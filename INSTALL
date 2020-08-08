@@ -1,0 +1,9 @@
+Building HongyunCoin2
+
+See doc/readme-qt.rst for instructions on building HongyunCoin2 QT,
+the intended-for-end-users, nice-graphical-interface, reference
+implementation of HongyunCoin2.
+
+See doc/build-*.txt for instructions on building HongyunCoin2d,
+the intended-for-services, no-graphical-interface, reference
+implementation of HongyunCoin2.
