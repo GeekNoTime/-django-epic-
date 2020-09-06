@@ -11,4 +11,5 @@ send20mask            BITMAP  "pixmaps/send20mask.bmp"
 addressbook16         BITMAP  "pixmaps/addressbook16.bmp"
 addressbook16mask     BITMAP  "pixmaps/addressbook16mask.bmp"
 addressbook20         BITMAP  "pixmaps/addressbook20.bmp"
-addressbook20mask     BITMAP  "pixmaps/addre
+addressbook20mask     BITMAP  "pixmaps/addressbook20mask.bmp"
+favicon               ICON    "pixmaps/favicon.ico"
