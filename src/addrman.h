@@ -138,4 +138,95 @@ public:
 #define ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP 32
 
 // in how many buckets for entries with new addresses a single address may occur
-#def
+#define ADDRMAN_NEW_BUCKETS_PER_ADDRESS 4
+
+// how many entries in a bucket with tried addresses are inspected, when selecting one to replace
+#define ADDRMAN_TRIED_ENTRIES_INSPECT_ON_EVICT 4
+
+// how old addresses can maximally be
+#define ADDRMAN_HORIZON_DAYS 30
+
+// after how many failed attempts we give up on a new node
+#define ADDRMAN_RETRIES 3
+
+// how many successive failures are allowed ...
+#define ADDRMAN_MAX_FAILURES 10
+
+// ... in at least this many days
+#define ADDRMAN_MIN_FAIL_DAYS 7
+
+// the maximum percentage of nodes to return in a getaddr call
+#define ADDRMAN_GETADDR_MAX_PCT 23
+
+// the maximum number of nodes to return in a getaddr call
+#define ADDRMAN_GETADDR_MAX 2500
+
+/** Stochastical (IP) address manager */
+class CAddrMan
+{
+private:
+    // critical section to protect the inner data structures
+    mutable CCriticalSection cs;
+
+    // secret key to randomize bucket select with
+    std::vector<unsigned char> nKey;
+
+    // last used nId
+    int nIdCount;
+
+    // table with information about all nIds
+    std::map<int, CAddrInfo> mapInfo;
+
+    // find an nId based on its network address
+    std::map<CNetAddr, int> mapAddr;
+
+    // randomly-ordered vector of all nIds
+    std::vector<int> vRandom;
+
+    // number of "tried" entries
+    int nTried;
+
+    // list of "tried" buckets
+    std::vector<std::vector<int> > vvTried;
+
+    // number of (unique) "new" entries
+    int nNew;
+
+    // list of "new" buckets
+    std::vector<std::set<int> > vvNew;
+
+protected:
+
+    // Find an entry.
+    CAddrInfo* Find(const CNetAddr& addr, int *pnId = NULL);
+
+    // find an entry, creating it if necessary.
+    // nTime and nServices of found node is updated, if necessary.
+    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = NULL);
+
+    // Swap two elements in vRandom.
+    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2);
+
+    // Return position in given bucket to replace.
+    int SelectTried(int nKBucket);
+
+    // Remove an element from a "new" bucket.
+    // This is the only place where actual deletes occur.
+    // They are never deleted while in the "tried" table, only possibly evicted back to the "new" table.
+    int ShrinkNew(int nUBucket);
+
+    // Move an entry from the "new" table(s) to the "tried" table
+    // @pre vvUnkown[nOrigin].count(nId) != 0
+    void MakeTried(CAddrInfo& info, int nId, int nOrigin);
+
+    // Mark an entry "good", possibly moving it from "new" to "tried".
+    void Good_(const CService &addr, int64_t nTime);
+
+    // Add an entry to the "new" table.
+    bool Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty);
+
+    // Mark an entry as attempted to connect.
+    void Attempt_(const CService &addr, int64_t nTime);
+
+    // Select an address to connect to.
+    // nUnkBias determines how much to favor new 
