@@ -229,4 +229,79 @@ protected:
     void Attempt_(const CService &addr, int64_t nTime);
 
     // Select an address to connect to.
-    // nUnkBias determines how much to favor new 
+    // nUnkBias determines how much to favor new addresses over tried ones (min=0, max=100)
+    CAddress Select_(int nUnkBias);
+
+#ifdef DEBUG_ADDRMAN
+    // Perform consistency check. Returns an error code or zero.
+    int Check_();
+#endif
+
+    // Select several addresses at once.
+    void GetAddr_(std::vector<CAddress> &vAddr);
+
+    // Mark an entry as currently-connected-to.
+    void Connected_(const CService &addr, int64_t nTime);
+
+public:
+
+    IMPLEMENT_SERIALIZE
+    (({
+        // serialized format:
+        // * version byte (currently 0)
+        // * nKey
+        // * nNew
+        // * nTried
+        // * number of "new" buckets
+        // * all nNew addrinfos in vvNew
+        // * all nTried addrinfos in vvTried
+        // * for each bucket:
+        //   * number of elements
+        //   * for each element: index
+        //
+        // Notice that vvTried, mapAddr and vVector are never encoded explicitly;
+        // they are instead reconstructed from the other information.
+        //
+        // vvNew is serialized, but only used if ADDRMAN_UNKOWN_BUCKET_COUNT didn't change,
+        // otherwise it is reconstructed as well.
+        //
+        // This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
+        // changes to the ADDRMAN_ parameters without breaking the on-disk structure.
+        {
+            LOCK(cs);
+            unsigned char nVersion = 0;
+            READWRITE(nVersion);
+            READWRITE(nKey);
+            READWRITE(nNew);
+            READWRITE(nTried);
+
+            CAddrMan *am = const_cast<CAddrMan*>(this);
+            if (fWrite)
+            {
+                int nUBuckets = ADDRMAN_NEW_BUCKET_COUNT;
+                READWRITE(nUBuckets);
+                std::map<int, int> mapUnkIds;
+                int nIds = 0;
+                for (std::map<int, CAddrInfo>::iterator it = am->mapInfo.begin(); it != am->mapInfo.end(); it++)
+                {
+                    if (nIds == nNew) break; // this means nNew was wrong, oh ow
+                    mapUnkIds[(*it).first] = nIds;
+                    CAddrInfo &info = (*it).second;
+                    if (info.nRefCount)
+                    {
+                        READWRITE(info);
+                        nIds++;
+                    }
+                }
+                nIds = 0;
+                for (std::map<int, CAddrInfo>::iterator it = am->mapInfo.begin(); it != am->mapInfo.end(); it++)
+                {
+                    if (nIds == nTried) break; // this means nTried was wrong, oh ow
+                    CAddrInfo &info = (*it).second;
+                    if (info.fInTried)
+                    {
+                        READWRITE(info);
+                        nIds++;
+                    }
+                }
+                for (std::vector<std::s
