@@ -60,4 +60,117 @@ std::string CUnsignedAlert::ToString() const
         "    nExpiration  = %"PRId64"\n"
         "    nID          = %d\n"
         "    nCancel      = %d\n"
-      
+        "    setCancel    = %s\n"
+        "    nMinVer      = %d\n"
+        "    nMaxVer      = %d\n"
+        "    setSubVer    = %s\n"
+        "    nPriority    = %d\n"
+        "    strComment   = \"%s\"\n"
+        "    strStatusBar = \"%s\"\n"
+        ")\n",
+        nVersion,
+        nRelayUntil,
+        nExpiration,
+        nID,
+        nCancel,
+        strSetCancel.c_str(),
+        nMinVer,
+        nMaxVer,
+        strSetSubVer.c_str(),
+        nPriority,
+        strComment.c_str(),
+        strStatusBar.c_str());
+}
+
+void CUnsignedAlert::print() const
+{
+    printf("%s", ToString().c_str());
+}
+
+void CAlert::SetNull()
+{
+    CUnsignedAlert::SetNull();
+    vchMsg.clear();
+    vchSig.clear();
+}
+
+bool CAlert::IsNull() const
+{
+    return (nExpiration == 0);
+}
+
+uint256 CAlert::GetHash() const
+{
+    return Hash(this->vchMsg.begin(), this->vchMsg.end());
+}
+
+bool CAlert::IsInEffect() const
+{
+    return (GetAdjustedTime() < nExpiration);
+}
+
+bool CAlert::Cancels(const CAlert& alert) const
+{
+    if (!IsInEffect())
+        return false; // this was a no-op before 31403
+    return (alert.nID <= nCancel || setCancel.count(alert.nID));
+}
+
+bool CAlert::AppliesTo(int nVersion, std::string strSubVerIn) const
+{
+    // TODO: rework for client-version-embedded-in-strSubVer ?
+    return (IsInEffect() &&
+            nMinVer <= nVersion && nVersion <= nMaxVer &&
+            (setSubVer.empty() || setSubVer.count(strSubVerIn)));
+}
+
+bool CAlert::AppliesToMe() const
+{
+    return AppliesTo(PROTOCOL_VERSION, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<std::string>()));
+}
+
+bool CAlert::RelayTo(CNode* pnode) const
+{
+    if (!IsInEffect())
+        return false;
+    // returns true if wasn't already contained in the set
+    if (pnode->setKnown.insert(GetHash()).second)
+    {
+        if (AppliesTo(pnode->nVersion, pnode->strSubVer) ||
+            AppliesToMe() ||
+            GetAdjustedTime() < nRelayUntil)
+        {
+            pnode->PushMessage("alert", *this);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CAlert::CheckSignature() const
+{
+    CKey key;
+    if (!key.SetPubKey(ParseHex(fTestNet ? pszTestKey : pszMainKey)))
+        return error("CAlert::CheckSignature() : SetPubKey failed");
+    if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
+        return error("CAlert::CheckSignature() : verify signature failed");
+
+    // Now unserialize the data
+    CDataStream sMsg(vchMsg, SER_NETWORK, PROTOCOL_VERSION);
+    sMsg >> *(CUnsignedAlert*)this;
+    return true;
+}
+
+CAlert CAlert::getAlertByHash(const uint256 &hash)
+{
+    CAlert retval;
+    {
+        LOCK(cs_mapAlerts);
+        map<uint256, CAlert>::iterator mi = mapAlerts.find(hash);
+        if(mi != mapAlerts.end())
+            retval = mi->second;
+    }
+    return retval;
+}
+
+bool CAlert::ProcessAle
