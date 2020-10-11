@@ -250,4 +250,24 @@ bool CAlert::ProcessAlert(bool fThread)
                 std::string singleQuote("'");
                 // safeChars chosen to allow simple messages/URLs/email addresses, but avoid anything
                 // even possibly remotely dangerous like & or >
-                std::stri
+                std::string safeChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890 .,;_/:?@");
+                std::string safeStatus;
+                for (std::string::size_type i = 0; i < strStatusBar.size(); i++)
+                {
+                    if (safeChars.find(strStatusBar[i]) != std::string::npos)
+                        safeStatus.push_back(strStatusBar[i]);
+                }
+                safeStatus = singleQuote+safeStatus+singleQuote;
+                boost::replace_all(strCmd, "%s", safeStatus);
+
+                if (fThread)
+                    boost::thread t(runCommand, strCmd); // thread runs free
+                else
+                    runCommand(strCmd);
+            }
+        }
+    }
+
+    printf("accepted alert %d, AppliesToMe()=%d\n", nID, AppliesToMe());
+    return true;
+}
