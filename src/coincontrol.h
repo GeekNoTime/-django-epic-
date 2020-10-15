@@ -36,4 +36,22 @@ public:
     
     void UnSelect(COutPoint& output)
     {
-        setSelected.erase
+        setSelected.erase(output);
+    }
+    
+    void UnSelectAll()
+    {
+        setSelected.clear();
+    }
+
+    void ListSelected(std::vector<COutPoint>& vOutpoints)
+    {
+        vOutpoints.assign(setSelected.begin(), setSelected.end());
+    }
+        
+private:
+    std::set<COutPoint> setSelected;
+
+};
+
+#endif // COINCONTROL_H
