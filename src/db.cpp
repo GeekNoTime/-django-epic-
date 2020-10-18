@@ -226,4 +226,112 @@ void CDBEnv::CheckpointLSN(std::string strFile)
     dbenv.txn_checkpoint(0, 0, 0);
     if (fMockDb)
         return;
-    dbenv.lsn_r
+    dbenv.lsn_reset(strFile.c_str(), 0);
+}
+
+
+CDB::CDB(const char *pszFile, const char* pszMode) :
+    pdb(NULL), activeTxn(NULL)
+{
+    int ret;
+    if (pszFile == NULL)
+        return;
+
+    fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
+    bool fCreate = strchr(pszMode, 'c');
+    unsigned int nFlags = DB_THREAD;
+    if (fCreate)
+        nFlags |= DB_CREATE;
+
+    {
+        LOCK(bitdb.cs_db);
+        if (!bitdb.Open(GetDataDir()))
+            throw runtime_error("env open failed");
+
+        strFile = pszFile;
+        ++bitdb.mapFileUseCount[strFile];
+        pdb = bitdb.mapDb[strFile];
+        if (pdb == NULL)
+        {
+            pdb = new Db(&bitdb.dbenv, 0);
+
+            bool fMockDb = bitdb.IsMock();
+            if (fMockDb)
+            {
+                DbMpoolFile*mpf = pdb->get_mpf();
+                ret = mpf->set_flags(DB_MPOOL_NOFILE, 1);
+                if (ret != 0)
+                    throw runtime_error(strprintf("CDB() : failed to configure for no temp file backing for database %s", pszFile));
+            }
+
+            ret = pdb->open(NULL,      // Txn pointer
+                            fMockDb ? NULL : pszFile,   // Filename
+                            "main",    // Logical db name
+                            DB_BTREE,  // Database type
+                            nFlags,    // Flags
+                            0);
+
+            if (ret != 0)
+            {
+                delete pdb;
+                pdb = NULL;
+                --bitdb.mapFileUseCount[strFile];
+                strFile = "";
+                throw runtime_error(strprintf("CDB() : can't open database file %s, error %d", pszFile, ret));
+            }
+
+            if (fCreate && !Exists(string("version")))
+            {
+                bool fTmp = fReadOnly;
+                fReadOnly = false;
+                WriteVersion(CLIENT_VERSION);
+                fReadOnly = fTmp;
+            }
+
+            bitdb.mapDb[strFile] = pdb;
+        }
+    }
+}
+
+static bool IsChainFile(std::string strFile)
+{
+    if (strFile == "blkindex.dat")
+        return true;
+
+    return false;
+}
+
+void CDB::Close()
+{
+    if (!pdb)
+        return;
+    if (activeTxn)
+        activeTxn->abort();
+    activeTxn = NULL;
+    pdb = NULL;
+
+    // Flush database activity from memory pool to disk log
+    unsigned int nMinutes = 0;
+    if (fReadOnly)
+        nMinutes = 1;
+    if (IsChainFile(strFile))
+        nMinutes = 2;
+    if (IsChainFile(strFile) && IsInitialBlockDownload())
+        nMinutes = 5;
+
+    bitdb.dbenv.txn_checkpoint(nMinutes ? GetArg("-dblogsize", 100)*1024 : 0, nMinutes, 0);
+
+    {
+        LOCK(bitdb.cs_db);
+        --bitdb.mapFileUseCount[strFile];
+    }
+}
+
+void CDBEnv::CloseDb(const string& strFile)
+{
+    {
+        LOCK(cs_db);
+        if (mapDb[strFile] != NULL)
+        {
+            // Close the database handle
+            Db* pdb = mapDb[strFile];
