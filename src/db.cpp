@@ -335,3 +335,75 @@ void CDBEnv::CloseDb(const string& strFile)
         {
             // Close the database handle
             Db* pdb = mapDb[strFile];
+            pdb->close(0);
+            delete pdb;
+            mapDb[strFile] = NULL;
+        }
+    }
+}
+
+bool CDBEnv::RemoveDb(const string& strFile)
+{
+    this->CloseDb(strFile);
+
+    LOCK(cs_db);
+    int rc = dbenv.dbremove(NULL, strFile.c_str(), NULL, DB_AUTO_COMMIT);
+    return (rc == 0);
+}
+
+bool CDB::Rewrite(const string& strFile, const char* pszSkip)
+{
+    while (!fShutdown)
+    {
+        {
+            LOCK(bitdb.cs_db);
+            if (!bitdb.mapFileUseCount.count(strFile) || bitdb.mapFileUseCount[strFile] == 0)
+            {
+                // Flush log data to the dat file
+                bitdb.CloseDb(strFile);
+                bitdb.CheckpointLSN(strFile);
+                bitdb.mapFileUseCount.erase(strFile);
+
+                bool fSuccess = true;
+                printf("Rewriting %s...\n", strFile.c_str());
+                string strFileRes = strFile + ".rewrite";
+                { // surround usage of db with extra {}
+                    CDB db(strFile.c_str(), "r");
+                    Db* pdbCopy = new Db(&bitdb.dbenv, 0);
+
+                    int ret = pdbCopy->open(NULL,                 // Txn pointer
+                                            strFileRes.c_str(),   // Filename
+                                            "main",    // Logical db name
+                                            DB_BTREE,  // Database type
+                                            DB_CREATE,    // Flags
+                                            0);
+                    if (ret > 0)
+                    {
+                        printf("Cannot create database file %s\n", strFileRes.c_str());
+                        fSuccess = false;
+                    }
+
+                    Dbc* pcursor = db.GetCursor();
+                    if (pcursor)
+                        while (fSuccess)
+                        {
+                            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+                            CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+                            int ret = db.ReadAtCursor(pcursor, ssKey, ssValue, DB_NEXT);
+                            if (ret == DB_NOTFOUND)
+                            {
+                                pcursor->close();
+                                break;
+                            }
+                            else if (ret != 0)
+                            {
+                                pcursor->close();
+                                fSuccess = false;
+                                break;
+                            }
+                            if (pszSkip &&
+                                strncmp(&ssKey[0], pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
+                                continue;
+                            if (strncmp(&ssKey[0], "\x07version", 8) == 0)
+                            {
+                                // Update versi
