@@ -406,4 +406,76 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                                 continue;
                             if (strncmp(&ssKey[0], "\x07version", 8) == 0)
                             {
-                                // Update versi
+                                // Update version:
+                                ssValue.clear();
+                                ssValue << CLIENT_VERSION;
+                            }
+                            Dbt datKey(&ssKey[0], ssKey.size());
+                            Dbt datValue(&ssValue[0], ssValue.size());
+                            int ret2 = pdbCopy->put(NULL, &datKey, &datValue, DB_NOOVERWRITE);
+                            if (ret2 > 0)
+                                fSuccess = false;
+                        }
+                    if (fSuccess)
+                    {
+                        db.Close();
+                        bitdb.CloseDb(strFile);
+                        if (pdbCopy->close(0))
+                            fSuccess = false;
+                        delete pdbCopy;
+                    }
+                }
+                if (fSuccess)
+                {
+                    Db dbA(&bitdb.dbenv, 0);
+                    if (dbA.remove(strFile.c_str(), NULL, 0))
+                        fSuccess = false;
+                    Db dbB(&bitdb.dbenv, 0);
+                    if (dbB.rename(strFileRes.c_str(), NULL, strFile.c_str(), 0))
+                        fSuccess = false;
+                }
+                if (!fSuccess)
+                    printf("Rewriting of %s FAILED!\n", strFileRes.c_str());
+                return fSuccess;
+            }
+        }
+        MilliSleep(100);
+    }
+    return false;
+}
+
+
+void CDBEnv::Flush(bool fShutdown)
+{
+    int64_t nStart = GetTimeMillis();
+    // Flush log data to the actual data file
+    //  on all files that are not in use
+    printf("Flush(%s)%s\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started");
+    if (!fDbEnvInit)
+        return;
+    {
+        LOCK(cs_db);
+        map<string, int>::iterator mi = mapFileUseCount.begin();
+        while (mi != mapFileUseCount.end())
+        {
+            string strFile = (*mi).first;
+            int nRefCount = (*mi).second;
+            printf("%s refcount=%d\n", strFile.c_str(), nRefCount);
+            if (nRefCount == 0)
+            {
+                // Move log data to the dat file
+                CloseDb(strFile);
+                printf("%s checkpoint\n", strFile.c_str());
+                dbenv.txn_checkpoint(0, 0, 0);
+                if (!IsChainFile(strFile) || fDetachDB) {
+                    printf("%s detach\n", strFile.c_str());
+                    if (!fMockDb)
+                        dbenv.lsn_reset(strFile.c_str(), 0);
+                }
+                printf("%s closed\n", strFile.c_str());
+                mapFileUseCount.erase(mi++);
+            }
+            else
+                mi++;
+        }
+        printf("DBFlush(%s)%s ended %15"PRId64"ms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not start
