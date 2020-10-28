@@ -183,4 +183,103 @@ protected:
         if (fReadOnly)
             assert(!"Erase called on database in read-only mode");
 
- 
+        // Key
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        ssKey.reserve(1000);
+        ssKey << key;
+        Dbt datKey(&ssKey[0], ssKey.size());
+
+        // Erase
+        int ret = pdb->del(activeTxn, &datKey, 0);
+
+        // Clear memory
+        memset(datKey.get_data(), 0, datKey.get_size());
+        return (ret == 0 || ret == DB_NOTFOUND);
+    }
+
+    template<typename K>
+    bool Exists(const K& key)
+    {
+        if (!pdb)
+            return false;
+
+        // Key
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        ssKey.reserve(1000);
+        ssKey << key;
+        Dbt datKey(&ssKey[0], ssKey.size());
+
+        // Exists
+        int ret = pdb->exists(activeTxn, &datKey, 0);
+
+        // Clear memory
+        memset(datKey.get_data(), 0, datKey.get_size());
+        return (ret == 0);
+    }
+
+    Dbc* GetCursor()
+    {
+        if (!pdb)
+            return NULL;
+        Dbc* pcursor = NULL;
+        int ret = pdb->cursor(NULL, &pcursor, 0);
+        if (ret != 0)
+            return NULL;
+        return pcursor;
+    }
+
+    int ReadAtCursor(Dbc* pcursor, CDataStream& ssKey, CDataStream& ssValue, unsigned int fFlags=DB_NEXT)
+    {
+        // Read at cursor
+        Dbt datKey;
+        if (fFlags == DB_SET || fFlags == DB_SET_RANGE || fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE)
+        {
+            datKey.set_data(&ssKey[0]);
+            datKey.set_size(ssKey.size());
+        }
+        Dbt datValue;
+        if (fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE)
+        {
+            datValue.set_data(&ssValue[0]);
+            datValue.set_size(ssValue.size());
+        }
+        datKey.set_flags(DB_DBT_MALLOC);
+        datValue.set_flags(DB_DBT_MALLOC);
+        int ret = pcursor->get(&datKey, &datValue, fFlags);
+        if (ret != 0)
+            return ret;
+        else if (datKey.get_data() == NULL || datValue.get_data() == NULL)
+            return 99999;
+
+        // Convert to streams
+        ssKey.SetType(SER_DISK);
+        ssKey.clear();
+        ssKey.write((char*)datKey.get_data(), datKey.get_size());
+        ssValue.SetType(SER_DISK);
+        ssValue.clear();
+        ssValue.write((char*)datValue.get_data(), datValue.get_size());
+
+        // Clear and free memory
+        memset(datKey.get_data(), 0, datKey.get_size());
+        memset(datValue.get_data(), 0, datValue.get_size());
+        free(datKey.get_data());
+        free(datValue.get_data());
+        return 0;
+    }
+
+public:
+    bool TxnBegin()
+    {
+        if (!pdb || activeTxn)
+            return false;
+        DbTxn* ptxn = bitdb.TxnBegin();
+        if (!ptxn)
+            return false;
+        activeTxn = ptxn;
+        return true;
+    }
+
+    bool TxnCommit()
+    {
+        if (!pdb || !activeTxn)
+   
