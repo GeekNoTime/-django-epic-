@@ -42,4 +42,122 @@ string EncodeAddress(const CService& addr)
 bool DecodeAddress(string str, CService& addr)
 {
     vector<unsigned char> vch;
-    if (!Dec
+    if (!DecodeBase58Check(str.substr(1), vch))
+        return false;
+
+    struct ircaddr tmp;
+    if (vch.size() != sizeof(tmp))
+        return false;
+    memcpy(&tmp, &vch[0], sizeof(tmp));
+
+    addr = CService(tmp.ip, ntohs(tmp.port));
+    return true;
+}
+
+
+
+
+
+
+static bool Send(SOCKET hSocket, const char* pszSend)
+{
+    if (strstr(pszSend, "PONG") != pszSend)
+        printf("IRC SENDING: %s\n", pszSend);
+    const char* psz = pszSend;
+    const char* pszEnd = psz + strlen(psz);
+    while (psz < pszEnd)
+    {
+        int ret = send(hSocket, psz, pszEnd - psz, MSG_NOSIGNAL);
+        if (ret < 0)
+            return false;
+        psz += ret;
+    }
+    return true;
+}
+
+bool RecvLineIRC(SOCKET hSocket, string& strLine)
+{
+    while (true)
+    {
+        bool fRet = RecvLine(hSocket, strLine);
+        if (fRet)
+        {
+            if (fShutdown)
+                return false;
+            vector<string> vWords;
+            ParseString(strLine, ' ', vWords);
+            if (vWords.size() >= 1 && vWords[0] == "PING")
+            {
+                strLine[1] = 'O';
+                strLine += '\r';
+                Send(hSocket, strLine.c_str());
+                continue;
+            }
+        }
+        return fRet;
+    }
+}
+
+int RecvUntil(SOCKET hSocket, const char* psz1, const char* psz2=NULL, const char* psz3=NULL, const char* psz4=NULL)
+{
+    while (true)
+    {
+        string strLine;
+        strLine.reserve(10000);
+        if (!RecvLineIRC(hSocket, strLine))
+            return 0;
+        printf("IRC %s\n", strLine.c_str());
+        if (psz1 && strLine.find(psz1) != string::npos)
+            return 1;
+        if (psz2 && strLine.find(psz2) != string::npos)
+            return 2;
+        if (psz3 && strLine.find(psz3) != string::npos)
+            return 3;
+        if (psz4 && strLine.find(psz4) != string::npos)
+            return 4;
+    }
+}
+
+bool Wait(int nSeconds)
+{
+    if (fShutdown)
+        return false;
+    printf("IRC waiting %d seconds to reconnect\n", nSeconds);
+    for (int i = 0; i < nSeconds; i++)
+    {
+        if (fShutdown)
+            return false;
+        MilliSleep(1000);
+    }
+    return true;
+}
+
+bool RecvCodeLine(SOCKET hSocket, const char* psz1, string& strRet)
+{
+    strRet.clear();
+    while (true)
+    {
+        string strLine;
+        if (!RecvLineIRC(hSocket, strLine))
+            return false;
+
+        vector<string> vWords;
+        ParseString(strLine, ' ', vWords);
+        if (vWords.size() < 2)
+            continue;
+
+        if (vWords[1] == psz1)
+        {
+            printf("IRC %s\n", strLine.c_str());
+            strRet = strLine;
+            return true;
+        }
+    }
+}
+
+bool GetIPFromIRC(SOCKET hSocket, string strMyName, CNetAddr& ipRet)
+{
+    Send(hSocket, strprintf("USERHOST %s\r", strMyName.c_str()).c_str());
+
+    string strLine;
+    if (!RecvCodeLine(hSocke
