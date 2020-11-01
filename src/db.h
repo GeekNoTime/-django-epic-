@@ -282,4 +282,45 @@ public:
     bool TxnCommit()
     {
         if (!pdb || !activeTxn)
-   
+            return false;
+        int ret = activeTxn->commit(0);
+        activeTxn = NULL;
+        return (ret == 0);
+    }
+
+    bool TxnAbort()
+    {
+        if (!pdb || !activeTxn)
+            return false;
+        int ret = activeTxn->abort();
+        activeTxn = NULL;
+        return (ret == 0);
+    }
+
+    bool ReadVersion(int& nVersion)
+    {
+        nVersion = 0;
+        return Read(std::string("version"), nVersion);
+    }
+
+    bool WriteVersion(int nVersion)
+    {
+        return Write(std::string("version"), nVersion);
+    }
+
+    bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL);
+};
+
+
+/** Access to the (IP) address database (peers.dat) */
+class CAddrDB
+{
+private:
+    boost::filesystem::path pathAddr;
+public:
+    CAddrDB();
+    bool Write(const CAddrMan& addr);
+    bool Read(CAddrMan& addr);
+};
+
+#endif // BITCOIN_DB_H
