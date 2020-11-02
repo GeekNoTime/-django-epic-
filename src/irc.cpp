@@ -160,4 +160,103 @@ bool GetIPFromIRC(SOCKET hSocket, string strMyName, CNetAddr& ipRet)
     Send(hSocket, strprintf("USERHOST %s\r", strMyName.c_str()).c_str());
 
     string strLine;
-    if (!RecvCodeLine(hSocke
+    if (!RecvCodeLine(hSocket, "302", strLine))
+        return false;
+
+    vector<string> vWords;
+    ParseString(strLine, ' ', vWords);
+    if (vWords.size() < 4)
+        return false;
+
+    string str = vWords[3];
+    if (str.rfind("@") == string::npos)
+        return false;
+    string strHost = str.substr(str.rfind("@")+1);
+
+    // Hybrid IRC used by lfnet always returns IP when you userhost yourself,
+    // but in case another IRC is ever used this should work.
+    printf("GetIPFromIRC() got userhost %s\n", strHost.c_str());
+    CNetAddr addr(strHost, true);
+    if (!addr.IsValid())
+        return false;
+    ipRet = addr;
+
+    return true;
+}
+
+
+
+void ThreadIRCSeed(void* parg)
+{
+    // Make this thread recognisable as the IRC seeding thread
+    RenameThread("HongyunCoin2-ircseed");
+
+    try
+    {
+        ThreadIRCSeed2(parg);
+    }
+    catch (std::exception& e) {
+        PrintExceptionContinue(&e, "ThreadIRCSeed()");
+    } catch (...) {
+        PrintExceptionContinue(NULL, "ThreadIRCSeed()");
+    }
+    printf("ThreadIRCSeed exited\n");
+}
+
+void ThreadIRCSeed2(void* parg)
+{
+    // Don't connect to IRC if we won't use IPv4 connections.
+    if (IsLimited(NET_IPV4))
+        return;
+
+    // ... or if we won't make outbound connections and won't accept inbound ones.
+    if (mapArgs.count("-connect") && fNoListen)
+        return;
+
+    // ... or if IRC is not enabled.
+    if (!GetBoolArg("-irc", false))
+        return;
+
+    printf("ThreadIRCSeed started\n");
+    int nErrorWait = 10;
+    int nRetryWait = 10;
+    int nNameRetry = 0;
+
+    while (!fShutdown)
+    {
+        CService addrConnect("92.243.23.21", 6667); // irc.lfnet.org
+
+        CService addrIRC("irc.lfnet.org", 6667, true);
+        if (addrIRC.IsValid())
+            addrConnect = addrIRC;
+
+        SOCKET hSocket;
+        if (!ConnectSocket(addrConnect, hSocket))
+        {
+            printf("IRC connect failed\n");
+            nErrorWait = nErrorWait * 11 / 10;
+            if (Wait(nErrorWait += 60))
+                continue;
+            else
+                return;
+        }
+
+        if (!RecvUntil(hSocket, "Found your hostname", "using your IP address instead", "Couldn't look up your hostname", "ignoring hostname"))
+        {
+            closesocket(hSocket);
+            hSocket = INVALID_SOCKET;
+            nErrorWait = nErrorWait * 11 / 10;
+            if (Wait(nErrorWait += 60))
+                continue;
+            else
+                return;
+        }
+
+        CNetAddr addrIPv4("1.2.3.4"); // arbitrary IPv4 address to make GetLocal prefer IPv4 addresses
+        CService addrLocal;
+        string strMyName;
+        // Don't use our IP as our nick if we're not listening
+        // or if it keeps failing because the nick is already in use.
+        if (!fNoListen && GetLocal(addrLocal, &addrIPv4) && nNameRetry<3)
+            strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
+        if (strM
