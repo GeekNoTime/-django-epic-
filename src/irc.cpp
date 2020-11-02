@@ -259,4 +259,79 @@ void ThreadIRCSeed2(void* parg)
         // or if it keeps failing because the nick is already in use.
         if (!fNoListen && GetLocal(addrLocal, &addrIPv4) && nNameRetry<3)
             strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
-        if (strM
+        if (strMyName == "")
+            strMyName = strprintf("x%"PRIu64"", GetRand(1000000000));
+
+        Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
+        Send(hSocket, strprintf("USER %s 8 * : %s\r", strMyName.c_str(), strMyName.c_str()).c_str());
+
+        int nRet = RecvUntil(hSocket, " 004 ", " 433 ");
+        if (nRet != 1)
+        {
+            closesocket(hSocket);
+            hSocket = INVALID_SOCKET;
+            if (nRet == 2)
+            {
+                printf("IRC name already in use\n");
+                nNameRetry++;
+                Wait(10);
+                continue;
+            }
+            nErrorWait = nErrorWait * 11 / 10;
+            if (Wait(nErrorWait += 60))
+                continue;
+            else
+                return;
+        }
+        nNameRetry = 0;
+        MilliSleep(500);
+
+        // Get our external IP from the IRC server and re-nick before joining the channel
+        CNetAddr addrFromIRC;
+        if (GetIPFromIRC(hSocket, strMyName, addrFromIRC))
+        {
+            printf("GetIPFromIRC() returned %s\n", addrFromIRC.ToString().c_str());
+            // Don't use our IP as our nick if we're not listening
+            if (!fNoListen && addrFromIRC.IsRoutable())
+            {
+                // IRC lets you to re-nick
+                AddLocal(addrFromIRC, LOCAL_IRC);
+                strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
+                Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
+            }
+        }
+
+        if (fTestNet) {
+            Send(hSocket, "JOIN #HongyunCoin2TEST\r");
+            Send(hSocket, "WHO #HongyunCoin2TEST\r");
+        } else {
+            // randomly join #HongyunCoin200-#HongyunCoin205
+            int channel_number = GetRandInt(5);
+
+            // Channel number is always 0 for initial release
+            //int channel_number = 0;
+            Send(hSocket, strprintf("JOIN #HongyunCoin2%02d\r", channel_number).c_str());
+            Send(hSocket, strprintf("WHO #HongyunCoin2%02d\r", channel_number).c_str());
+        }
+
+        int64_t nStart = GetTime();
+        string strLine;
+        strLine.reserve(10000);
+        while (!fShutdown && RecvLineIRC(hSocket, strLine))
+        {
+            if (strLine.empty() || strLine.size() > 900 || strLine[0] != ':')
+                continue;
+
+            vector<string> vWords;
+            ParseString(strLine, ' ', vWords);
+            if (vWords.size() < 2)
+                continue;
+
+            char pszName[10000];
+            pszName[0] = '\0';
+
+            if (vWords[1] == "352" && vWords.size() >= 8)
+            {
+                // index 7 is limited to 16 characters
+                // could get full length name at index 10, but would be different from join messages
+                strlcpy(pszName, v
