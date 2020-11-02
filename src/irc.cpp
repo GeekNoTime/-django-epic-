@@ -334,4 +334,72 @@ void ThreadIRCSeed2(void* parg)
             {
                 // index 7 is limited to 16 characters
                 // could get full length name at index 10, but would be different from join messages
-                strlcpy(pszName, v
+                strlcpy(pszName, vWords[7].c_str(), sizeof(pszName));
+                printf("IRC got who\n");
+            }
+
+            if (vWords[1] == "JOIN" && vWords[0].size() > 1)
+            {
+                // :username!username@50000007.F000000B.90000002.IP JOIN :#channelname
+                strlcpy(pszName, vWords[0].c_str() + 1, sizeof(pszName));
+                if (strchr(pszName, '!'))
+                    *strchr(pszName, '!') = '\0';
+                printf("IRC got join\n");
+            }
+
+            if (pszName[0] == 'u')
+            {
+                CAddress addr;
+                if (DecodeAddress(pszName, addr))
+                {
+                    addr.nTime = GetAdjustedTime();
+                    if (addrman.Add(addr, addrConnect, 51 * 60))
+                        printf("IRC got new address: %s\n", addr.ToString().c_str());
+                    nGotIRCAddresses++;
+                }
+                else
+                {
+                    printf("IRC decode failed\n");
+                }
+            }
+        }
+        closesocket(hSocket);
+        hSocket = INVALID_SOCKET;
+
+        if (GetTime() - nStart > 20 * 60)
+        {
+            nErrorWait /= 3;
+            nRetryWait /= 3;
+        }
+
+        nRetryWait = nRetryWait * 11 / 10;
+        if (!Wait(nRetryWait += 60))
+            return;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+#ifdef TEST
+int main(int argc, char *argv[])
+{
+    WSADATA wsadata;
+    if (WSAStartup(MAKEWORD(2,2), &wsadata) != NO_ERROR)
+    {
+        printf("Error at WSAStartup()\n");
+        return false;
+    }
+
+    ThreadIRCSeed(NULL);
+
+    WSACleanup();
+    return 0;
+}
+#endif
