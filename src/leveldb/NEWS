@@ -7,4 +7,11 @@ i.e., ~100GB).
 (1) Place hard limit on number of level-0 files.  This fixes errors
 of the form "too many open files".
 
-(2) Fixed memtable 
+(2) Fixed memtable management.  Before the fix, a heavy write burst
+could cause unbounded memory usage.
+
+A fix for a logging bug where the reader would incorrectly complain
+about corruption.
+
+Allow public access to WriteBatch contents so that users can easily
+wrap a DB.
