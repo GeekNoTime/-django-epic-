@@ -105,4 +105,119 @@ struct leveldb_filterpolicy_t : public FilterPolicy {
     return (*name_)(state_);
   }
 
- 
+  virtual void CreateFilter(const Slice* keys, int n, std::string* dst) const {
+    std::vector<const char*> key_pointers(n);
+    std::vector<size_t> key_sizes(n);
+    for (int i = 0; i < n; i++) {
+      key_pointers[i] = keys[i].data();
+      key_sizes[i] = keys[i].size();
+    }
+    size_t len;
+    char* filter = (*create_)(state_, &key_pointers[0], &key_sizes[0], n, &len);
+    dst->append(filter, len);
+    free(filter);
+  }
+
+  virtual bool KeyMayMatch(const Slice& key, const Slice& filter) const {
+    return (*key_match_)(state_, key.data(), key.size(),
+                         filter.data(), filter.size());
+  }
+};
+
+struct leveldb_env_t {
+  Env* rep;
+  bool is_default;
+};
+
+static bool SaveError(char** errptr, const Status& s) {
+  assert(errptr != NULL);
+  if (s.ok()) {
+    return false;
+  } else if (*errptr == NULL) {
+    *errptr = strdup(s.ToString().c_str());
+  } else {
+    // TODO(sanjay): Merge with existing error?
+    free(*errptr);
+    *errptr = strdup(s.ToString().c_str());
+  }
+  return true;
+}
+
+static char* CopyString(const std::string& str) {
+  char* result = reinterpret_cast<char*>(malloc(sizeof(char) * str.size()));
+  memcpy(result, str.data(), sizeof(char) * str.size());
+  return result;
+}
+
+leveldb_t* leveldb_open(
+    const leveldb_options_t* options,
+    const char* name,
+    char** errptr) {
+  DB* db;
+  if (SaveError(errptr, DB::Open(options->rep, std::string(name), &db))) {
+    return NULL;
+  }
+  leveldb_t* result = new leveldb_t;
+  result->rep = db;
+  return result;
+}
+
+void leveldb_close(leveldb_t* db) {
+  delete db->rep;
+  delete db;
+}
+
+void leveldb_put(
+    leveldb_t* db,
+    const leveldb_writeoptions_t* options,
+    const char* key, size_t keylen,
+    const char* val, size_t vallen,
+    char** errptr) {
+  SaveError(errptr,
+            db->rep->Put(options->rep, Slice(key, keylen), Slice(val, vallen)));
+}
+
+void leveldb_delete(
+    leveldb_t* db,
+    const leveldb_writeoptions_t* options,
+    const char* key, size_t keylen,
+    char** errptr) {
+  SaveError(errptr, db->rep->Delete(options->rep, Slice(key, keylen)));
+}
+
+
+void leveldb_write(
+    leveldb_t* db,
+    const leveldb_writeoptions_t* options,
+    leveldb_writebatch_t* batch,
+    char** errptr) {
+  SaveError(errptr, db->rep->Write(options->rep, &batch->rep));
+}
+
+char* leveldb_get(
+    leveldb_t* db,
+    const leveldb_readoptions_t* options,
+    const char* key, size_t keylen,
+    size_t* vallen,
+    char** errptr) {
+  char* result = NULL;
+  std::string tmp;
+  Status s = db->rep->Get(options->rep, Slice(key, keylen), &tmp);
+  if (s.ok()) {
+    *vallen = tmp.size();
+    result = CopyString(tmp);
+  } else {
+    *vallen = 0;
+    if (!s.IsNotFound()) {
+      SaveError(errptr, s);
+    }
+  }
+  return result;
+}
+
+leveldb_iterator_t* leveldb_create_iterator(
+    leveldb_t* db,
+    const leveldb_readoptions_t* options) {
+  leveldb_iterator_t* result = new leveldb_iterator_t;
+  result->rep = db->rep->NewIterator(options->rep);
+  
