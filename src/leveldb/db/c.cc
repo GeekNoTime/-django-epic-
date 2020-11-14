@@ -520,4 +520,76 @@ leveldb_filterpolicy_t* leveldb_filterpolicy_create_bloom(int bits_per_key) {
 }
 
 leveldb_readoptions_t* leveldb_readoptions_create() {
-  return new 
+  return new leveldb_readoptions_t;
+}
+
+void leveldb_readoptions_destroy(leveldb_readoptions_t* opt) {
+  delete opt;
+}
+
+void leveldb_readoptions_set_verify_checksums(
+    leveldb_readoptions_t* opt,
+    unsigned char v) {
+  opt->rep.verify_checksums = v;
+}
+
+void leveldb_readoptions_set_fill_cache(
+    leveldb_readoptions_t* opt, unsigned char v) {
+  opt->rep.fill_cache = v;
+}
+
+void leveldb_readoptions_set_snapshot(
+    leveldb_readoptions_t* opt,
+    const leveldb_snapshot_t* snap) {
+  opt->rep.snapshot = (snap ? snap->rep : NULL);
+}
+
+leveldb_writeoptions_t* leveldb_writeoptions_create() {
+  return new leveldb_writeoptions_t;
+}
+
+void leveldb_writeoptions_destroy(leveldb_writeoptions_t* opt) {
+  delete opt;
+}
+
+void leveldb_writeoptions_set_sync(
+    leveldb_writeoptions_t* opt, unsigned char v) {
+  opt->rep.sync = v;
+}
+
+leveldb_cache_t* leveldb_cache_create_lru(size_t capacity) {
+  leveldb_cache_t* c = new leveldb_cache_t;
+  c->rep = NewLRUCache(capacity);
+  return c;
+}
+
+void leveldb_cache_destroy(leveldb_cache_t* cache) {
+  delete cache->rep;
+  delete cache;
+}
+
+leveldb_env_t* leveldb_create_default_env() {
+  leveldb_env_t* result = new leveldb_env_t;
+  result->rep = Env::Default();
+  result->is_default = true;
+  return result;
+}
+
+void leveldb_env_destroy(leveldb_env_t* env) {
+  if (!env->is_default) delete env->rep;
+  delete env;
+}
+
+void leveldb_free(void* ptr) {
+  free(ptr);
+}
+
+int leveldb_major_version() {
+  return kMajorVersion;
+}
+
+int leveldb_minor_version() {
+  return kMinorVersion;
+}
+
+}  // end extern "C"
