@@ -220,4 +220,108 @@ leveldb_iterator_t* leveldb_create_iterator(
     const leveldb_readoptions_t* options) {
   leveldb_iterator_t* result = new leveldb_iterator_t;
   result->rep = db->rep->NewIterator(options->rep);
-  
+  return result;
+}
+
+const leveldb_snapshot_t* leveldb_create_snapshot(
+    leveldb_t* db) {
+  leveldb_snapshot_t* result = new leveldb_snapshot_t;
+  result->rep = db->rep->GetSnapshot();
+  return result;
+}
+
+void leveldb_release_snapshot(
+    leveldb_t* db,
+    const leveldb_snapshot_t* snapshot) {
+  db->rep->ReleaseSnapshot(snapshot->rep);
+  delete snapshot;
+}
+
+char* leveldb_property_value(
+    leveldb_t* db,
+    const char* propname) {
+  std::string tmp;
+  if (db->rep->GetProperty(Slice(propname), &tmp)) {
+    // We use strdup() since we expect human readable output.
+    return strdup(tmp.c_str());
+  } else {
+    return NULL;
+  }
+}
+
+void leveldb_approximate_sizes(
+    leveldb_t* db,
+    int num_ranges,
+    const char* const* range_start_key, const size_t* range_start_key_len,
+    const char* const* range_limit_key, const size_t* range_limit_key_len,
+    uint64_t* sizes) {
+  Range* ranges = new Range[num_ranges];
+  for (int i = 0; i < num_ranges; i++) {
+    ranges[i].start = Slice(range_start_key[i], range_start_key_len[i]);
+    ranges[i].limit = Slice(range_limit_key[i], range_limit_key_len[i]);
+  }
+  db->rep->GetApproximateSizes(ranges, num_ranges, sizes);
+  delete[] ranges;
+}
+
+void leveldb_compact_range(
+    leveldb_t* db,
+    const char* start_key, size_t start_key_len,
+    const char* limit_key, size_t limit_key_len) {
+  Slice a, b;
+  db->rep->CompactRange(
+      // Pass NULL Slice if corresponding "const char*" is NULL
+      (start_key ? (a = Slice(start_key, start_key_len), &a) : NULL),
+      (limit_key ? (b = Slice(limit_key, limit_key_len), &b) : NULL));
+}
+
+void leveldb_destroy_db(
+    const leveldb_options_t* options,
+    const char* name,
+    char** errptr) {
+  SaveError(errptr, DestroyDB(name, options->rep));
+}
+
+void leveldb_repair_db(
+    const leveldb_options_t* options,
+    const char* name,
+    char** errptr) {
+  SaveError(errptr, RepairDB(name, options->rep));
+}
+
+void leveldb_iter_destroy(leveldb_iterator_t* iter) {
+  delete iter->rep;
+  delete iter;
+}
+
+unsigned char leveldb_iter_valid(const leveldb_iterator_t* iter) {
+  return iter->rep->Valid();
+}
+
+void leveldb_iter_seek_to_first(leveldb_iterator_t* iter) {
+  iter->rep->SeekToFirst();
+}
+
+void leveldb_iter_seek_to_last(leveldb_iterator_t* iter) {
+  iter->rep->SeekToLast();
+}
+
+void leveldb_iter_seek(leveldb_iterator_t* iter, const char* k, size_t klen) {
+  iter->rep->Seek(Slice(k, klen));
+}
+
+void leveldb_iter_next(leveldb_iterator_t* iter) {
+  iter->rep->Next();
+}
+
+void leveldb_iter_prev(leveldb_iterator_t* iter) {
+  iter->rep->Prev();
+}
+
+const char* leveldb_iter_key(const leveldb_iterator_t* iter, size_t* klen) {
+  Slice s = iter->rep->key();
+  *klen = s.size();
+  return s.data();
+}
+
+const char*
