@@ -430,4 +430,94 @@ void leveldb_options_set_write_buffer_size(leveldb_options_t* opt, size_t s) {
   opt->rep.write_buffer_size = s;
 }
 
-void leveldb_opt
+void leveldb_options_set_max_open_files(leveldb_options_t* opt, int n) {
+  opt->rep.max_open_files = n;
+}
+
+void leveldb_options_set_cache(leveldb_options_t* opt, leveldb_cache_t* c) {
+  opt->rep.block_cache = c->rep;
+}
+
+void leveldb_options_set_block_size(leveldb_options_t* opt, size_t s) {
+  opt->rep.block_size = s;
+}
+
+void leveldb_options_set_block_restart_interval(leveldb_options_t* opt, int n) {
+  opt->rep.block_restart_interval = n;
+}
+
+void leveldb_options_set_compression(leveldb_options_t* opt, int t) {
+  opt->rep.compression = static_cast<CompressionType>(t);
+}
+
+leveldb_comparator_t* leveldb_comparator_create(
+    void* state,
+    void (*destructor)(void*),
+    int (*compare)(
+        void*,
+        const char* a, size_t alen,
+        const char* b, size_t blen),
+    const char* (*name)(void*)) {
+  leveldb_comparator_t* result = new leveldb_comparator_t;
+  result->state_ = state;
+  result->destructor_ = destructor;
+  result->compare_ = compare;
+  result->name_ = name;
+  return result;
+}
+
+void leveldb_comparator_destroy(leveldb_comparator_t* cmp) {
+  delete cmp;
+}
+
+leveldb_filterpolicy_t* leveldb_filterpolicy_create(
+    void* state,
+    void (*destructor)(void*),
+    char* (*create_filter)(
+        void*,
+        const char* const* key_array, const size_t* key_length_array,
+        int num_keys,
+        size_t* filter_length),
+    unsigned char (*key_may_match)(
+        void*,
+        const char* key, size_t length,
+        const char* filter, size_t filter_length),
+    const char* (*name)(void*)) {
+  leveldb_filterpolicy_t* result = new leveldb_filterpolicy_t;
+  result->state_ = state;
+  result->destructor_ = destructor;
+  result->create_ = create_filter;
+  result->key_match_ = key_may_match;
+  result->name_ = name;
+  return result;
+}
+
+void leveldb_filterpolicy_destroy(leveldb_filterpolicy_t* filter) {
+  delete filter;
+}
+
+leveldb_filterpolicy_t* leveldb_filterpolicy_create_bloom(int bits_per_key) {
+  // Make a leveldb_filterpolicy_t, but override all of its methods so
+  // they delegate to a NewBloomFilterPolicy() instead of user
+  // supplied C functions.
+  struct Wrapper : public leveldb_filterpolicy_t {
+    const FilterPolicy* rep_;
+    ~Wrapper() { delete rep_; }
+    const char* Name() const { return rep_->Name(); }
+    void CreateFilter(const Slice* keys, int n, std::string* dst) const {
+      return rep_->CreateFilter(keys, n, dst);
+    }
+    bool KeyMayMatch(const Slice& key, const Slice& filter) const {
+      return rep_->KeyMayMatch(key, filter);
+    }
+    static void DoNothing(void*) { }
+  };
+  Wrapper* wrapper = new Wrapper;
+  wrapper->rep_ = NewBloomFilterPolicy(bits_per_key);
+  wrapper->state_ = NULL;
+  wrapper->destructor_ = &Wrapper::DoNothing;
+  return wrapper;
+}
+
+leveldb_readoptions_t* leveldb_readoptions_create() {
+  return new 
