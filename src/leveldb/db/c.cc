@@ -324,4 +324,110 @@ const char* leveldb_iter_key(const leveldb_iterator_t* iter, size_t* klen) {
   return s.data();
 }
 
-const char*
+const char* leveldb_iter_value(const leveldb_iterator_t* iter, size_t* vlen) {
+  Slice s = iter->rep->value();
+  *vlen = s.size();
+  return s.data();
+}
+
+void leveldb_iter_get_error(const leveldb_iterator_t* iter, char** errptr) {
+  SaveError(errptr, iter->rep->status());
+}
+
+leveldb_writebatch_t* leveldb_writebatch_create() {
+  return new leveldb_writebatch_t;
+}
+
+void leveldb_writebatch_destroy(leveldb_writebatch_t* b) {
+  delete b;
+}
+
+void leveldb_writebatch_clear(leveldb_writebatch_t* b) {
+  b->rep.Clear();
+}
+
+void leveldb_writebatch_put(
+    leveldb_writebatch_t* b,
+    const char* key, size_t klen,
+    const char* val, size_t vlen) {
+  b->rep.Put(Slice(key, klen), Slice(val, vlen));
+}
+
+void leveldb_writebatch_delete(
+    leveldb_writebatch_t* b,
+    const char* key, size_t klen) {
+  b->rep.Delete(Slice(key, klen));
+}
+
+void leveldb_writebatch_iterate(
+    leveldb_writebatch_t* b,
+    void* state,
+    void (*put)(void*, const char* k, size_t klen, const char* v, size_t vlen),
+    void (*deleted)(void*, const char* k, size_t klen)) {
+  class H : public WriteBatch::Handler {
+   public:
+    void* state_;
+    void (*put_)(void*, const char* k, size_t klen, const char* v, size_t vlen);
+    void (*deleted_)(void*, const char* k, size_t klen);
+    virtual void Put(const Slice& key, const Slice& value) {
+      (*put_)(state_, key.data(), key.size(), value.data(), value.size());
+    }
+    virtual void Delete(const Slice& key) {
+      (*deleted_)(state_, key.data(), key.size());
+    }
+  };
+  H handler;
+  handler.state_ = state;
+  handler.put_ = put;
+  handler.deleted_ = deleted;
+  b->rep.Iterate(&handler);
+}
+
+leveldb_options_t* leveldb_options_create() {
+  return new leveldb_options_t;
+}
+
+void leveldb_options_destroy(leveldb_options_t* options) {
+  delete options;
+}
+
+void leveldb_options_set_comparator(
+    leveldb_options_t* opt,
+    leveldb_comparator_t* cmp) {
+  opt->rep.comparator = cmp;
+}
+
+void leveldb_options_set_filter_policy(
+    leveldb_options_t* opt,
+    leveldb_filterpolicy_t* policy) {
+  opt->rep.filter_policy = policy;
+}
+
+void leveldb_options_set_create_if_missing(
+    leveldb_options_t* opt, unsigned char v) {
+  opt->rep.create_if_missing = v;
+}
+
+void leveldb_options_set_error_if_exists(
+    leveldb_options_t* opt, unsigned char v) {
+  opt->rep.error_if_exists = v;
+}
+
+void leveldb_options_set_paranoid_checks(
+    leveldb_options_t* opt, unsigned char v) {
+  opt->rep.paranoid_checks = v;
+}
+
+void leveldb_options_set_env(leveldb_options_t* opt, leveldb_env_t* env) {
+  opt->rep.env = (env ? env->rep : NULL);
+}
+
+void leveldb_options_set_info_log(leveldb_options_t* opt, leveldb_logger_t* l) {
+  opt->rep.info_log = (l ? l->rep : NULL);
+}
+
+void leveldb_options_set_write_buffer_size(leveldb_options_t* opt, size_t s) {
+  opt->rep.write_buffer_size = s;
+}
+
+void leveldb_opt
