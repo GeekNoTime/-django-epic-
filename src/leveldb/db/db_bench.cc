@@ -215,4 +215,106 @@ class Stats {
         fprintf(stderr, "long op: %.1f micros%30s\r", micros, "");
         fflush(stderr);
       }
-      last_op_finish_
+      last_op_finish_ = now;
+    }
+
+    done_++;
+    if (done_ >= next_report_) {
+      if      (next_report_ < 1000)   next_report_ += 100;
+      else if (next_report_ < 5000)   next_report_ += 500;
+      else if (next_report_ < 10000)  next_report_ += 1000;
+      else if (next_report_ < 50000)  next_report_ += 5000;
+      else if (next_report_ < 100000) next_report_ += 10000;
+      else if (next_report_ < 500000) next_report_ += 50000;
+      else                            next_report_ += 100000;
+      fprintf(stderr, "... finished %d ops%30s\r", done_, "");
+      fflush(stderr);
+    }
+  }
+
+  void AddBytes(int64_t n) {
+    bytes_ += n;
+  }
+
+  void Report(const Slice& name) {
+    // Pretend at least one op was done in case we are running a benchmark
+    // that does not call FinishedSingleOp().
+    if (done_ < 1) done_ = 1;
+
+    std::string extra;
+    if (bytes_ > 0) {
+      // Rate is computed on actual elapsed time, not the sum of per-thread
+      // elapsed times.
+      double elapsed = (finish_ - start_) * 1e-6;
+      char rate[100];
+      snprintf(rate, sizeof(rate), "%6.1f MB/s",
+               (bytes_ / 1048576.0) / elapsed);
+      extra = rate;
+    }
+    AppendWithSpace(&extra, message_);
+
+    fprintf(stdout, "%-12s : %11.3f micros/op;%s%s\n",
+            name.ToString().c_str(),
+            seconds_ * 1e6 / done_,
+            (extra.empty() ? "" : " "),
+            extra.c_str());
+    if (FLAGS_histogram) {
+      fprintf(stdout, "Microseconds per op:\n%s\n", hist_.ToString().c_str());
+    }
+    fflush(stdout);
+  }
+};
+
+// State shared by all concurrent executions of the same benchmark.
+struct SharedState {
+  port::Mutex mu;
+  port::CondVar cv;
+  int total;
+
+  // Each thread goes through the following states:
+  //    (1) initializing
+  //    (2) waiting for others to be initialized
+  //    (3) running
+  //    (4) done
+
+  int num_initialized;
+  int num_done;
+  bool start;
+
+  SharedState() : cv(&mu) { }
+};
+
+// Per-thread state for concurrent executions of the same benchmark.
+struct ThreadState {
+  int tid;             // 0..n-1 when running in n threads
+  Random rand;         // Has different seeds for different threads
+  Stats stats;
+  SharedState* shared;
+
+  ThreadState(int index)
+      : tid(index),
+        rand(1000 + index) {
+  }
+};
+
+}  // namespace
+
+class Benchmark {
+ private:
+  Cache* cache_;
+  const FilterPolicy* filter_policy_;
+  DB* db_;
+  int num_;
+  int value_size_;
+  int entries_per_batch_;
+  WriteOptions write_options_;
+  int reads_;
+  int heap_counter_;
+
+  void PrintHeader() {
+    const int kKeySize = 16;
+    PrintEnvironment();
+    fprintf(stdout, "Keys:       %d bytes each\n", kKeySize);
+    fprintf(stdout, "Values:     %d bytes each (%d bytes after compression)\n",
+            FLAGS_value_size,
+       
