@@ -97,4 +97,122 @@ static int FLAGS_bloom_bits = -1;
 // If true, do not destroy the existing database.  If you set this
 // flag and also specify a benchmark that wants a fresh database, that
 // benchmark will fail.
-static bool FLA
+static bool FLAGS_use_existing_db = false;
+
+// Use the db with the following name.
+static const char* FLAGS_db = NULL;
+
+namespace leveldb {
+
+namespace {
+
+// Helper for quickly generating random data.
+class RandomGenerator {
+ private:
+  std::string data_;
+  int pos_;
+
+ public:
+  RandomGenerator() {
+    // We use a limited amount of data over and over again and ensure
+    // that it is larger than the compression window (32KB), and also
+    // large enough to serve all typical value sizes we want to write.
+    Random rnd(301);
+    std::string piece;
+    while (data_.size() < 1048576) {
+      // Add a short fragment that is as compressible as specified
+      // by FLAGS_compression_ratio.
+      test::CompressibleString(&rnd, FLAGS_compression_ratio, 100, &piece);
+      data_.append(piece);
+    }
+    pos_ = 0;
+  }
+
+  Slice Generate(size_t len) {
+    if (pos_ + len > data_.size()) {
+      pos_ = 0;
+      assert(len < data_.size());
+    }
+    pos_ += len;
+    return Slice(data_.data() + pos_ - len, len);
+  }
+};
+
+static Slice TrimSpace(Slice s) {
+  size_t start = 0;
+  while (start < s.size() && isspace(s[start])) {
+    start++;
+  }
+  size_t limit = s.size();
+  while (limit > start && isspace(s[limit-1])) {
+    limit--;
+  }
+  return Slice(s.data() + start, limit - start);
+}
+
+static void AppendWithSpace(std::string* str, Slice msg) {
+  if (msg.empty()) return;
+  if (!str->empty()) {
+    str->push_back(' ');
+  }
+  str->append(msg.data(), msg.size());
+}
+
+class Stats {
+ private:
+  double start_;
+  double finish_;
+  double seconds_;
+  int done_;
+  int next_report_;
+  int64_t bytes_;
+  double last_op_finish_;
+  Histogram hist_;
+  std::string message_;
+
+ public:
+  Stats() { Start(); }
+
+  void Start() {
+    next_report_ = 100;
+    last_op_finish_ = start_;
+    hist_.Clear();
+    done_ = 0;
+    bytes_ = 0;
+    seconds_ = 0;
+    start_ = Env::Default()->NowMicros();
+    finish_ = start_;
+    message_.clear();
+  }
+
+  void Merge(const Stats& other) {
+    hist_.Merge(other.hist_);
+    done_ += other.done_;
+    bytes_ += other.bytes_;
+    seconds_ += other.seconds_;
+    if (other.start_ < start_) start_ = other.start_;
+    if (other.finish_ > finish_) finish_ = other.finish_;
+
+    // Just keep the messages from one thread
+    if (message_.empty()) message_ = other.message_;
+  }
+
+  void Stop() {
+    finish_ = Env::Default()->NowMicros();
+    seconds_ = (finish_ - start_) * 1e-6;
+  }
+
+  void AddMessage(Slice msg) {
+    AppendWithSpace(&message_, msg);
+  }
+
+  void FinishedSingleOp() {
+    if (FLAGS_histogram) {
+      double now = Env::Default()->NowMicros();
+      double micros = now - last_op_finish_;
+      hist_.Add(micros);
+      if (micros > 20000) {
+        fprintf(stderr, "long op: %.1f micros%30s\r", micros, "");
+        fflush(stderr);
+      }
+      last_op_finish_
