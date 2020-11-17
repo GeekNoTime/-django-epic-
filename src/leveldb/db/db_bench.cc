@@ -317,4 +317,85 @@ class Benchmark {
     fprintf(stdout, "Keys:       %d bytes each\n", kKeySize);
     fprintf(stdout, "Values:     %d bytes each (%d bytes after compression)\n",
             FLAGS_value_size,
-       
+            static_cast<int>(FLAGS_value_size * FLAGS_compression_ratio + 0.5));
+    fprintf(stdout, "Entries:    %d\n", num_);
+    fprintf(stdout, "RawSize:    %.1f MB (estimated)\n",
+            ((static_cast<int64_t>(kKeySize + FLAGS_value_size) * num_)
+             / 1048576.0));
+    fprintf(stdout, "FileSize:   %.1f MB (estimated)\n",
+            (((kKeySize + FLAGS_value_size * FLAGS_compression_ratio) * num_)
+             / 1048576.0));
+    PrintWarnings();
+    fprintf(stdout, "------------------------------------------------\n");
+  }
+
+  void PrintWarnings() {
+#if defined(__GNUC__) && !defined(__OPTIMIZE__)
+    fprintf(stdout,
+            "WARNING: Optimization is disabled: benchmarks unnecessarily slow\n"
+            );
+#endif
+#ifndef NDEBUG
+    fprintf(stdout,
+            "WARNING: Assertions are enabled; benchmarks unnecessarily slow\n");
+#endif
+
+    // See if snappy is working by attempting to compress a compressible string
+    const char text[] = "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy";
+    std::string compressed;
+    if (!port::Snappy_Compress(text, sizeof(text), &compressed)) {
+      fprintf(stdout, "WARNING: Snappy compression is not enabled\n");
+    } else if (compressed.size() >= sizeof(text)) {
+      fprintf(stdout, "WARNING: Snappy compression is not effective\n");
+    }
+  }
+
+  void PrintEnvironment() {
+    fprintf(stderr, "LevelDB:    version %d.%d\n",
+            kMajorVersion, kMinorVersion);
+
+#if defined(__linux)
+    time_t now = time(NULL);
+    fprintf(stderr, "Date:       %s", ctime(&now));  // ctime() adds newline
+
+    FILE* cpuinfo = fopen("/proc/cpuinfo", "r");
+    if (cpuinfo != NULL) {
+      char line[1000];
+      int num_cpus = 0;
+      std::string cpu_type;
+      std::string cache_size;
+      while (fgets(line, sizeof(line), cpuinfo) != NULL) {
+        const char* sep = strchr(line, ':');
+        if (sep == NULL) {
+          continue;
+        }
+        Slice key = TrimSpace(Slice(line, sep - 1 - line));
+        Slice val = TrimSpace(Slice(sep + 1));
+        if (key == "model name") {
+          ++num_cpus;
+          cpu_type = val.ToString();
+        } else if (key == "cache size") {
+          cache_size = val.ToString();
+        }
+      }
+      fclose(cpuinfo);
+      fprintf(stderr, "CPU:        %d * %s\n", num_cpus, cpu_type.c_str());
+      fprintf(stderr, "CPUCache:   %s\n", cache_size.c_str());
+    }
+#endif
+  }
+
+ public:
+  Benchmark()
+  : cache_(FLAGS_cache_size >= 0 ? NewLRUCache(FLAGS_cache_size) : NULL),
+    filter_policy_(FLAGS_bloom_bits >= 0
+                   ? NewBloomFilterPolicy(FLAGS_bloom_bits)
+                   : NULL),
+    db_(NULL),
+    num_(FLAGS_num),
+    value_size_(FLAGS_value_size),
+    entries_per_batch_(1),
+    reads_(FLAGS_reads < 0 ? FLAGS_num : FLAGS_reads),
+    heap_counter_(0) {
+    std::vector<std::string> files;
+    Env::Default()->GetChildren(FLAGS_db
