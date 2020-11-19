@@ -398,4 +398,87 @@ class Benchmark {
     reads_(FLAGS_reads < 0 ? FLAGS_num : FLAGS_reads),
     heap_counter_(0) {
     std::vector<std::string> files;
-    Env::Default()->GetChildren(FLAGS_db
+    Env::Default()->GetChildren(FLAGS_db, &files);
+    for (size_t i = 0; i < files.size(); i++) {
+      if (Slice(files[i]).starts_with("heap-")) {
+        Env::Default()->DeleteFile(std::string(FLAGS_db) + "/" + files[i]);
+      }
+    }
+    if (!FLAGS_use_existing_db) {
+      DestroyDB(FLAGS_db, Options());
+    }
+  }
+
+  ~Benchmark() {
+    delete db_;
+    delete cache_;
+    delete filter_policy_;
+  }
+
+  void Run() {
+    PrintHeader();
+    Open();
+
+    const char* benchmarks = FLAGS_benchmarks;
+    while (benchmarks != NULL) {
+      const char* sep = strchr(benchmarks, ',');
+      Slice name;
+      if (sep == NULL) {
+        name = benchmarks;
+        benchmarks = NULL;
+      } else {
+        name = Slice(benchmarks, sep - benchmarks);
+        benchmarks = sep + 1;
+      }
+
+      // Reset parameters that may be overriddden bwlow
+      num_ = FLAGS_num;
+      reads_ = (FLAGS_reads < 0 ? FLAGS_num : FLAGS_reads);
+      value_size_ = FLAGS_value_size;
+      entries_per_batch_ = 1;
+      write_options_ = WriteOptions();
+
+      void (Benchmark::*method)(ThreadState*) = NULL;
+      bool fresh_db = false;
+      int num_threads = FLAGS_threads;
+
+      if (name == Slice("fillseq")) {
+        fresh_db = true;
+        method = &Benchmark::WriteSeq;
+      } else if (name == Slice("fillbatch")) {
+        fresh_db = true;
+        entries_per_batch_ = 1000;
+        method = &Benchmark::WriteSeq;
+      } else if (name == Slice("fillrandom")) {
+        fresh_db = true;
+        method = &Benchmark::WriteRandom;
+      } else if (name == Slice("overwrite")) {
+        fresh_db = false;
+        method = &Benchmark::WriteRandom;
+      } else if (name == Slice("fillsync")) {
+        fresh_db = true;
+        num_ /= 1000;
+        write_options_.sync = true;
+        method = &Benchmark::WriteRandom;
+      } else if (name == Slice("fill100K")) {
+        fresh_db = true;
+        num_ /= 1000;
+        value_size_ = 100 * 1000;
+        method = &Benchmark::WriteRandom;
+      } else if (name == Slice("readseq")) {
+        method = &Benchmark::ReadSequential;
+      } else if (name == Slice("readreverse")) {
+        method = &Benchmark::ReadReverse;
+      } else if (name == Slice("readrandom")) {
+        method = &Benchmark::ReadRandom;
+      } else if (name == Slice("readmissing")) {
+        method = &Benchmark::ReadMissing;
+      } else if (name == Slice("seekrandom")) {
+        method = &Benchmark::SeekRandom;
+      } else if (name == Slice("readhot")) {
+        method = &Benchmark::ReadHot;
+      } else if (name == Slice("readrandomsmall")) {
+        reads_ /= 1000;
+        method = &Benchmark::ReadRandom;
+      } else if (name == Slice("deleteseq")) {
+        method = &Benchmark::Delete
