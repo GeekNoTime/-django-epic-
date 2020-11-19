@@ -481,4 +481,99 @@ class Benchmark {
         reads_ /= 1000;
         method = &Benchmark::ReadRandom;
       } else if (name == Slice("deleteseq")) {
-        method = &Benchmark::Delete
+        method = &Benchmark::DeleteSeq;
+      } else if (name == Slice("deleterandom")) {
+        method = &Benchmark::DeleteRandom;
+      } else if (name == Slice("readwhilewriting")) {
+        num_threads++;  // Add extra thread for writing
+        method = &Benchmark::ReadWhileWriting;
+      } else if (name == Slice("compact")) {
+        method = &Benchmark::Compact;
+      } else if (name == Slice("crc32c")) {
+        method = &Benchmark::Crc32c;
+      } else if (name == Slice("acquireload")) {
+        method = &Benchmark::AcquireLoad;
+      } else if (name == Slice("snappycomp")) {
+        method = &Benchmark::SnappyCompress;
+      } else if (name == Slice("snappyuncomp")) {
+        method = &Benchmark::SnappyUncompress;
+      } else if (name == Slice("heapprofile")) {
+        HeapProfile();
+      } else if (name == Slice("stats")) {
+        PrintStats("leveldb.stats");
+      } else if (name == Slice("sstables")) {
+        PrintStats("leveldb.sstables");
+      } else {
+        if (name != Slice()) {  // No error message for empty name
+          fprintf(stderr, "unknown benchmark '%s'\n", name.ToString().c_str());
+        }
+      }
+
+      if (fresh_db) {
+        if (FLAGS_use_existing_db) {
+          fprintf(stdout, "%-12s : skipped (--use_existing_db is true)\n",
+                  name.ToString().c_str());
+          method = NULL;
+        } else {
+          delete db_;
+          db_ = NULL;
+          DestroyDB(FLAGS_db, Options());
+          Open();
+        }
+      }
+
+      if (method != NULL) {
+        RunBenchmark(num_threads, name, method);
+      }
+    }
+  }
+
+ private:
+  struct ThreadArg {
+    Benchmark* bm;
+    SharedState* shared;
+    ThreadState* thread;
+    void (Benchmark::*method)(ThreadState*);
+  };
+
+  static void ThreadBody(void* v) {
+    ThreadArg* arg = reinterpret_cast<ThreadArg*>(v);
+    SharedState* shared = arg->shared;
+    ThreadState* thread = arg->thread;
+    {
+      MutexLock l(&shared->mu);
+      shared->num_initialized++;
+      if (shared->num_initialized >= shared->total) {
+        shared->cv.SignalAll();
+      }
+      while (!shared->start) {
+        shared->cv.Wait();
+      }
+    }
+
+    thread->stats.Start();
+    (arg->bm->*(arg->method))(thread);
+    thread->stats.Stop();
+
+    {
+      MutexLock l(&shared->mu);
+      shared->num_done++;
+      if (shared->num_done >= shared->total) {
+        shared->cv.SignalAll();
+      }
+    }
+  }
+
+  void RunBenchmark(int n, Slice name,
+                    void (Benchmark::*method)(ThreadState*)) {
+    SharedState shared;
+    shared.total = n;
+    shared.num_initialized = 0;
+    shared.num_done = 0;
+    shared.start = false;
+
+    ThreadArg* arg = new ThreadArg[n];
+    for (int i = 0; i < n; i++) {
+      arg[i].bm = this;
+      arg[i].method = method;
+      arg[i].shared = &
