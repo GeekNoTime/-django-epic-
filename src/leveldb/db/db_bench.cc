@@ -774,4 +774,103 @@ class Benchmark {
       char key[100];
       const int k = thread->rand.Next() % FLAGS_num;
       snprintf(key, sizeof(key), "%016d", k);
-      if (db_->Get(options, key, &value)
+      if (db_->Get(options, key, &value).ok()) {
+        found++;
+      }
+      thread->stats.FinishedSingleOp();
+    }
+    char msg[100];
+    snprintf(msg, sizeof(msg), "(%d of %d found)", found, num_);
+    thread->stats.AddMessage(msg);
+  }
+
+  void ReadMissing(ThreadState* thread) {
+    ReadOptions options;
+    std::string value;
+    for (int i = 0; i < reads_; i++) {
+      char key[100];
+      const int k = thread->rand.Next() % FLAGS_num;
+      snprintf(key, sizeof(key), "%016d.", k);
+      db_->Get(options, key, &value);
+      thread->stats.FinishedSingleOp();
+    }
+  }
+
+  void ReadHot(ThreadState* thread) {
+    ReadOptions options;
+    std::string value;
+    const int range = (FLAGS_num + 99) / 100;
+    for (int i = 0; i < reads_; i++) {
+      char key[100];
+      const int k = thread->rand.Next() % range;
+      snprintf(key, sizeof(key), "%016d", k);
+      db_->Get(options, key, &value);
+      thread->stats.FinishedSingleOp();
+    }
+  }
+
+  void SeekRandom(ThreadState* thread) {
+    ReadOptions options;
+    std::string value;
+    int found = 0;
+    for (int i = 0; i < reads_; i++) {
+      Iterator* iter = db_->NewIterator(options);
+      char key[100];
+      const int k = thread->rand.Next() % FLAGS_num;
+      snprintf(key, sizeof(key), "%016d", k);
+      iter->Seek(key);
+      if (iter->Valid() && iter->key() == key) found++;
+      delete iter;
+      thread->stats.FinishedSingleOp();
+    }
+    char msg[100];
+    snprintf(msg, sizeof(msg), "(%d of %d found)", found, num_);
+    thread->stats.AddMessage(msg);
+  }
+
+  void DoDelete(ThreadState* thread, bool seq) {
+    RandomGenerator gen;
+    WriteBatch batch;
+    Status s;
+    for (int i = 0; i < num_; i += entries_per_batch_) {
+      batch.Clear();
+      for (int j = 0; j < entries_per_batch_; j++) {
+        const int k = seq ? i+j : (thread->rand.Next() % FLAGS_num);
+        char key[100];
+        snprintf(key, sizeof(key), "%016d", k);
+        batch.Delete(key);
+        thread->stats.FinishedSingleOp();
+      }
+      s = db_->Write(write_options_, &batch);
+      if (!s.ok()) {
+        fprintf(stderr, "del error: %s\n", s.ToString().c_str());
+        exit(1);
+      }
+    }
+  }
+
+  void DeleteSeq(ThreadState* thread) {
+    DoDelete(thread, true);
+  }
+
+  void DeleteRandom(ThreadState* thread) {
+    DoDelete(thread, false);
+  }
+
+  void ReadWhileWriting(ThreadState* thread) {
+    if (thread->tid > 0) {
+      ReadRandom(thread);
+    } else {
+      // Special thread that keeps writing until other threads are done.
+      RandomGenerator gen;
+      while (true) {
+        {
+          MutexLock l(&thread->shared->mu);
+          if (thread->shared->num_done + 1 >= thread->shared->num_initialized) {
+            // Other threads have finished
+            break;
+          }
+        }
+
+        const int k = thread->rand.Next() % FLAGS_num;
+        char ke
