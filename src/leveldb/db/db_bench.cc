@@ -673,4 +673,105 @@ class Benchmark {
     int64_t bytes = 0;
     char* uncompressed = new char[input.size()];
     while (ok && bytes < 1024 * 1048576) {  // Compress 1G
-      ok =  port::Snappy_Uncompress(com
+      ok =  port::Snappy_Uncompress(compressed.data(), compressed.size(),
+                                    uncompressed);
+      bytes += input.size();
+      thread->stats.FinishedSingleOp();
+    }
+    delete[] uncompressed;
+
+    if (!ok) {
+      thread->stats.AddMessage("(snappy failure)");
+    } else {
+      thread->stats.AddBytes(bytes);
+    }
+  }
+
+  void Open() {
+    assert(db_ == NULL);
+    Options options;
+    options.create_if_missing = !FLAGS_use_existing_db;
+    options.block_cache = cache_;
+    options.write_buffer_size = FLAGS_write_buffer_size;
+    options.max_open_files = FLAGS_open_files;
+    options.filter_policy = filter_policy_;
+    Status s = DB::Open(options, FLAGS_db, &db_);
+    if (!s.ok()) {
+      fprintf(stderr, "open error: %s\n", s.ToString().c_str());
+      exit(1);
+    }
+  }
+
+  void WriteSeq(ThreadState* thread) {
+    DoWrite(thread, true);
+  }
+
+  void WriteRandom(ThreadState* thread) {
+    DoWrite(thread, false);
+  }
+
+  void DoWrite(ThreadState* thread, bool seq) {
+    if (num_ != FLAGS_num) {
+      char msg[100];
+      snprintf(msg, sizeof(msg), "(%d ops)", num_);
+      thread->stats.AddMessage(msg);
+    }
+
+    RandomGenerator gen;
+    WriteBatch batch;
+    Status s;
+    int64_t bytes = 0;
+    for (int i = 0; i < num_; i += entries_per_batch_) {
+      batch.Clear();
+      for (int j = 0; j < entries_per_batch_; j++) {
+        const int k = seq ? i+j : (thread->rand.Next() % FLAGS_num);
+        char key[100];
+        snprintf(key, sizeof(key), "%016d", k);
+        batch.Put(key, gen.Generate(value_size_));
+        bytes += value_size_ + strlen(key);
+        thread->stats.FinishedSingleOp();
+      }
+      s = db_->Write(write_options_, &batch);
+      if (!s.ok()) {
+        fprintf(stderr, "put error: %s\n", s.ToString().c_str());
+        exit(1);
+      }
+    }
+    thread->stats.AddBytes(bytes);
+  }
+
+  void ReadSequential(ThreadState* thread) {
+    Iterator* iter = db_->NewIterator(ReadOptions());
+    int i = 0;
+    int64_t bytes = 0;
+    for (iter->SeekToFirst(); i < reads_ && iter->Valid(); iter->Next()) {
+      bytes += iter->key().size() + iter->value().size();
+      thread->stats.FinishedSingleOp();
+      ++i;
+    }
+    delete iter;
+    thread->stats.AddBytes(bytes);
+  }
+
+  void ReadReverse(ThreadState* thread) {
+    Iterator* iter = db_->NewIterator(ReadOptions());
+    int i = 0;
+    int64_t bytes = 0;
+    for (iter->SeekToLast(); i < reads_ && iter->Valid(); iter->Prev()) {
+      bytes += iter->key().size() + iter->value().size();
+      thread->stats.FinishedSingleOp();
+      ++i;
+    }
+    delete iter;
+    thread->stats.AddBytes(bytes);
+  }
+
+  void ReadRandom(ThreadState* thread) {
+    ReadOptions options;
+    std::string value;
+    int found = 0;
+    for (int i = 0; i < reads_; i++) {
+      char key[100];
+      const int k = thread->rand.Next() % FLAGS_num;
+      snprintf(key, sizeof(key), "%016d", k);
+      if (db_->Get(options, key, &value)
