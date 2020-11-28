@@ -956,4 +956,24 @@ int main(int argc, char** argv) {
       FLAGS_cache_size = n;
     } else if (sscanf(argv[i], "--bloom_bits=%d%c", &n, &junk) == 1) {
       FLAGS_bloom_bits = n;
-    } else if (sscanf(argv[i], "--open_files=%d%c", &n,
+    } else if (sscanf(argv[i], "--open_files=%d%c", &n, &junk) == 1) {
+      FLAGS_open_files = n;
+    } else if (strncmp(argv[i], "--db=", 5) == 0) {
+      FLAGS_db = argv[i] + 5;
+    } else {
+      fprintf(stderr, "Invalid flag '%s'\n", argv[i]);
+      exit(1);
+    }
+  }
+
+  // Choose a location for the test database if none given with --db=<path>
+  if (FLAGS_db == NULL) {
+      leveldb::Env::Default()->GetTestDirectory(&default_db_path);
+      default_db_path += "/dbbench";
+      FLAGS_db = default_db_path.c_str();
+  }
+
+  leveldb::Benchmark benchmark;
+  benchmark.Run();
+  return 0;
+}
