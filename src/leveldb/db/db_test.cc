@@ -2107,3 +2107,23 @@ void BM_LogAndApply(int iters, int num_base_files) {
   }
   uint64_t stop_micros = env->NowMicros();
   unsigned int us = stop_micros - start_micros;
+  char buf[16];
+  snprintf(buf, sizeof(buf), "%d", num_base_files);
+  fprintf(stderr,
+          "BM_LogAndApply/%-6s   %8d iters : %9u us (%7.0f us / iter)\n",
+          buf, iters, us, ((float)us) / iters);
+}
+
+}  // namespace leveldb
+
+int main(int argc, char** argv) {
+  if (argc > 1 && std::string(argv[1]) == "--benchmark") {
+    leveldb::BM_LogAndApply(1000, 1);
+    leveldb::BM_LogAndApply(1000, 100);
+    leveldb::BM_LogAndApply(1000, 10000);
+    leveldb::BM_LogAndApply(100, 100000);
+    return 0;
+  }
+
+  return leveldb::test::RunAllTests();
+}
