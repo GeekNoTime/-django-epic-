@@ -139,3 +139,101 @@ bool DumpTable(Env* env, const std::string& fname) {
   }
   if (!s.ok()) {
     fprintf(stderr, "%s\n", s.ToString().c_str());
+    delete table;
+    delete file;
+    return false;
+  }
+
+  ReadOptions ro;
+  ro.fill_cache = false;
+  Iterator* iter = table->NewIterator(ro);
+  for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
+    ParsedInternalKey key;
+    if (!ParseInternalKey(iter->key(), &key)) {
+      printf("badkey '%s' => '%s'\n",
+             EscapeString(iter->key()).c_str(),
+             EscapeString(iter->value()).c_str());
+    } else {
+      char kbuf[20];
+      const char* type;
+      if (key.type == kTypeDeletion) {
+        type = "del";
+      } else if (key.type == kTypeValue) {
+        type = "val";
+      } else {
+        snprintf(kbuf, sizeof(kbuf), "%d", static_cast<int>(key.type));
+        type = kbuf;
+      }
+      printf("'%s' @ %8llu : %s => '%s'\n",
+             EscapeString(key.user_key).c_str(),
+             static_cast<unsigned long long>(key.sequence),
+             type,
+             EscapeString(iter->value()).c_str());
+    }
+  }
+  s = iter->status();
+  if (!s.ok()) {
+    printf("iterator error: %s\n", s.ToString().c_str());
+  }
+
+  delete iter;
+  delete table;
+  delete file;
+  return true;
+}
+
+bool DumpFile(Env* env, const std::string& fname) {
+  FileType ftype;
+  if (!GuessType(fname, &ftype)) {
+    fprintf(stderr, "%s: unknown file type\n", fname.c_str());
+    return false;
+  }
+  switch (ftype) {
+    case kLogFile:         return DumpLog(env, fname);
+    case kDescriptorFile:  return DumpDescriptor(env, fname);
+    case kTableFile:       return DumpTable(env, fname);
+
+    default: {
+      fprintf(stderr, "%s: not a dump-able file type\n", fname.c_str());
+      break;
+    }
+  }
+  return false;
+}
+
+bool HandleDumpCommand(Env* env, char** files, int num) {
+  bool ok = true;
+  for (int i = 0; i < num; i++) {
+    ok &= DumpFile(env, files[i]);
+  }
+  return ok;
+}
+
+}
+}  // namespace leveldb
+
+static void Usage() {
+  fprintf(
+      stderr,
+      "Usage: leveldbutil command...\n"
+      "   dump files...         -- dump contents of specified files\n"
+      );
+}
+
+int main(int argc, char** argv) {
+  leveldb::Env* env = leveldb::Env::Default();
+  bool ok = true;
+  if (argc < 2) {
+    Usage();
+    ok = false;
+  } else {
+    std::string command = argv[1];
+    if (command == "dump") {
+      ok = leveldb::HandleDumpCommand(env, argv+2, argc-2);
+    } else {
+      Usage();
+      ok = false;
+    }
+  }
+  return (ok ? 0 : 1);
+}
