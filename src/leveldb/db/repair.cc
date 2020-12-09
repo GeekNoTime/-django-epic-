@@ -98,3 +98,97 @@ class Repairer {
   };
 
   std::string const dbname_;
+  Env* const env_;
+  InternalKeyComparator const icmp_;
+  InternalFilterPolicy const ipolicy_;
+  Options const options_;
+  bool owns_info_log_;
+  bool owns_cache_;
+  TableCache* table_cache_;
+  VersionEdit edit_;
+
+  std::vector<std::string> manifests_;
+  std::vector<uint64_t> table_numbers_;
+  std::vector<uint64_t> logs_;
+  std::vector<TableInfo> tables_;
+  uint64_t next_file_number_;
+
+  Status FindFiles() {
+    std::vector<std::string> filenames;
+    Status status = env_->GetChildren(dbname_, &filenames);
+    if (!status.ok()) {
+      return status;
+    }
+    if (filenames.empty()) {
+      return Status::IOError(dbname_, "repair found no files");
+    }
+
+    uint64_t number;
+    FileType type;
+    for (size_t i = 0; i < filenames.size(); i++) {
+      if (ParseFileName(filenames[i], &number, &type)) {
+        if (type == kDescriptorFile) {
+          manifests_.push_back(filenames[i]);
+        } else {
+          if (number + 1 > next_file_number_) {
+            next_file_number_ = number + 1;
+          }
+          if (type == kLogFile) {
+            logs_.push_back(number);
+          } else if (type == kTableFile) {
+            table_numbers_.push_back(number);
+          } else {
+            // Ignore other files
+          }
+        }
+      }
+    }
+    return status;
+  }
+
+  void ConvertLogFilesToTables() {
+    for (size_t i = 0; i < logs_.size(); i++) {
+      std::string logname = LogFileName(dbname_, logs_[i]);
+      Status status = ConvertLogToTable(logs_[i]);
+      if (!status.ok()) {
+        Log(options_.info_log, "Log #%llu: ignoring conversion error: %s",
+            (unsigned long long) logs_[i],
+            status.ToString().c_str());
+      }
+      ArchiveFile(logname);
+    }
+  }
+
+  Status ConvertLogToTable(uint64_t log) {
+    struct LogReporter : public log::Reader::Reporter {
+      Env* env;
+      Logger* info_log;
+      uint64_t lognum;
+      virtual void Corruption(size_t bytes, const Status& s) {
+        // We print error messages for corruption, but continue repairing.
+        Log(info_log, "Log #%llu: dropping %d bytes; %s",
+            (unsigned long long) lognum,
+            static_cast<int>(bytes),
+            s.ToString().c_str());
+      }
+    };
+
+    // Open the log file
+    std::string logname = LogFileName(dbname_, log);
+    SequentialFile* lfile;
+    Status status = env_->NewSequentialFile(logname, &lfile);
+    if (!status.ok()) {
+      return status;
+    }
+
+    // Create the log reader.
+    LogReporter reporter;
+    reporter.env = env_;
+    reporter.info_log = options_.info_log;
+    reporter.lognum = log;
+    // We intentially make log::Reader do checksumming so that
+    // corruptions cause entire commits to be skipped instead of
+    // propagating bad information (like overly large sequence
+    // numbers).
+    log::Reader reader(lfile, &reporter, false/*do not checksum*/,
+                       0/*initial_offset*/);
