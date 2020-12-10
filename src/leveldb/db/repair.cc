@@ -192,3 +192,91 @@ class Repairer {
     // numbers).
     log::Reader reader(lfile, &reporter, false/*do not checksum*/,
                        0/*initial_offset*/);
+
+    // Read all the records and add to a memtable
+    std::string scratch;
+    Slice record;
+    WriteBatch batch;
+    MemTable* mem = new MemTable(icmp_);
+    mem->Ref();
+    int counter = 0;
+    while (reader.ReadRecord(&record, &scratch)) {
+      if (record.size() < 12) {
+        reporter.Corruption(
+            record.size(), Status::Corruption("log record too small"));
+        continue;
+      }
+      WriteBatchInternal::SetContents(&batch, record);
+      status = WriteBatchInternal::InsertInto(&batch, mem);
+      if (status.ok()) {
+        counter += WriteBatchInternal::Count(&batch);
+      } else {
+        Log(options_.info_log, "Log #%llu: ignoring %s",
+            (unsigned long long) log,
+            status.ToString().c_str());
+        status = Status::OK();  // Keep going with rest of file
+      }
+    }
+    delete lfile;
+
+    // Do not record a version edit for this conversion to a Table
+    // since ExtractMetaData() will also generate edits.
+    FileMetaData meta;
+    meta.number = next_file_number_++;
+    Iterator* iter = mem->NewIterator();
+    status = BuildTable(dbname_, env_, options_, table_cache_, iter, &meta);
+    delete iter;
+    mem->Unref();
+    mem = NULL;
+    if (status.ok()) {
+      if (meta.file_size > 0) {
+        table_numbers_.push_back(meta.number);
+      }
+    }
+    Log(options_.info_log, "Log #%llu: %d ops saved to Table #%llu %s",
+        (unsigned long long) log,
+        counter,
+        (unsigned long long) meta.number,
+        status.ToString().c_str());
+    return status;
+  }
+
+  void ExtractMetaData() {
+    for (size_t i = 0; i < table_numbers_.size(); i++) {
+      ScanTable(table_numbers_[i]);
+    }
+  }
+
+  Iterator* NewTableIterator(const FileMetaData& meta) {
+    // Same as compaction iterators: if paranoid_checks are on, turn
+    // on checksum verification.
+    ReadOptions r;
+    r.verify_checksums = options_.paranoid_checks;
+    return table_cache_->NewIterator(r, meta.number, meta.file_size);
+  }
+
+  void ScanTable(uint64_t number) {
+    TableInfo t;
+    t.meta.number = number;
+    std::string fname = TableFileName(dbname_, number);
+    Status status = env_->GetFileSize(fname, &t.meta.file_size);
+    if (!status.ok()) {
+      // Try alternate file name.
+      fname = SSTTableFileName(dbname_, number);
+      Status s2 = env_->GetFileSize(fname, &t.meta.file_size);
+      if (s2.ok()) {
+        status = Status::OK();
+      }
+    }
+    if (!status.ok()) {
+      ArchiveFile(TableFileName(dbname_, number));
+      ArchiveFile(SSTTableFileName(dbname_, number));
+      Log(options_.info_log, "Table #%llu: dropped: %s",
+          (unsigned long long) t.meta.number,
+          status.ToString().c_str());
+      return;
+    }
+
+    // Extract metadata by scanning through table.
+    int counter = 0;
+    Iterator*
