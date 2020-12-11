@@ -279,4 +279,107 @@ class Repairer {
 
     // Extract metadata by scanning through table.
     int counter = 0;
-    Iterator*
+    Iterator* iter = NewTableIterator(t.meta);
+    bool empty = true;
+    ParsedInternalKey parsed;
+    t.max_sequence = 0;
+    for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
+      Slice key = iter->key();
+      if (!ParseInternalKey(key, &parsed)) {
+        Log(options_.info_log, "Table #%llu: unparsable key %s",
+            (unsigned long long) t.meta.number,
+            EscapeString(key).c_str());
+        continue;
+      }
+
+      counter++;
+      if (empty) {
+        empty = false;
+        t.meta.smallest.DecodeFrom(key);
+      }
+      t.meta.largest.DecodeFrom(key);
+      if (parsed.sequence > t.max_sequence) {
+        t.max_sequence = parsed.sequence;
+      }
+    }
+    if (!iter->status().ok()) {
+      status = iter->status();
+    }
+    delete iter;
+    Log(options_.info_log, "Table #%llu: %d entries %s",
+        (unsigned long long) t.meta.number,
+        counter,
+        status.ToString().c_str());
+
+    if (status.ok()) {
+      tables_.push_back(t);
+    } else {
+      RepairTable(fname, t);  // RepairTable archives input file.
+    }
+  }
+
+  void RepairTable(const std::string& src, TableInfo t) {
+    // We will copy src contents to a new table and then rename the
+    // new table over the source.
+
+    // Create builder.
+    std::string copy = TableFileName(dbname_, next_file_number_++);
+    WritableFile* file;
+    Status s = env_->NewWritableFile(copy, &file);
+    if (!s.ok()) {
+      return;
+    }
+    TableBuilder* builder = new TableBuilder(options_, file);
+
+    // Copy data.
+    Iterator* iter = NewTableIterator(t.meta);
+    int counter = 0;
+    for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
+      builder->Add(iter->key(), iter->value());
+      counter++;
+    }
+    delete iter;
+
+    ArchiveFile(src);
+    if (counter == 0) {
+      builder->Abandon();  // Nothing to save
+    } else {
+      s = builder->Finish();
+      if (s.ok()) {
+        t.meta.file_size = builder->FileSize();
+      }
+    }
+    delete builder;
+    builder = NULL;
+
+    if (s.ok()) {
+      s = file->Close();
+    }
+    delete file;
+    file = NULL;
+
+    if (counter > 0 && s.ok()) {
+      std::string orig = TableFileName(dbname_, t.meta.number);
+      s = env_->RenameFile(copy, orig);
+      if (s.ok()) {
+        Log(options_.info_log, "Table #%llu: %d entries repaired",
+            (unsigned long long) t.meta.number, counter);
+        tables_.push_back(t);
+      }
+    }
+    if (!s.ok()) {
+      env_->DeleteFile(copy);
+    }
+  }
+
+  Status WriteDescriptor() {
+    std::string tmp = TempFileName(dbname_, 1);
+    WritableFile* file;
+    Status status = env_->NewWritableFile(tmp, &file);
+    if (!status.ok()) {
+      return status;
+    }
+
+    SequenceNumber max_sequence = 0;
+    for (size_t i = 0; i < tables_.size(); i++) {
+      if (max_sequence < tables_[i].max
