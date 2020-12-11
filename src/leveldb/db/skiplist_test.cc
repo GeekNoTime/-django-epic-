@@ -300,3 +300,80 @@ class TestState {
   ConcurrentTest t_;
   int seed_;
   port::AtomicPointer quit_flag_;
+
+  enum ReaderState {
+    STARTING,
+    RUNNING,
+    DONE
+  };
+
+  explicit TestState(int s)
+      : seed_(s),
+        quit_flag_(NULL),
+        state_(STARTING),
+        state_cv_(&mu_) {}
+
+  void Wait(ReaderState s) {
+    mu_.Lock();
+    while (state_ != s) {
+      state_cv_.Wait();
+    }
+    mu_.Unlock();
+  }
+
+  void Change(ReaderState s) {
+    mu_.Lock();
+    state_ = s;
+    state_cv_.Signal();
+    mu_.Unlock();
+  }
+
+ private:
+  port::Mutex mu_;
+  ReaderState state_;
+  port::CondVar state_cv_;
+};
+
+static void ConcurrentReader(void* arg) {
+  TestState* state = reinterpret_cast<TestState*>(arg);
+  Random rnd(state->seed_);
+  int64_t reads = 0;
+  state->Change(TestState::RUNNING);
+  while (!state->quit_flag_.Acquire_Load()) {
+    state->t_.ReadStep(&rnd);
+    ++reads;
+  }
+  state->Change(TestState::DONE);
+}
+
+static void RunConcurrent(int run) {
+  const int seed = test::RandomSeed() + (run * 100);
+  Random rnd(seed);
+  const int N = 1000;
+  const int kSize = 1000;
+  for (int i = 0; i < N; i++) {
+    if ((i % 100) == 0) {
+      fprintf(stderr, "Run %d of %d\n", i, N);
+    }
+    TestState state(seed + 1);
+    Env::Default()->Schedule(ConcurrentReader, &state);
+    state.Wait(TestState::RUNNING);
+    for (int i = 0; i < kSize; i++) {
+      state.t_.WriteStep(&rnd);
+    }
+    state.quit_flag_.Release_Store(&state);  // Any non-NULL arg will do
+    state.Wait(TestState::DONE);
+  }
+}
+
+TEST(SkipTest, Concurrent1) { RunConcurrent(1); }
+TEST(SkipTest, Concurrent2) { RunConcurrent(2); }
+TEST(SkipTest, Concurrent3) { RunConcurrent(3); }
+TEST(SkipTest, Concurrent4) { RunConcurrent(4); }
+TEST(SkipTest, Concurrent5) { RunConcurrent(5); }
+
+}  // namespace leveldb
+
+int main(int argc, char** argv) {
+  return leveldb::test::RunAllTests();
+}
