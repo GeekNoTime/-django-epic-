@@ -57,4 +57,112 @@ void VersionEdit::EncodeTo(std::string* dst) const {
   }
   if (has_last_sequence_) {
     PutVarint32(dst, kLastSequence);
-    PutVarint64(dst, last_sequence_
+    PutVarint64(dst, last_sequence_);
+  }
+
+  for (size_t i = 0; i < compact_pointers_.size(); i++) {
+    PutVarint32(dst, kCompactPointer);
+    PutVarint32(dst, compact_pointers_[i].first);  // level
+    PutLengthPrefixedSlice(dst, compact_pointers_[i].second.Encode());
+  }
+
+  for (DeletedFileSet::const_iterator iter = deleted_files_.begin();
+       iter != deleted_files_.end();
+       ++iter) {
+    PutVarint32(dst, kDeletedFile);
+    PutVarint32(dst, iter->first);   // level
+    PutVarint64(dst, iter->second);  // file number
+  }
+
+  for (size_t i = 0; i < new_files_.size(); i++) {
+    const FileMetaData& f = new_files_[i].second;
+    PutVarint32(dst, kNewFile);
+    PutVarint32(dst, new_files_[i].first);  // level
+    PutVarint64(dst, f.number);
+    PutVarint64(dst, f.file_size);
+    PutLengthPrefixedSlice(dst, f.smallest.Encode());
+    PutLengthPrefixedSlice(dst, f.largest.Encode());
+  }
+}
+
+static bool GetInternalKey(Slice* input, InternalKey* dst) {
+  Slice str;
+  if (GetLengthPrefixedSlice(input, &str)) {
+    dst->DecodeFrom(str);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+static bool GetLevel(Slice* input, int* level) {
+  uint32_t v;
+  if (GetVarint32(input, &v) &&
+      v < config::kNumLevels) {
+    *level = v;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+Status VersionEdit::DecodeFrom(const Slice& src) {
+  Clear();
+  Slice input = src;
+  const char* msg = NULL;
+  uint32_t tag;
+
+  // Temporary storage for parsing
+  int level;
+  uint64_t number;
+  FileMetaData f;
+  Slice str;
+  InternalKey key;
+
+  while (msg == NULL && GetVarint32(&input, &tag)) {
+    switch (tag) {
+      case kComparator:
+        if (GetLengthPrefixedSlice(&input, &str)) {
+          comparator_ = str.ToString();
+          has_comparator_ = true;
+        } else {
+          msg = "comparator name";
+        }
+        break;
+
+      case kLogNumber:
+        if (GetVarint64(&input, &log_number_)) {
+          has_log_number_ = true;
+        } else {
+          msg = "log number";
+        }
+        break;
+
+      case kPrevLogNumber:
+        if (GetVarint64(&input, &prev_log_number_)) {
+          has_prev_log_number_ = true;
+        } else {
+          msg = "previous log number";
+        }
+        break;
+
+      case kNextFileNumber:
+        if (GetVarint64(&input, &next_file_number_)) {
+          has_next_file_number_ = true;
+        } else {
+          msg = "next file number";
+        }
+        break;
+
+      case kLastSequence:
+        if (GetVarint64(&input, &last_sequence_)) {
+          has_last_sequence_ = true;
+        } else {
+          msg = "last sequence number";
+        }
+        break;
+
+      case kCompactPointer:
+        if (GetLevel(&input, &level) &&
+            GetInternalKey(&input, &key)) {
+          compact_pointers_.push_back(std::make_pair(level
