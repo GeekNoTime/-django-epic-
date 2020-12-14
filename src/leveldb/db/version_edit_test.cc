@@ -39,3 +39,9 @@ TEST(VersionEditTest, EncodeDecode) {
   edit.SetLastSequence(kBig + 1000);
   TestEncodeDecode(edit);
 }
+
+}  // namespace leveldb
+
+int main(int argc, char** argv) {
+  return leveldb::test::RunAllTests();
+}
