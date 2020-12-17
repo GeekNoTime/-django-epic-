@@ -263,4 +263,90 @@ static void SaveValue(void* arg, const Slice& ikey, const Slice& v) {
     s->state = kCorrupt;
   } else {
     if (s->ucmp->Compare(parsed_key.user_key, s->user_key) == 0) {
-      s->state = (parsed_key.type == kType
+      s->state = (parsed_key.type == kTypeValue) ? kFound : kDeleted;
+      if (s->state == kFound) {
+        s->value->assign(v.data(), v.size());
+      }
+    }
+  }
+}
+
+static bool NewestFirst(FileMetaData* a, FileMetaData* b) {
+  return a->number > b->number;
+}
+
+void Version::ForEachOverlapping(Slice user_key, Slice internal_key,
+                                 void* arg,
+                                 bool (*func)(void*, int, FileMetaData*)) {
+  // TODO(sanjay): Change Version::Get() to use this function.
+  const Comparator* ucmp = vset_->icmp_.user_comparator();
+
+  // Search level-0 in order from newest to oldest.
+  std::vector<FileMetaData*> tmp;
+  tmp.reserve(files_[0].size());
+  for (uint32_t i = 0; i < files_[0].size(); i++) {
+    FileMetaData* f = files_[0][i];
+    if (ucmp->Compare(user_key, f->smallest.user_key()) >= 0 &&
+        ucmp->Compare(user_key, f->largest.user_key()) <= 0) {
+      tmp.push_back(f);
+    }
+  }
+  if (!tmp.empty()) {
+    std::sort(tmp.begin(), tmp.end(), NewestFirst);
+    for (uint32_t i = 0; i < tmp.size(); i++) {
+      if (!(*func)(arg, 0, tmp[i])) {
+        return;
+      }
+    }
+  }
+
+  // Search other levels.
+  for (int level = 1; level < config::kNumLevels; level++) {
+    size_t num_files = files_[level].size();
+    if (num_files == 0) continue;
+
+    // Binary search to find earliest index whose largest key >= internal_key.
+    uint32_t index = FindFile(vset_->icmp_, files_[level], internal_key);
+    if (index < num_files) {
+      FileMetaData* f = files_[level][index];
+      if (ucmp->Compare(user_key, f->smallest.user_key()) < 0) {
+        // All of "f" is past any data for user_key
+      } else {
+        if (!(*func)(arg, level, f)) {
+          return;
+        }
+      }
+    }
+  }
+}
+
+Status Version::Get(const ReadOptions& options,
+                    const LookupKey& k,
+                    std::string* value,
+                    GetStats* stats) {
+  Slice ikey = k.internal_key();
+  Slice user_key = k.user_key();
+  const Comparator* ucmp = vset_->icmp_.user_comparator();
+  Status s;
+
+  stats->seek_file = NULL;
+  stats->seek_file_level = -1;
+  FileMetaData* last_file_read = NULL;
+  int last_file_read_level = -1;
+
+  // We can search level-by-level since entries never hop across
+  // levels.  Therefore we are guaranteed that if we find data
+  // in an smaller level, later levels are irrelevant.
+  std::vector<FileMetaData*> tmp;
+  FileMetaData* tmp2;
+  for (int level = 0; level < config::kNumLevels; level++) {
+    size_t num_files = files_[level].size();
+    if (num_files == 0) continue;
+
+    // Get the list of files to search in this level
+    FileMetaData* const* files = &files_[level][0];
+    if (level == 0) {
+      // Level-0 files may overlap each other.  Find all files that
+      // overlap user_key and process them in order from newest to oldest.
+      tmp.reserve(num_files);
+      for (ui
