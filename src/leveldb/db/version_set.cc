@@ -443,4 +443,95 @@ bool Version::RecordReadSample(Slice internal_key) {
     int matches;
 
     static bool Match(void* arg, int level, FileMetaData* f) {
-      State* state = r
+      State* state = reinterpret_cast<State*>(arg);
+      state->matches++;
+      if (state->matches == 1) {
+        // Remember first match.
+        state->stats.seek_file = f;
+        state->stats.seek_file_level = level;
+      }
+      // We can stop iterating once we have a second match.
+      return state->matches < 2;
+    }
+  };
+
+  State state;
+  state.matches = 0;
+  ForEachOverlapping(ikey.user_key, internal_key, &state, &State::Match);
+
+  // Must have at least two matches since we want to merge across
+  // files. But what if we have a single file that contains many
+  // overwrites and deletions?  Should we have another mechanism for
+  // finding such files?
+  if (state.matches >= 2) {
+    // 1MB cost is about 1 seek (see comment in Builder::Apply).
+    return UpdateStats(state.stats);
+  }
+  return false;
+}
+
+void Version::Ref() {
+  ++refs_;
+}
+
+void Version::Unref() {
+  assert(this != &vset_->dummy_versions_);
+  assert(refs_ >= 1);
+  --refs_;
+  if (refs_ == 0) {
+    delete this;
+  }
+}
+
+bool Version::OverlapInLevel(int level,
+                             const Slice* smallest_user_key,
+                             const Slice* largest_user_key) {
+  return SomeFileOverlapsRange(vset_->icmp_, (level > 0), files_[level],
+                               smallest_user_key, largest_user_key);
+}
+
+int Version::PickLevelForMemTableOutput(
+    const Slice& smallest_user_key,
+    const Slice& largest_user_key) {
+  int level = 0;
+  if (!OverlapInLevel(0, &smallest_user_key, &largest_user_key)) {
+    // Push to next level if there is no overlap in next level,
+    // and the #bytes overlapping in the level after that are limited.
+    InternalKey start(smallest_user_key, kMaxSequenceNumber, kValueTypeForSeek);
+    InternalKey limit(largest_user_key, 0, static_cast<ValueType>(0));
+    std::vector<FileMetaData*> overlaps;
+    while (level < config::kMaxMemCompactLevel) {
+      if (OverlapInLevel(level + 1, &smallest_user_key, &largest_user_key)) {
+        break;
+      }
+      if (level + 2 < config::kNumLevels) {
+        // Check that file does not overlap too many grandparent bytes.
+        GetOverlappingInputs(level + 2, &start, &limit, &overlaps);
+        const int64_t sum = TotalFileSize(overlaps);
+        if (sum > kMaxGrandParentOverlapBytes) {
+          break;
+        }
+      }
+      level++;
+    }
+  }
+  return level;
+}
+
+// Store in "*inputs" all files in "level" that overlap [begin,end]
+void Version::GetOverlappingInputs(
+    int level,
+    const InternalKey* begin,
+    const InternalKey* end,
+    std::vector<FileMetaData*>* inputs) {
+  assert(level >= 0);
+  assert(level < config::kNumLevels);
+  inputs->clear();
+  Slice user_begin, user_end;
+  if (begin != NULL) {
+    user_begin = begin->user_key();
+  }
+  if (end != NULL) {
+    user_end = end->user_key();
+  }
+  const Comparator* user_
