@@ -534,4 +534,91 @@ void Version::GetOverlappingInputs(
   if (end != NULL) {
     user_end = end->user_key();
   }
-  const Comparator* user_
+  const Comparator* user_cmp = vset_->icmp_.user_comparator();
+  for (size_t i = 0; i < files_[level].size(); ) {
+    FileMetaData* f = files_[level][i++];
+    const Slice file_start = f->smallest.user_key();
+    const Slice file_limit = f->largest.user_key();
+    if (begin != NULL && user_cmp->Compare(file_limit, user_begin) < 0) {
+      // "f" is completely before specified range; skip it
+    } else if (end != NULL && user_cmp->Compare(file_start, user_end) > 0) {
+      // "f" is completely after specified range; skip it
+    } else {
+      inputs->push_back(f);
+      if (level == 0) {
+        // Level-0 files may overlap each other.  So check if the newly
+        // added file has expanded the range.  If so, restart search.
+        if (begin != NULL && user_cmp->Compare(file_start, user_begin) < 0) {
+          user_begin = file_start;
+          inputs->clear();
+          i = 0;
+        } else if (end != NULL && user_cmp->Compare(file_limit, user_end) > 0) {
+          user_end = file_limit;
+          inputs->clear();
+          i = 0;
+        }
+      }
+    }
+  }
+}
+
+std::string Version::DebugString() const {
+  std::string r;
+  for (int level = 0; level < config::kNumLevels; level++) {
+    // E.g.,
+    //   --- level 1 ---
+    //   17:123['a' .. 'd']
+    //   20:43['e' .. 'g']
+    r.append("--- level ");
+    AppendNumberTo(&r, level);
+    r.append(" ---\n");
+    const std::vector<FileMetaData*>& files = files_[level];
+    for (size_t i = 0; i < files.size(); i++) {
+      r.push_back(' ');
+      AppendNumberTo(&r, files[i]->number);
+      r.push_back(':');
+      AppendNumberTo(&r, files[i]->file_size);
+      r.append("[");
+      r.append(files[i]->smallest.DebugString());
+      r.append(" .. ");
+      r.append(files[i]->largest.DebugString());
+      r.append("]\n");
+    }
+  }
+  return r;
+}
+
+// A helper class so we can efficiently apply a whole sequence
+// of edits to a particular state without creating intermediate
+// Versions that contain full copies of the intermediate state.
+class VersionSet::Builder {
+ private:
+  // Helper to sort by v->files_[file_number].smallest
+  struct BySmallestKey {
+    const InternalKeyComparator* internal_comparator;
+
+    bool operator()(FileMetaData* f1, FileMetaData* f2) const {
+      int r = internal_comparator->Compare(f1->smallest, f2->smallest);
+      if (r != 0) {
+        return (r < 0);
+      } else {
+        // Break ties by file number
+        return (f1->number < f2->number);
+      }
+    }
+  };
+
+  typedef std::set<FileMetaData*, BySmallestKey> FileSet;
+  struct LevelState {
+    std::set<uint64_t> deleted_files;
+    FileSet* added_files;
+  };
+
+  VersionSet* vset_;
+  Version* base_;
+  LevelState levels_[config::kNumLevels];
+
+ public:
+  // Initialize a builder with the files from *base and other info from *vset
+  Builder(VersionSet* vset, Version* base)
+      : 
