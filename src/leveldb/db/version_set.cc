@@ -1158,4 +1158,82 @@ int64_t VersionSet::MaxNextLevelOverlappingBytes() {
   std::vector<FileMetaData*> overlaps;
   for (int level = 1; level < config::kNumLevels - 1; level++) {
     for (size_t i = 0; i < current_->files_[level].size(); i++) {
-      const FileMetaData* f = cu
+      const FileMetaData* f = current_->files_[level][i];
+      current_->GetOverlappingInputs(level+1, &f->smallest, &f->largest,
+                                     &overlaps);
+      const int64_t sum = TotalFileSize(overlaps);
+      if (sum > result) {
+        result = sum;
+      }
+    }
+  }
+  return result;
+}
+
+// Stores the minimal range that covers all entries in inputs in
+// *smallest, *largest.
+// REQUIRES: inputs is not empty
+void VersionSet::GetRange(const std::vector<FileMetaData*>& inputs,
+                          InternalKey* smallest,
+                          InternalKey* largest) {
+  assert(!inputs.empty());
+  smallest->Clear();
+  largest->Clear();
+  for (size_t i = 0; i < inputs.size(); i++) {
+    FileMetaData* f = inputs[i];
+    if (i == 0) {
+      *smallest = f->smallest;
+      *largest = f->largest;
+    } else {
+      if (icmp_.Compare(f->smallest, *smallest) < 0) {
+        *smallest = f->smallest;
+      }
+      if (icmp_.Compare(f->largest, *largest) > 0) {
+        *largest = f->largest;
+      }
+    }
+  }
+}
+
+// Stores the minimal range that covers all entries in inputs1 and inputs2
+// in *smallest, *largest.
+// REQUIRES: inputs is not empty
+void VersionSet::GetRange2(const std::vector<FileMetaData*>& inputs1,
+                           const std::vector<FileMetaData*>& inputs2,
+                           InternalKey* smallest,
+                           InternalKey* largest) {
+  std::vector<FileMetaData*> all = inputs1;
+  all.insert(all.end(), inputs2.begin(), inputs2.end());
+  GetRange(all, smallest, largest);
+}
+
+Iterator* VersionSet::MakeInputIterator(Compaction* c) {
+  ReadOptions options;
+  options.verify_checksums = options_->paranoid_checks;
+  options.fill_cache = false;
+
+  // Level-0 files have to be merged together.  For other levels,
+  // we will make a concatenating iterator per level.
+  // TODO(opt): use concatenating iterator for level-0 if there is no overlap
+  const int space = (c->level() == 0 ? c->inputs_[0].size() + 1 : 2);
+  Iterator** list = new Iterator*[space];
+  int num = 0;
+  for (int which = 0; which < 2; which++) {
+    if (!c->inputs_[which].empty()) {
+      if (c->level() + which == 0) {
+        const std::vector<FileMetaData*>& files = c->inputs_[which];
+        for (size_t i = 0; i < files.size(); i++) {
+          list[num++] = table_cache_->NewIterator(
+              options, files[i]->number, files[i]->file_size);
+        }
+      } else {
+        // Create concatenating iterator for the files from this level
+        list[num++] = NewTwoLevelIterator(
+            new Version::LevelFileNumIterator(icmp_, &c->inputs_[which]),
+            &GetFileIterator, table_cache_, options);
+      }
+    }
+  }
+  assert(num <= space);
+  Iterator* result = NewMergingIterator(&icmp_, list, num);
+  d
