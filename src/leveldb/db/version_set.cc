@@ -984,4 +984,98 @@ Status VersionSet::Recover() {
       s = Status::Corruption("no last-sequence-number entry in descriptor");
     }
 
-    if (!have_prev
+    if (!have_prev_log_number) {
+      prev_log_number = 0;
+    }
+
+    MarkFileNumberUsed(prev_log_number);
+    MarkFileNumberUsed(log_number);
+  }
+
+  if (s.ok()) {
+    Version* v = new Version(this);
+    builder.SaveTo(v);
+    // Install recovered version
+    Finalize(v);
+    AppendVersion(v);
+    manifest_file_number_ = next_file;
+    next_file_number_ = next_file + 1;
+    last_sequence_ = last_sequence;
+    log_number_ = log_number;
+    prev_log_number_ = prev_log_number;
+  }
+
+  return s;
+}
+
+void VersionSet::MarkFileNumberUsed(uint64_t number) {
+  if (next_file_number_ <= number) {
+    next_file_number_ = number + 1;
+  }
+}
+
+void VersionSet::Finalize(Version* v) {
+  // Precomputed best level for next compaction
+  int best_level = -1;
+  double best_score = -1;
+
+  for (int level = 0; level < config::kNumLevels-1; level++) {
+    double score;
+    if (level == 0) {
+      // We treat level-0 specially by bounding the number of files
+      // instead of number of bytes for two reasons:
+      //
+      // (1) With larger write-buffer sizes, it is nice not to do too
+      // many level-0 compactions.
+      //
+      // (2) The files in level-0 are merged on every read and
+      // therefore we wish to avoid too many files when the individual
+      // file size is small (perhaps because of a small write-buffer
+      // setting, or very high compression ratios, or lots of
+      // overwrites/deletions).
+      score = v->files_[level].size() /
+          static_cast<double>(config::kL0_CompactionTrigger);
+    } else {
+      // Compute the ratio of current size to size limit.
+      const uint64_t level_bytes = TotalFileSize(v->files_[level]);
+      score = static_cast<double>(level_bytes) / MaxBytesForLevel(level);
+    }
+
+    if (score > best_score) {
+      best_level = level;
+      best_score = score;
+    }
+  }
+
+  v->compaction_level_ = best_level;
+  v->compaction_score_ = best_score;
+}
+
+Status VersionSet::WriteSnapshot(log::Writer* log) {
+  // TODO: Break up into multiple records to reduce memory usage on recovery?
+
+  // Save metadata
+  VersionEdit edit;
+  edit.SetComparatorName(icmp_.user_comparator()->Name());
+
+  // Save compaction pointers
+  for (int level = 0; level < config::kNumLevels; level++) {
+    if (!compact_pointer_[level].empty()) {
+      InternalKey key;
+      key.DecodeFrom(compact_pointer_[level]);
+      edit.SetCompactPointer(level, key);
+    }
+  }
+
+  // Save files
+  for (int level = 0; level < config::kNumLevels; level++) {
+    const std::vector<FileMetaData*>& files = current_->files_[level];
+    for (size_t i = 0; i < files.size(); i++) {
+      const FileMetaData* f = files[i];
+      edit.AddFile(level, f->number, f->file_size, f->smallest, f->largest);
+    }
+  }
+
+  std::string record;
+  edit.EncodeTo(&record);
+  return log->AddRecord(r
