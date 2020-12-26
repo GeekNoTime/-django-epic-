@@ -1078,4 +1078,84 @@ Status VersionSet::WriteSnapshot(log::Writer* log) {
 
   std::string record;
   edit.EncodeTo(&record);
-  return log->AddRecord(r
+  return log->AddRecord(record);
+}
+
+int VersionSet::NumLevelFiles(int level) const {
+  assert(level >= 0);
+  assert(level < config::kNumLevels);
+  return current_->files_[level].size();
+}
+
+const char* VersionSet::LevelSummary(LevelSummaryStorage* scratch) const {
+  // Update code if kNumLevels changes
+  assert(config::kNumLevels == 7);
+  snprintf(scratch->buffer, sizeof(scratch->buffer),
+           "files[ %d %d %d %d %d %d %d ]",
+           int(current_->files_[0].size()),
+           int(current_->files_[1].size()),
+           int(current_->files_[2].size()),
+           int(current_->files_[3].size()),
+           int(current_->files_[4].size()),
+           int(current_->files_[5].size()),
+           int(current_->files_[6].size()));
+  return scratch->buffer;
+}
+
+uint64_t VersionSet::ApproximateOffsetOf(Version* v, const InternalKey& ikey) {
+  uint64_t result = 0;
+  for (int level = 0; level < config::kNumLevels; level++) {
+    const std::vector<FileMetaData*>& files = v->files_[level];
+    for (size_t i = 0; i < files.size(); i++) {
+      if (icmp_.Compare(files[i]->largest, ikey) <= 0) {
+        // Entire file is before "ikey", so just add the file size
+        result += files[i]->file_size;
+      } else if (icmp_.Compare(files[i]->smallest, ikey) > 0) {
+        // Entire file is after "ikey", so ignore
+        if (level > 0) {
+          // Files other than level 0 are sorted by meta->smallest, so
+          // no further files in this level will contain data for
+          // "ikey".
+          break;
+        }
+      } else {
+        // "ikey" falls in the range for this table.  Add the
+        // approximate offset of "ikey" within the table.
+        Table* tableptr;
+        Iterator* iter = table_cache_->NewIterator(
+            ReadOptions(), files[i]->number, files[i]->file_size, &tableptr);
+        if (tableptr != NULL) {
+          result += tableptr->ApproximateOffsetOf(ikey.Encode());
+        }
+        delete iter;
+      }
+    }
+  }
+  return result;
+}
+
+void VersionSet::AddLiveFiles(std::set<uint64_t>* live) {
+  for (Version* v = dummy_versions_.next_;
+       v != &dummy_versions_;
+       v = v->next_) {
+    for (int level = 0; level < config::kNumLevels; level++) {
+      const std::vector<FileMetaData*>& files = v->files_[level];
+      for (size_t i = 0; i < files.size(); i++) {
+        live->insert(files[i]->number);
+      }
+    }
+  }
+}
+
+int64_t VersionSet::NumLevelBytes(int level) const {
+  assert(level >= 0);
+  assert(level < config::kNumLevels);
+  return TotalFileSize(current_->files_[level]);
+}
+
+int64_t VersionSet::MaxNextLevelOverlappingBytes() {
+  int64_t result = 0;
+  std::vector<FileMetaData*> overlaps;
+  for (int level = 1; level < config::kNumLevels - 1; level++) {
+    for (size_t i = 0; i < current_->files_[level].size(); i++) {
+      const FileMetaData* f = cu
