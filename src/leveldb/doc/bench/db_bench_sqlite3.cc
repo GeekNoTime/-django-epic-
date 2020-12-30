@@ -264,4 +264,108 @@ class Benchmark {
       if      (next_report_ < 1000)   next_report_ += 100;
       else if (next_report_ < 5000)   next_report_ += 500;
       else if (next_report_ < 10000)  next_report_ += 1000;
-      else if (next_report_ < 50000)  next_report_ += 50
+      else if (next_report_ < 50000)  next_report_ += 5000;
+      else if (next_report_ < 100000) next_report_ += 10000;
+      else if (next_report_ < 500000) next_report_ += 50000;
+      else                            next_report_ += 100000;
+      fprintf(stderr, "... finished %d ops%30s\r", done_, "");
+      fflush(stderr);
+    }
+  }
+
+  void Stop(const Slice& name) {
+    double finish = Env::Default()->NowMicros() * 1e-6;
+
+    // Pretend at least one op was done in case we are running a benchmark
+    // that does not call FinishedSingleOp().
+    if (done_ < 1) done_ = 1;
+
+    if (bytes_ > 0) {
+      char rate[100];
+      snprintf(rate, sizeof(rate), "%6.1f MB/s",
+               (bytes_ / 1048576.0) / (finish - start_));
+      if (!message_.empty()) {
+        message_  = std::string(rate) + " " + message_;
+      } else {
+        message_ = rate;
+      }
+    }
+
+    fprintf(stdout, "%-12s : %11.3f micros/op;%s%s\n",
+            name.ToString().c_str(),
+            (finish - start_) * 1e6 / done_,
+            (message_.empty() ? "" : " "),
+            message_.c_str());
+    if (FLAGS_histogram) {
+      fprintf(stdout, "Microseconds per op:\n%s\n", hist_.ToString().c_str());
+    }
+    fflush(stdout);
+  }
+
+ public:
+  enum Order {
+    SEQUENTIAL,
+    RANDOM
+  };
+  enum DBState {
+    FRESH,
+    EXISTING
+  };
+
+  Benchmark()
+  : db_(NULL),
+    db_num_(0),
+    num_(FLAGS_num),
+    reads_(FLAGS_reads < 0 ? FLAGS_num : FLAGS_reads),
+    bytes_(0),
+    rand_(301) {
+    std::vector<std::string> files;
+    std::string test_dir;
+    Env::Default()->GetTestDirectory(&test_dir);
+    Env::Default()->GetChildren(test_dir, &files);
+    if (!FLAGS_use_existing_db) {
+      for (int i = 0; i < files.size(); i++) {
+        if (Slice(files[i]).starts_with("dbbench_sqlite3")) {
+          std::string file_name(test_dir);
+          file_name += "/";
+          file_name += files[i];
+          Env::Default()->DeleteFile(file_name.c_str());
+        }
+      }
+    }
+  }
+
+  ~Benchmark() {
+    int status = sqlite3_close(db_);
+    ErrorCheck(status);
+  }
+
+  void Run() {
+    PrintHeader();
+    Open();
+
+    const char* benchmarks = FLAGS_benchmarks;
+    while (benchmarks != NULL) {
+      const char* sep = strchr(benchmarks, ',');
+      Slice name;
+      if (sep == NULL) {
+        name = benchmarks;
+        benchmarks = NULL;
+      } else {
+        name = Slice(benchmarks, sep - benchmarks);
+        benchmarks = sep + 1;
+      }
+
+      bytes_ = 0;
+      Start();
+
+      bool known = true;
+      bool write_sync = false;
+      if (name == Slice("fillseq")) {
+        Write(write_sync, SEQUENTIAL, FRESH, num_, FLAGS_value_size, 1);
+        WalCheckpoint(db_);
+      } else if (name == Slice("fillseqbatch")) {
+        Write(write_sync, SEQUENTIAL, FRESH, num_, FLAGS_value_size, 1000);
+        WalCheckpoint(db_);
+      } else if (name == Slice("fillrandom")) {
+        Write(write_sync, RANDOM, FRESH, num_, FLAGS_va
