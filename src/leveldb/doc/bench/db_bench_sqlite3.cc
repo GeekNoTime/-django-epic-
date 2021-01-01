@@ -453,4 +453,77 @@ class Benchmark {
 
     // Change journal mode to WAL if WAL enabled flag is on
     if (FLAGS_WAL_enabled) {
-      std::string WAL_stmt = "PRAGMA journal
+      std::string WAL_stmt = "PRAGMA journal_mode = WAL";
+
+      // LevelDB's default cache size is a combined 4 MB
+      std::string WAL_checkpoint = "PRAGMA wal_autocheckpoint = 4096";
+      status = sqlite3_exec(db_, WAL_stmt.c_str(), NULL, NULL, &err_msg);
+      ExecErrorCheck(status, err_msg);
+      status = sqlite3_exec(db_, WAL_checkpoint.c_str(), NULL, NULL, &err_msg);
+      ExecErrorCheck(status, err_msg);
+    }
+
+    // Change locking mode to exclusive and create tables/index for database
+    std::string locking_stmt = "PRAGMA locking_mode = EXCLUSIVE";
+    std::string create_stmt =
+          "CREATE TABLE test (key blob, value blob, PRIMARY KEY(key))";
+    std::string stmt_array[] = { locking_stmt, create_stmt };
+    int stmt_array_length = sizeof(stmt_array) / sizeof(std::string);
+    for (int i = 0; i < stmt_array_length; i++) {
+      status = sqlite3_exec(db_, stmt_array[i].c_str(), NULL, NULL, &err_msg);
+      ExecErrorCheck(status, err_msg);
+    }
+  }
+
+  void Write(bool write_sync, Order order, DBState state,
+             int num_entries, int value_size, int entries_per_batch) {
+    // Create new database if state == FRESH
+    if (state == FRESH) {
+      if (FLAGS_use_existing_db) {
+        message_ = "skipping (--use_existing_db is true)";
+        return;
+      }
+      sqlite3_close(db_);
+      db_ = NULL;
+      Open();
+      Start();
+    }
+
+    if (num_entries != num_) {
+      char msg[100];
+      snprintf(msg, sizeof(msg), "(%d ops)", num_entries);
+      message_ = msg;
+    }
+
+    char* err_msg = NULL;
+    int status;
+
+    sqlite3_stmt *replace_stmt, *begin_trans_stmt, *end_trans_stmt;
+    std::string replace_str = "REPLACE INTO test (key, value) VALUES (?, ?)";
+    std::string begin_trans_str = "BEGIN TRANSACTION;";
+    std::string end_trans_str = "END TRANSACTION;";
+
+    // Check for synchronous flag in options
+    std::string sync_stmt = (write_sync) ? "PRAGMA synchronous = FULL" :
+                                           "PRAGMA synchronous = OFF";
+    status = sqlite3_exec(db_, sync_stmt.c_str(), NULL, NULL, &err_msg);
+    ExecErrorCheck(status, err_msg);
+
+    // Preparing sqlite3 statements
+    status = sqlite3_prepare_v2(db_, replace_str.c_str(), -1,
+                                &replace_stmt, NULL);
+    ErrorCheck(status);
+    status = sqlite3_prepare_v2(db_, begin_trans_str.c_str(), -1,
+                                &begin_trans_stmt, NULL);
+    ErrorCheck(status);
+    status = sqlite3_prepare_v2(db_, end_trans_str.c_str(), -1,
+                                &end_trans_stmt, NULL);
+    ErrorCheck(status);
+
+    bool transaction = (entries_per_batch > 1);
+    for (int i = 0; i < num_entries; i += entries_per_batch) {
+      // Begin write transaction
+      if (FLAGS_transaction && transaction) {
+        status = sqlite3_step(begin_trans_stmt);
+        StepErrorCheck(status);
+     
