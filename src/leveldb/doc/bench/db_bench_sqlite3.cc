@@ -526,4 +526,86 @@ class Benchmark {
       if (FLAGS_transaction && transaction) {
         status = sqlite3_step(begin_trans_stmt);
         StepErrorCheck(status);
-     
+        status = sqlite3_reset(begin_trans_stmt);
+        ErrorCheck(status);
+      }
+
+      // Create and execute SQL statements
+      for (int j = 0; j < entries_per_batch; j++) {
+        const char* value = gen_.Generate(value_size).data();
+
+        // Create values for key-value pair
+        const int k = (order == SEQUENTIAL) ? i + j :
+                      (rand_.Next() % num_entries);
+        char key[100];
+        snprintf(key, sizeof(key), "%016d", k);
+
+        // Bind KV values into replace_stmt
+        status = sqlite3_bind_blob(replace_stmt, 1, key, 16, SQLITE_STATIC);
+        ErrorCheck(status);
+        status = sqlite3_bind_blob(replace_stmt, 2, value,
+                                   value_size, SQLITE_STATIC);
+        ErrorCheck(status);
+
+        // Execute replace_stmt
+        bytes_ += value_size + strlen(key);
+        status = sqlite3_step(replace_stmt);
+        StepErrorCheck(status);
+
+        // Reset SQLite statement for another use
+        status = sqlite3_clear_bindings(replace_stmt);
+        ErrorCheck(status);
+        status = sqlite3_reset(replace_stmt);
+        ErrorCheck(status);
+
+        FinishedSingleOp();
+      }
+
+      // End write transaction
+      if (FLAGS_transaction && transaction) {
+        status = sqlite3_step(end_trans_stmt);
+        StepErrorCheck(status);
+        status = sqlite3_reset(end_trans_stmt);
+        ErrorCheck(status);
+      }
+    }
+
+    status = sqlite3_finalize(replace_stmt);
+    ErrorCheck(status);
+    status = sqlite3_finalize(begin_trans_stmt);
+    ErrorCheck(status);
+    status = sqlite3_finalize(end_trans_stmt);
+    ErrorCheck(status);
+  }
+
+  void Read(Order order, int entries_per_batch) {
+    int status;
+    sqlite3_stmt *read_stmt, *begin_trans_stmt, *end_trans_stmt;
+
+    std::string read_str = "SELECT * FROM test WHERE key = ?";
+    std::string begin_trans_str = "BEGIN TRANSACTION;";
+    std::string end_trans_str = "END TRANSACTION;";
+
+    // Preparing sqlite3 statements
+    status = sqlite3_prepare_v2(db_, begin_trans_str.c_str(), -1,
+                                &begin_trans_stmt, NULL);
+    ErrorCheck(status);
+    status = sqlite3_prepare_v2(db_, end_trans_str.c_str(), -1,
+                                &end_trans_stmt, NULL);
+    ErrorCheck(status);
+    status = sqlite3_prepare_v2(db_, read_str.c_str(), -1, &read_stmt, NULL);
+    ErrorCheck(status);
+
+    bool transaction = (entries_per_batch > 1);
+    for (int i = 0; i < reads_; i += entries_per_batch) {
+      // Begin read transaction
+      if (FLAGS_transaction && transaction) {
+        status = sqlite3_step(begin_trans_stmt);
+        StepErrorCheck(status);
+        status = sqlite3_reset(begin_trans_stmt);
+        ErrorCheck(status);
+      }
+
+      // Create and execute SQL statements
+      for (int j = 0; j < entries_per_batch; j++) {
+        // Create key 
