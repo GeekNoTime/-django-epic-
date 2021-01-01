@@ -368,4 +368,89 @@ class Benchmark {
         Write(write_sync, SEQUENTIAL, FRESH, num_, FLAGS_value_size, 1000);
         WalCheckpoint(db_);
       } else if (name == Slice("fillrandom")) {
-        Write(write_sync, RANDOM, FRESH, num_, FLAGS_va
+        Write(write_sync, RANDOM, FRESH, num_, FLAGS_value_size, 1);
+        WalCheckpoint(db_);
+      } else if (name == Slice("fillrandbatch")) {
+        Write(write_sync, RANDOM, FRESH, num_, FLAGS_value_size, 1000);
+        WalCheckpoint(db_);
+      } else if (name == Slice("overwrite")) {
+        Write(write_sync, RANDOM, EXISTING, num_, FLAGS_value_size, 1);
+        WalCheckpoint(db_);
+      } else if (name == Slice("overwritebatch")) {
+        Write(write_sync, RANDOM, EXISTING, num_, FLAGS_value_size, 1000);
+        WalCheckpoint(db_);
+      } else if (name == Slice("fillrandsync")) {
+        write_sync = true;
+        Write(write_sync, RANDOM, FRESH, num_ / 100, FLAGS_value_size, 1);
+        WalCheckpoint(db_);
+      } else if (name == Slice("fillseqsync")) {
+        write_sync = true;
+        Write(write_sync, SEQUENTIAL, FRESH, num_ / 100, FLAGS_value_size, 1);
+        WalCheckpoint(db_);
+      } else if (name == Slice("fillrand100K")) {
+        Write(write_sync, RANDOM, FRESH, num_ / 1000, 100 * 1000, 1);
+        WalCheckpoint(db_);
+      } else if (name == Slice("fillseq100K")) {
+        Write(write_sync, SEQUENTIAL, FRESH, num_ / 1000, 100 * 1000, 1);
+        WalCheckpoint(db_);
+      } else if (name == Slice("readseq")) {
+        ReadSequential();
+      } else if (name == Slice("readrandom")) {
+        Read(RANDOM, 1);
+      } else if (name == Slice("readrand100K")) {
+        int n = reads_;
+        reads_ /= 1000;
+        Read(RANDOM, 1);
+        reads_ = n;
+      } else {
+        known = false;
+        if (name != Slice()) {  // No error message for empty name
+          fprintf(stderr, "unknown benchmark '%s'\n", name.ToString().c_str());
+        }
+      }
+      if (known) {
+        Stop(name);
+      }
+    }
+  }
+
+  void Open() {
+    assert(db_ == NULL);
+
+    int status;
+    char file_name[100];
+    char* err_msg = NULL;
+    db_num_++;
+
+    // Open database
+    std::string tmp_dir;
+    Env::Default()->GetTestDirectory(&tmp_dir);
+    snprintf(file_name, sizeof(file_name),
+             "%s/dbbench_sqlite3-%d.db",
+             tmp_dir.c_str(),
+             db_num_);
+    status = sqlite3_open(file_name, &db_);
+    if (status) {
+      fprintf(stderr, "open error: %s\n", sqlite3_errmsg(db_));
+      exit(1);
+    }
+
+    // Change SQLite cache size
+    char cache_size[100];
+    snprintf(cache_size, sizeof(cache_size), "PRAGMA cache_size = %d",
+             FLAGS_num_pages);
+    status = sqlite3_exec(db_, cache_size, NULL, NULL, &err_msg);
+    ExecErrorCheck(status, err_msg);
+
+    // FLAGS_page_size is defaulted to 1024
+    if (FLAGS_page_size != 1024) {
+      char page_size[100];
+      snprintf(page_size, sizeof(page_size), "PRAGMA page_size = %d",
+               FLAGS_page_size);
+      status = sqlite3_exec(db_, page_size, NULL, NULL, &err_msg);
+      ExecErrorCheck(status, err_msg);
+    }
+
+    // Change journal mode to WAL if WAL enabled flag is on
+    if (FLAGS_WAL_enabled) {
+      std::string WAL_stmt = "PRAGMA journal
