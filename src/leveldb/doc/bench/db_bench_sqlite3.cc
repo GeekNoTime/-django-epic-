@@ -693,4 +693,26 @@ int main(int argc, char** argv) {
     } else if (sscanf(argv[i], "--page_size=%d%c", &n, &junk) == 1) {
       FLAGS_page_size = n;
     } else if (sscanf(argv[i], "--num_pages=%d%c", &n, &junk) == 1) {
-      FLAGS_n
+      FLAGS_num_pages = n;
+    } else if (sscanf(argv[i], "--WAL_enabled=%d%c", &n, &junk) == 1 &&
+               (n == 0 || n == 1)) {
+      FLAGS_WAL_enabled = n;
+    } else if (strncmp(argv[i], "--db=", 5) == 0) {
+      FLAGS_db = argv[i] + 5;
+    } else {
+      fprintf(stderr, "Invalid flag '%s'\n", argv[i]);
+      exit(1);
+    }
+  }
+
+  // Choose a location for the test database if none given with --db=<path>
+  if (FLAGS_db == NULL) {
+      leveldb::Env::Default()->GetTestDirectory(&default_db_path);
+      default_db_path += "/dbbench";
+      FLAGS_db = default_db_path.c_str();
+  }
+
+  leveldb::Benchmark benchmark;
+  benchmark.Run();
+  return 0;
+}
