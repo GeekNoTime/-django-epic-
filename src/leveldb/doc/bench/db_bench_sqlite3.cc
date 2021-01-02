@@ -608,4 +608,89 @@ class Benchmark {
 
       // Create and execute SQL statements
       for (int j = 0; j < entries_per_batch; j++) {
-        // Create key 
+        // Create key value
+        char key[100];
+        int k = (order == SEQUENTIAL) ? i + j : (rand_.Next() % reads_);
+        snprintf(key, sizeof(key), "%016d", k);
+
+        // Bind key value into read_stmt
+        status = sqlite3_bind_blob(read_stmt, 1, key, 16, SQLITE_STATIC);
+        ErrorCheck(status);
+
+        // Execute read statement
+        while ((status = sqlite3_step(read_stmt)) == SQLITE_ROW) {}
+        StepErrorCheck(status);
+
+        // Reset SQLite statement for another use
+        status = sqlite3_clear_bindings(read_stmt);
+        ErrorCheck(status);
+        status = sqlite3_reset(read_stmt);
+        ErrorCheck(status);
+        FinishedSingleOp();
+      }
+
+      // End read transaction
+      if (FLAGS_transaction && transaction) {
+        status = sqlite3_step(end_trans_stmt);
+        StepErrorCheck(status);
+        status = sqlite3_reset(end_trans_stmt);
+        ErrorCheck(status);
+      }
+    }
+
+    status = sqlite3_finalize(read_stmt);
+    ErrorCheck(status);
+    status = sqlite3_finalize(begin_trans_stmt);
+    ErrorCheck(status);
+    status = sqlite3_finalize(end_trans_stmt);
+    ErrorCheck(status);
+  }
+
+  void ReadSequential() {
+    int status;
+    sqlite3_stmt *pStmt;
+    std::string read_str = "SELECT * FROM test ORDER BY key";
+
+    status = sqlite3_prepare_v2(db_, read_str.c_str(), -1, &pStmt, NULL);
+    ErrorCheck(status);
+    for (int i = 0; i < reads_ && SQLITE_ROW == sqlite3_step(pStmt); i++) {
+      bytes_ += sqlite3_column_bytes(pStmt, 1) + sqlite3_column_bytes(pStmt, 2);
+      FinishedSingleOp();
+    }
+
+    status = sqlite3_finalize(pStmt);
+    ErrorCheck(status);
+  }
+
+};
+
+}  // namespace leveldb
+
+int main(int argc, char** argv) {
+  std::string default_db_path;
+  for (int i = 1; i < argc; i++) {
+    double d;
+    int n;
+    char junk;
+    if (leveldb::Slice(argv[i]).starts_with("--benchmarks=")) {
+      FLAGS_benchmarks = argv[i] + strlen("--benchmarks=");
+    } else if (sscanf(argv[i], "--histogram=%d%c", &n, &junk) == 1 &&
+               (n == 0 || n == 1)) {
+      FLAGS_histogram = n;
+    } else if (sscanf(argv[i], "--compression_ratio=%lf%c", &d, &junk) == 1) {
+      FLAGS_compression_ratio = d;
+    } else if (sscanf(argv[i], "--use_existing_db=%d%c", &n, &junk) == 1 &&
+               (n == 0 || n == 1)) {
+      FLAGS_use_existing_db = n;
+    } else if (sscanf(argv[i], "--num=%d%c", &n, &junk) == 1) {
+      FLAGS_num = n;
+    } else if (sscanf(argv[i], "--reads=%d%c", &n, &junk) == 1) {
+      FLAGS_reads = n;
+    } else if (sscanf(argv[i], "--value_size=%d%c", &n, &junk) == 1) {
+      FLAGS_value_size = n;
+    } else if (leveldb::Slice(argv[i]) == leveldb::Slice("--no_transaction")) {
+      FLAGS_transaction = false;
+    } else if (sscanf(argv[i], "--page_size=%d%c", &n, &junk) == 1) {
+      FLAGS_page_size = n;
+    } else if (sscanf(argv[i], "--num_pages=%d%c", &n, &junk) == 1) {
+      FLAGS_n
