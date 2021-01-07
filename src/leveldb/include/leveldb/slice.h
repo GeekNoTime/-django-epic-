@@ -94,4 +94,16 @@ inline bool operator!=(const Slice& x, const Slice& y) {
 }
 
 inline int Slice::compare(const Slice& b) const {
-  const size_t min_len = (size_ < b.size_) ? size_ 
+  const size_t min_len = (size_ < b.size_) ? size_ : b.size_;
+  int r = memcmp(data_, b.data_, min_len);
+  if (r == 0) {
+    if (size_ < b.size_) r = -1;
+    else if (size_ > b.size_) r = +1;
+  }
+  return r;
+}
+
+}  // namespace leveldb
+
+
+#endif  // STORAGE_LEVELDB_INCLUDE_SLICE_H_
