@@ -62,4 +62,24 @@ class Table {
   explicit Table(Rep* rep) { rep_ = rep; }
   static Iterator* BlockReader(void*, const ReadOptions&, const Slice&);
 
-  // Calls (*handle_result)(arg, ...) with the entry found after
+  // Calls (*handle_result)(arg, ...) with the entry found after a call
+  // to Seek(key).  May not make such a call if filter policy says
+  // that key is not present.
+  friend class TableCache;
+  Status InternalGet(
+      const ReadOptions&, const Slice& key,
+      void* arg,
+      void (*handle_result)(void* arg, const Slice& k, const Slice& v));
+
+
+  void ReadMeta(const Footer& footer);
+  void ReadFilter(const Slice& filter_handle_value);
+
+  // No copying allowed
+  Table(const Table&);
+  void operator=(const Table&);
+};
+
+}  // namespace leveldb
+
+#endif  // STORAGE_LEVELDB_INCLUDE_TABLE_H_
