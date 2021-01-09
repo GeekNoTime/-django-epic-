@@ -53,3 +53,40 @@ class TableBuilder {
   void Flush();
 
   // Return non-ok iff some error has been detected.
+  Status status() const;
+
+  // Finish building the table.  Stops using the file passed to the
+  // constructor after this function returns.
+  // REQUIRES: Finish(), Abandon() have not been called
+  Status Finish();
+
+  // Indicate that the contents of this builder should be abandoned.  Stops
+  // using the file passed to the constructor after this function returns.
+  // If the caller is not going to call Finish(), it must call Abandon()
+  // before destroying this builder.
+  // REQUIRES: Finish(), Abandon() have not been called
+  void Abandon();
+
+  // Number of calls to Add() so far.
+  uint64_t NumEntries() const;
+
+  // Size of the file generated so far.  If invoked after a successful
+  // Finish() call, returns the size of the final generated file.
+  uint64_t FileSize() const;
+
+ private:
+  bool ok() const { return status().ok(); }
+  void WriteBlock(BlockBuilder* block, BlockHandle* handle);
+  void WriteRawBlock(const Slice& data, CompressionType, BlockHandle* handle);
+
+  struct Rep;
+  Rep* rep_;
+
+  // No copying allowed
+  TableBuilder(const TableBuilder&);
+  void operator=(const TableBuilder&);
+};
+
+}  // namespace leveldb
+
+#endif  // STORAGE_LEVELDB_INCLUDE_TABLE_BUILDER_H_
