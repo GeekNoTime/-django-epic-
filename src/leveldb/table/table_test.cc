@@ -162,4 +162,114 @@ class Constructor {
     }
     data_.clear();
     Status s = FinishImpl(options, *kvmap);
-    ASSERT_TRUE(s.ok()) <
+    ASSERT_TRUE(s.ok()) << s.ToString();
+  }
+
+  // Construct the data structure from the data in "data"
+  virtual Status FinishImpl(const Options& options, const KVMap& data) = 0;
+
+  virtual Iterator* NewIterator() const = 0;
+
+  virtual const KVMap& data() { return data_; }
+
+  virtual DB* db() const { return NULL; }  // Overridden in DBConstructor
+
+ private:
+  KVMap data_;
+};
+
+class BlockConstructor: public Constructor {
+ public:
+  explicit BlockConstructor(const Comparator* cmp)
+      : Constructor(cmp),
+        comparator_(cmp),
+        block_(NULL) { }
+  ~BlockConstructor() {
+    delete block_;
+  }
+  virtual Status FinishImpl(const Options& options, const KVMap& data) {
+    delete block_;
+    block_ = NULL;
+    BlockBuilder builder(&options);
+
+    for (KVMap::const_iterator it = data.begin();
+         it != data.end();
+         ++it) {
+      builder.Add(it->first, it->second);
+    }
+    // Open the block
+    data_ = builder.Finish().ToString();
+    BlockContents contents;
+    contents.data = data_;
+    contents.cachable = false;
+    contents.heap_allocated = false;
+    block_ = new Block(contents);
+    return Status::OK();
+  }
+  virtual Iterator* NewIterator() const {
+    return block_->NewIterator(comparator_);
+  }
+
+ private:
+  const Comparator* comparator_;
+  std::string data_;
+  Block* block_;
+
+  BlockConstructor();
+};
+
+class TableConstructor: public Constructor {
+ public:
+  TableConstructor(const Comparator* cmp)
+      : Constructor(cmp),
+        source_(NULL), table_(NULL) {
+  }
+  ~TableConstructor() {
+    Reset();
+  }
+  virtual Status FinishImpl(const Options& options, const KVMap& data) {
+    Reset();
+    StringSink sink;
+    TableBuilder builder(options, &sink);
+
+    for (KVMap::const_iterator it = data.begin();
+         it != data.end();
+         ++it) {
+      builder.Add(it->first, it->second);
+      ASSERT_TRUE(builder.status().ok());
+    }
+    Status s = builder.Finish();
+    ASSERT_TRUE(s.ok()) << s.ToString();
+
+    ASSERT_EQ(sink.contents().size(), builder.FileSize());
+
+    // Open the table
+    source_ = new StringSource(sink.contents());
+    Options table_options;
+    table_options.comparator = options.comparator;
+    return Table::Open(table_options, source_, sink.contents().size(), &table_);
+  }
+
+  virtual Iterator* NewIterator() const {
+    return table_->NewIterator(ReadOptions());
+  }
+
+  uint64_t ApproximateOffsetOf(const Slice& key) const {
+    return table_->ApproximateOffsetOf(key);
+  }
+
+ private:
+  void Reset() {
+    delete table_;
+    delete source_;
+    table_ = NULL;
+    source_ = NULL;
+  }
+
+  StringSource* source_;
+  Table* table_;
+
+  TableConstructor();
+};
+
+// A helper class that converts internal format keys into user keys
