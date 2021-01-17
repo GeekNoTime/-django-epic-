@@ -43,4 +43,21 @@ class IteratorWrapper {
   void Prev()               { assert(iter_); iter_->Prev();        Update(); }
   void Seek(const Slice& k) { assert(iter_); iter_->Seek(k);       Update(); }
   void SeekToFirst()        { assert(iter_); iter_->SeekToFirst(); Update(); }
-  void SeekToLast()      
+  void SeekToLast()         { assert(iter_); iter_->SeekToLast();  Update(); }
+
+ private:
+  void Update() {
+    valid_ = iter_->Valid();
+    if (valid_) {
+      key_ = iter_->key();
+    }
+  }
+
+  Iterator* iter_;
+  bool valid_;
+  Slice key_;
+};
+
+}  // namespace leveldb
+
+#endif  // STORAGE_LEVELDB_TABLE_ITERATOR_WRAPPER_H_
