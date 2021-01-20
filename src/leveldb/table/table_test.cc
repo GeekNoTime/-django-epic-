@@ -370,4 +370,115 @@ class DBConstructor: public Constructor {
     }
     return Status::OK();
   }
-  virtual Iterato
+  virtual Iterator* NewIterator() const {
+    return db_->NewIterator(ReadOptions());
+  }
+
+  virtual DB* db() const { return db_; }
+
+ private:
+  void NewDB() {
+    std::string name = test::TmpDir() + "/table_testdb";
+
+    Options options;
+    options.comparator = comparator_;
+    Status status = DestroyDB(name, options);
+    ASSERT_TRUE(status.ok()) << status.ToString();
+
+    options.create_if_missing = true;
+    options.error_if_exists = true;
+    options.write_buffer_size = 10000;  // Something small to force merging
+    status = DB::Open(options, name, &db_);
+    ASSERT_TRUE(status.ok()) << status.ToString();
+  }
+
+  const Comparator* comparator_;
+  DB* db_;
+};
+
+enum TestType {
+  TABLE_TEST,
+  BLOCK_TEST,
+  MEMTABLE_TEST,
+  DB_TEST
+};
+
+struct TestArgs {
+  TestType type;
+  bool reverse_compare;
+  int restart_interval;
+};
+
+static const TestArgs kTestArgList[] = {
+  { TABLE_TEST, false, 16 },
+  { TABLE_TEST, false, 1 },
+  { TABLE_TEST, false, 1024 },
+  { TABLE_TEST, true, 16 },
+  { TABLE_TEST, true, 1 },
+  { TABLE_TEST, true, 1024 },
+
+  { BLOCK_TEST, false, 16 },
+  { BLOCK_TEST, false, 1 },
+  { BLOCK_TEST, false, 1024 },
+  { BLOCK_TEST, true, 16 },
+  { BLOCK_TEST, true, 1 },
+  { BLOCK_TEST, true, 1024 },
+
+  // Restart interval does not matter for memtables
+  { MEMTABLE_TEST, false, 16 },
+  { MEMTABLE_TEST, true, 16 },
+
+  // Do not bother with restart interval variations for DB
+  { DB_TEST, false, 16 },
+  { DB_TEST, true, 16 },
+};
+static const int kNumTestArgs = sizeof(kTestArgList) / sizeof(kTestArgList[0]);
+
+class Harness {
+ public:
+  Harness() : constructor_(NULL) { }
+
+  void Init(const TestArgs& args) {
+    delete constructor_;
+    constructor_ = NULL;
+    options_ = Options();
+
+    options_.block_restart_interval = args.restart_interval;
+    // Use shorter block size for tests to exercise block boundary
+    // conditions more.
+    options_.block_size = 256;
+    if (args.reverse_compare) {
+      options_.comparator = &reverse_key_comparator;
+    }
+    switch (args.type) {
+      case TABLE_TEST:
+        constructor_ = new TableConstructor(options_.comparator);
+        break;
+      case BLOCK_TEST:
+        constructor_ = new BlockConstructor(options_.comparator);
+        break;
+      case MEMTABLE_TEST:
+        constructor_ = new MemTableConstructor(options_.comparator);
+        break;
+      case DB_TEST:
+        constructor_ = new DBConstructor(options_.comparator);
+        break;
+    }
+  }
+
+  ~Harness() {
+    delete constructor_;
+  }
+
+  void Add(const std::string& key, const std::string& value) {
+    constructor_->Add(key, value);
+  }
+
+  void Test(Random* rnd) {
+    std::vector<std::string> keys;
+    KVMap data;
+    constructor_->Finish(options_, &keys, &data);
+
+    TestForwardScan(keys, data);
+    TestBackwardScan(keys, data);
+    TestRandomAcc
