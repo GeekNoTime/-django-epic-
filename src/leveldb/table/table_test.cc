@@ -273,3 +273,101 @@ class TableConstructor: public Constructor {
 };
 
 // A helper class that converts internal format keys into user keys
+class KeyConvertingIterator: public Iterator {
+ public:
+  explicit KeyConvertingIterator(Iterator* iter) : iter_(iter) { }
+  virtual ~KeyConvertingIterator() { delete iter_; }
+  virtual bool Valid() const { return iter_->Valid(); }
+  virtual void Seek(const Slice& target) {
+    ParsedInternalKey ikey(target, kMaxSequenceNumber, kTypeValue);
+    std::string encoded;
+    AppendInternalKey(&encoded, ikey);
+    iter_->Seek(encoded);
+  }
+  virtual void SeekToFirst() { iter_->SeekToFirst(); }
+  virtual void SeekToLast() { iter_->SeekToLast(); }
+  virtual void Next() { iter_->Next(); }
+  virtual void Prev() { iter_->Prev(); }
+
+  virtual Slice key() const {
+    assert(Valid());
+    ParsedInternalKey key;
+    if (!ParseInternalKey(iter_->key(), &key)) {
+      status_ = Status::Corruption("malformed internal key");
+      return Slice("corrupted key");
+    }
+    return key.user_key;
+  }
+
+  virtual Slice value() const { return iter_->value(); }
+  virtual Status status() const {
+    return status_.ok() ? iter_->status() : status_;
+  }
+
+ private:
+  mutable Status status_;
+  Iterator* iter_;
+
+  // No copying allowed
+  KeyConvertingIterator(const KeyConvertingIterator&);
+  void operator=(const KeyConvertingIterator&);
+};
+
+class MemTableConstructor: public Constructor {
+ public:
+  explicit MemTableConstructor(const Comparator* cmp)
+      : Constructor(cmp),
+        internal_comparator_(cmp) {
+    memtable_ = new MemTable(internal_comparator_);
+    memtable_->Ref();
+  }
+  ~MemTableConstructor() {
+    memtable_->Unref();
+  }
+  virtual Status FinishImpl(const Options& options, const KVMap& data) {
+    memtable_->Unref();
+    memtable_ = new MemTable(internal_comparator_);
+    memtable_->Ref();
+    int seq = 1;
+    for (KVMap::const_iterator it = data.begin();
+         it != data.end();
+         ++it) {
+      memtable_->Add(seq, kTypeValue, it->first, it->second);
+      seq++;
+    }
+    return Status::OK();
+  }
+  virtual Iterator* NewIterator() const {
+    return new KeyConvertingIterator(memtable_->NewIterator());
+  }
+
+ private:
+  InternalKeyComparator internal_comparator_;
+  MemTable* memtable_;
+};
+
+class DBConstructor: public Constructor {
+ public:
+  explicit DBConstructor(const Comparator* cmp)
+      : Constructor(cmp),
+        comparator_(cmp) {
+    db_ = NULL;
+    NewDB();
+  }
+  ~DBConstructor() {
+    delete db_;
+  }
+  virtual Status FinishImpl(const Options& options, const KVMap& data) {
+    delete db_;
+    db_ = NULL;
+    NewDB();
+    for (KVMap::const_iterator it = data.begin();
+         it != data.end();
+         ++it) {
+      WriteBatch batch;
+      batch.Put(it->first, it->second);
+      ASSERT_TRUE(db_->Write(WriteOptions(), &batch).ok());
+    }
+    return Status::OK();
+  }
+  virtual Iterato
