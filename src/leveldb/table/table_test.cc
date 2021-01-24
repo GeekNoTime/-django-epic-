@@ -674,4 +674,105 @@ TEST(Harness, ZeroRestartPointsInBlock) {
   delete iter;
 }
 
-// Test the empty ke
+// Test the empty key
+TEST(Harness, SimpleEmptyKey) {
+  for (int i = 0; i < kNumTestArgs; i++) {
+    Init(kTestArgList[i]);
+    Random rnd(test::RandomSeed() + 1);
+    Add("", "v");
+    Test(&rnd);
+  }
+}
+
+TEST(Harness, SimpleSingle) {
+  for (int i = 0; i < kNumTestArgs; i++) {
+    Init(kTestArgList[i]);
+    Random rnd(test::RandomSeed() + 2);
+    Add("abc", "v");
+    Test(&rnd);
+  }
+}
+
+TEST(Harness, SimpleMulti) {
+  for (int i = 0; i < kNumTestArgs; i++) {
+    Init(kTestArgList[i]);
+    Random rnd(test::RandomSeed() + 3);
+    Add("abc", "v");
+    Add("abcd", "v");
+    Add("ac", "v2");
+    Test(&rnd);
+  }
+}
+
+TEST(Harness, SimpleSpecialKey) {
+  for (int i = 0; i < kNumTestArgs; i++) {
+    Init(kTestArgList[i]);
+    Random rnd(test::RandomSeed() + 4);
+    Add("\xff\xff", "v3");
+    Test(&rnd);
+  }
+}
+
+TEST(Harness, Randomized) {
+  for (int i = 0; i < kNumTestArgs; i++) {
+    Init(kTestArgList[i]);
+    Random rnd(test::RandomSeed() + 5);
+    for (int num_entries = 0; num_entries < 2000;
+         num_entries += (num_entries < 50 ? 1 : 200)) {
+      if ((num_entries % 10) == 0) {
+        fprintf(stderr, "case %d of %d: num_entries = %d\n",
+                (i + 1), int(kNumTestArgs), num_entries);
+      }
+      for (int e = 0; e < num_entries; e++) {
+        std::string v;
+        Add(test::RandomKey(&rnd, rnd.Skewed(4)),
+            test::RandomString(&rnd, rnd.Skewed(5), &v).ToString());
+      }
+      Test(&rnd);
+    }
+  }
+}
+
+TEST(Harness, RandomizedLongDB) {
+  Random rnd(test::RandomSeed());
+  TestArgs args = { DB_TEST, false, 16 };
+  Init(args);
+  int num_entries = 100000;
+  for (int e = 0; e < num_entries; e++) {
+    std::string v;
+    Add(test::RandomKey(&rnd, rnd.Skewed(4)),
+        test::RandomString(&rnd, rnd.Skewed(5), &v).ToString());
+  }
+  Test(&rnd);
+
+  // We must have created enough data to force merging
+  int files = 0;
+  for (int level = 0; level < config::kNumLevels; level++) {
+    std::string value;
+    char name[100];
+    snprintf(name, sizeof(name), "leveldb.num-files-at-level%d", level);
+    ASSERT_TRUE(db()->GetProperty(name, &value));
+    files += atoi(value.c_str());
+  }
+  ASSERT_GT(files, 0);
+}
+
+class MemTableTest { };
+
+TEST(MemTableTest, Simple) {
+  InternalKeyComparator cmp(BytewiseComparator());
+  MemTable* memtable = new MemTable(cmp);
+  memtable->Ref();
+  WriteBatch batch;
+  WriteBatchInternal::SetSequence(&batch, 100);
+  batch.Put(std::string("k1"), std::string("v1"));
+  batch.Put(std::string("k2"), std::string("v2"));
+  batch.Put(std::string("k3"), std::string("v3"));
+  batch.Put(std::string("largekey"), std::string("vlarge"));
+  ASSERT_TRUE(WriteBatchInternal::InsertInto(&batch, memtable).ok());
+
+  Iterator* iter = memtable->NewIterator();
+  iter->SeekToFirst();
+  while (iter->Valid()) {
+    fprintf(stderr, "key: '%s' -> '%s'\n",
+            ite
