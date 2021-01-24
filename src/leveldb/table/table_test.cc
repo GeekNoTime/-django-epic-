@@ -775,4 +775,85 @@ TEST(MemTableTest, Simple) {
   iter->SeekToFirst();
   while (iter->Valid()) {
     fprintf(stderr, "key: '%s' -> '%s'\n",
-            ite
+            iter->key().ToString().c_str(),
+            iter->value().ToString().c_str());
+    iter->Next();
+  }
+
+  delete iter;
+  memtable->Unref();
+}
+
+static bool Between(uint64_t val, uint64_t low, uint64_t high) {
+  bool result = (val >= low) && (val <= high);
+  if (!result) {
+    fprintf(stderr, "Value %llu is not in range [%llu, %llu]\n",
+            (unsigned long long)(val),
+            (unsigned long long)(low),
+            (unsigned long long)(high));
+  }
+  return result;
+}
+
+class TableTest { };
+
+TEST(TableTest, ApproximateOffsetOfPlain) {
+  TableConstructor c(BytewiseComparator());
+  c.Add("k01", "hello");
+  c.Add("k02", "hello2");
+  c.Add("k03", std::string(10000, 'x'));
+  c.Add("k04", std::string(200000, 'x'));
+  c.Add("k05", std::string(300000, 'x'));
+  c.Add("k06", "hello3");
+  c.Add("k07", std::string(100000, 'x'));
+  std::vector<std::string> keys;
+  KVMap kvmap;
+  Options options;
+  options.block_size = 1024;
+  options.compression = kNoCompression;
+  c.Finish(options, &keys, &kvmap);
+
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("abc"),       0,      0));
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("k01"),       0,      0));
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("k01a"),      0,      0));
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("k02"),       0,      0));
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("k03"),       0,      0));
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("k04"),   10000,  11000));
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("k04a"), 210000, 211000));
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("k05"),  210000, 211000));
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("k06"),  510000, 511000));
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("k07"),  510000, 511000));
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("xyz"),  610000, 612000));
+
+}
+
+static bool SnappyCompressionSupported() {
+  std::string out;
+  Slice in = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  return port::Snappy_Compress(in.data(), in.size(), &out);
+}
+
+TEST(TableTest, ApproximateOffsetOfCompressed) {
+  if (!SnappyCompressionSupported()) {
+    fprintf(stderr, "skipping compression tests\n");
+    return;
+  }
+
+  Random rnd(301);
+  TableConstructor c(BytewiseComparator());
+  std::string tmp;
+  c.Add("k01", "hello");
+  c.Add("k02", test::CompressibleString(&rnd, 0.25, 10000, &tmp));
+  c.Add("k03", "hello3");
+  c.Add("k04", test::CompressibleString(&rnd, 0.25, 10000, &tmp));
+  std::vector<std::string> keys;
+  KVMap kvmap;
+  Options options;
+  options.block_size = 1024;
+  options.compression = kSnappyCompression;
+  c.Finish(options, &keys, &kvmap);
+
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("abc"),       0,      0));
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("k01"),       0,      0));
+  ASSERT_TRUE(Between(c.ApproximateOffsetOf("k02"),       0,      0));
+  ASSERT_TR
