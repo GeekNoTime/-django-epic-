@@ -568,4 +568,110 @@ class Harness {
         }
 
         case 4: {
-          if (kVerbose) fprintf(stderr, 
+          if (kVerbose) fprintf(stderr, "SeekToLast\n");
+          iter->SeekToLast();
+          if (keys.empty()) {
+            model_iter = data.end();
+          } else {
+            std::string last = data.rbegin()->first;
+            model_iter = data.lower_bound(last);
+          }
+          ASSERT_EQ(ToString(data, model_iter), ToString(iter));
+          break;
+        }
+      }
+    }
+    delete iter;
+  }
+
+  std::string ToString(const KVMap& data, const KVMap::const_iterator& it) {
+    if (it == data.end()) {
+      return "END";
+    } else {
+      return "'" + it->first + "->" + it->second + "'";
+    }
+  }
+
+  std::string ToString(const KVMap& data,
+                       const KVMap::const_reverse_iterator& it) {
+    if (it == data.rend()) {
+      return "END";
+    } else {
+      return "'" + it->first + "->" + it->second + "'";
+    }
+  }
+
+  std::string ToString(const Iterator* it) {
+    if (!it->Valid()) {
+      return "END";
+    } else {
+      return "'" + it->key().ToString() + "->" + it->value().ToString() + "'";
+    }
+  }
+
+  std::string PickRandomKey(Random* rnd, const std::vector<std::string>& keys) {
+    if (keys.empty()) {
+      return "foo";
+    } else {
+      const int index = rnd->Uniform(keys.size());
+      std::string result = keys[index];
+      switch (rnd->Uniform(3)) {
+        case 0:
+          // Return an existing key
+          break;
+        case 1: {
+          // Attempt to return something smaller than an existing key
+          if (result.size() > 0 && result[result.size()-1] > '\0') {
+            result[result.size()-1]--;
+          }
+          break;
+        }
+        case 2: {
+          // Return something larger than an existing key
+          Increment(options_.comparator, &result);
+          break;
+        }
+      }
+      return result;
+    }
+  }
+
+  // Returns NULL if not running against a DB
+  DB* db() const { return constructor_->db(); }
+
+ private:
+  Options options_;
+  Constructor* constructor_;
+};
+
+// Test empty table/block.
+TEST(Harness, Empty) {
+  for (int i = 0; i < kNumTestArgs; i++) {
+    Init(kTestArgList[i]);
+    Random rnd(test::RandomSeed() + 1);
+    Test(&rnd);
+  }
+}
+
+// Special test for a block with no restart entries.  The C++ leveldb
+// code never generates such blocks, but the Java version of leveldb
+// seems to.
+TEST(Harness, ZeroRestartPointsInBlock) {
+  char data[sizeof(uint32_t)];
+  memset(data, 0, sizeof(data));
+  BlockContents contents;
+  contents.data = Slice(data, sizeof(data));
+  contents.cachable = false;
+  contents.heap_allocated = false;
+  Block block(contents);
+  Iterator* iter = block.NewIterator(BytewiseComparator());
+  iter->SeekToFirst();
+  ASSERT_TRUE(!iter->Valid());
+  iter->SeekToLast();
+  ASSERT_TRUE(!iter->Valid());
+  iter->Seek("foo");
+  ASSERT_TRUE(!iter->Valid());
+  delete iter;
+}
+
+// Test the empty ke
