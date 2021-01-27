@@ -48,4 +48,21 @@ TEST(ArenaTest, Simple) {
     allocated.push_back(std::make_pair(s, r));
     ASSERT_GE(arena.MemoryUsage(), bytes);
     if (i > N/10) {
-      A
+      ASSERT_LE(arena.MemoryUsage(), bytes * 1.10);
+    }
+  }
+  for (size_t i = 0; i < allocated.size(); i++) {
+    size_t num_bytes = allocated[i].first;
+    const char* p = allocated[i].second;
+    for (size_t b = 0; b < num_bytes; b++) {
+      // Check the "i"th allocation for the known bit pattern
+      ASSERT_EQ(int(p[b]) & 0xff, i % 256);
+    }
+  }
+}
+
+}  // namespace leveldb
+
+int main(int argc, char** argv) {
+  return leveldb::test::RunAllTests();
+}
