@@ -99,4 +99,63 @@ TEST(BloomTest, Small) {
   ASSERT_TRUE(! Matches("foo"));
 }
 
-static int NextLength(int 
+static int NextLength(int length) {
+  if (length < 10) {
+    length += 1;
+  } else if (length < 100) {
+    length += 10;
+  } else if (length < 1000) {
+    length += 100;
+  } else {
+    length += 1000;
+  }
+  return length;
+}
+
+TEST(BloomTest, VaryingLengths) {
+  char buffer[sizeof(int)];
+
+  // Count number of filters that significantly exceed the false positive rate
+  int mediocre_filters = 0;
+  int good_filters = 0;
+
+  for (int length = 1; length <= 10000; length = NextLength(length)) {
+    Reset();
+    for (int i = 0; i < length; i++) {
+      Add(Key(i, buffer));
+    }
+    Build();
+
+    ASSERT_LE(FilterSize(), static_cast<size_t>((length * 10 / 8) + 40))
+        << length;
+
+    // All added keys must match
+    for (int i = 0; i < length; i++) {
+      ASSERT_TRUE(Matches(Key(i, buffer)))
+          << "Length " << length << "; key " << i;
+    }
+
+    // Check false positive rate
+    double rate = FalsePositiveRate();
+    if (kVerbose >= 1) {
+      fprintf(stderr, "False positives: %5.2f%% @ length = %6d ; bytes = %6d\n",
+              rate*100.0, length, static_cast<int>(FilterSize()));
+    }
+    ASSERT_LE(rate, 0.02);   // Must not be over 2%
+    if (rate > 0.0125) mediocre_filters++;  // Allowed, but not too often
+    else good_filters++;
+  }
+  if (kVerbose >= 1) {
+    fprintf(stderr, "Filters: %d good, %d mediocre\n",
+            good_filters, mediocre_filters);
+  }
+  ASSERT_LE(mediocre_filters, good_filters/5);
+}
+
+// Different bits-per-byte
+
+}  // namespace leveldb
+
+int main(int argc, char** argv) {
+  return leveldb::test::RunAllTests();
+}
