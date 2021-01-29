@@ -257,4 +257,69 @@ Cache::Handle* LRUCache::Insert(
 
 void LRUCache::Erase(const Slice& key, uint32_t hash) {
   MutexLock l(&mutex_);
-  LRUHandle* e = tabl
+  LRUHandle* e = table_.Remove(key, hash);
+  if (e != NULL) {
+    LRU_Remove(e);
+    Unref(e);
+  }
+}
+
+static const int kNumShardBits = 4;
+static const int kNumShards = 1 << kNumShardBits;
+
+class ShardedLRUCache : public Cache {
+ private:
+  LRUCache shard_[kNumShards];
+  port::Mutex id_mutex_;
+  uint64_t last_id_;
+
+  static inline uint32_t HashSlice(const Slice& s) {
+    return Hash(s.data(), s.size(), 0);
+  }
+
+  static uint32_t Shard(uint32_t hash) {
+    return hash >> (32 - kNumShardBits);
+  }
+
+ public:
+  explicit ShardedLRUCache(size_t capacity)
+      : last_id_(0) {
+    const size_t per_shard = (capacity + (kNumShards - 1)) / kNumShards;
+    for (int s = 0; s < kNumShards; s++) {
+      shard_[s].SetCapacity(per_shard);
+    }
+  }
+  virtual ~ShardedLRUCache() { }
+  virtual Handle* Insert(const Slice& key, void* value, size_t charge,
+                         void (*deleter)(const Slice& key, void* value)) {
+    const uint32_t hash = HashSlice(key);
+    return shard_[Shard(hash)].Insert(key, hash, value, charge, deleter);
+  }
+  virtual Handle* Lookup(const Slice& key) {
+    const uint32_t hash = HashSlice(key);
+    return shard_[Shard(hash)].Lookup(key, hash);
+  }
+  virtual void Release(Handle* handle) {
+    LRUHandle* h = reinterpret_cast<LRUHandle*>(handle);
+    shard_[Shard(h->hash)].Release(handle);
+  }
+  virtual void Erase(const Slice& key) {
+    const uint32_t hash = HashSlice(key);
+    shard_[Shard(hash)].Erase(key, hash);
+  }
+  virtual void* Value(Handle* handle) {
+    return reinterpret_cast<LRUHandle*>(handle)->value;
+  }
+  virtual uint64_t NewId() {
+    MutexLock l(&id_mutex_);
+    return ++(last_id_);
+  }
+};
+
+}  // end anonymous namespace
+
+Cache* NewLRUCache(size_t capacity) {
+  return new ShardedLRUCache(capacity);
+}
+
+}  // namespace leveldb
