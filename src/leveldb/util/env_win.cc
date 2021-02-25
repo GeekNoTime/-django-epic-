@@ -468,4 +468,103 @@ bool Win32MapFile::_UnmapCurrentRegion()
         _base = NULL;
         _base_handle = NULL;
         _limit = NULL;
-        _
+        _last_sync = NULL;
+        _dst = NULL;
+        // Increase the amount we map the next time, but capped at 1MB
+        if (_map_size < (1<<20)) {
+            _map_size *= 2;
+        }
+    }
+    return result;
+}
+
+bool Win32MapFile::_MapNewRegion()
+{
+    assert(_base == NULL);
+    //LONG newSizeHigh = (LONG)((file_offset_ + map_size_) >> 32);
+    //LONG newSizeLow = (LONG)((file_offset_ + map_size_) & 0xFFFFFFFF);
+    DWORD off_hi = (DWORD)(_file_offset >> 32);
+    DWORD off_lo = (DWORD)(_file_offset & 0xFFFFFFFF);
+    LARGE_INTEGER newSize;
+    newSize.QuadPart = _file_offset + _map_size;
+    SetFilePointerEx(_hFile, newSize, NULL, FILE_BEGIN);
+    SetEndOfFile(_hFile);
+
+    _base_handle = CreateFileMappingA(
+        _hFile,
+        NULL,
+        PAGE_READWRITE,
+        0,
+        0,
+        0);
+    if (_base_handle != NULL) {
+        _base = (char*) MapViewOfFile(_base_handle,
+            FILE_MAP_ALL_ACCESS,
+            off_hi,
+            off_lo,
+            _map_size);
+        if (_base != NULL) {
+            _limit = _base + _map_size;
+            _dst = _base;
+            _last_sync = _base;
+            return true;
+        }
+    }
+    return false;
+}
+
+Win32MapFile::Win32MapFile( const std::string& fname) :
+    _filename(fname),
+    _hFile(NULL),
+    _page_size(Win32::g_PageSize),
+    _map_size(_Roundup(65536, Win32::g_PageSize)),
+    _base(NULL),
+    _base_handle(NULL),
+    _limit(NULL),
+    _dst(NULL),
+    _last_sync(NULL),
+    _file_offset(0),
+    _pending_sync(false)
+{
+	std::wstring path;
+	ToWidePath(fname, path);
+    _Init(path.c_str());
+    assert((Win32::g_PageSize & (Win32::g_PageSize - 1)) == 0);
+}
+
+Status Win32MapFile::Append( const Slice& data )
+{
+    const char* src = data.data();
+    size_t left = data.size();
+    Status s;
+    while (left > 0) {
+        assert(_base <= _dst);
+        assert(_dst <= _limit);
+        size_t avail = _limit - _dst;
+        if (avail == 0) {
+            if (!_UnmapCurrentRegion() ||
+                !_MapNewRegion()) {
+                    return Status::IOError("WinMmapFile.Append::UnmapCurrentRegion or MapNewRegion: ", Win32::GetLastErrSz());
+            }
+        }
+        size_t n = (left <= avail) ? left : avail;
+        memcpy(_dst, src, n);
+        _dst += n;
+        src += n;
+        left -= n;
+    }
+    return s;
+}
+
+Status Win32MapFile::Close()
+{
+    Status s;
+    size_t unused = _limit - _dst;
+    if (!_UnmapCurrentRegion()) {
+        s = Status::IOError("WinMmapFile.Close::UnmapCurrentRegion: ",Win32::GetLastErrSz());
+    } else if (unused > 0) {
+        // Trim the extra space at the end of the file
+        LARGE_INTEGER newSize;
+        newSize.QuadPart = _file_offset - unused;
+        if (!SetFilePointerEx(_hFile, newSize, NULL, FILE_BEGIN)) {
+            s = Status::IOError("WinMmapFile.Close::SetFilePointer: ",Win32::GetLastErrSz()
