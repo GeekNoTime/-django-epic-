@@ -221,4 +221,130 @@ void ToWidePath(const std::string& value, std::wstring& target) {
 	target = buffer;
 }
 
-void ToNarrowPath(const std::wstring& value,
+void ToNarrowPath(const std::wstring& value, std::string& target) {
+	char buffer[MAX_PATH];
+	WideCharToMultiByte(CP_ACP, 0, value.c_str(), -1, buffer, MAX_PATH, NULL, NULL);
+	target = buffer;
+}
+
+std::string GetCurrentDir()
+{
+    CHAR path[MAX_PATH];
+    ::GetModuleFileNameA(::GetModuleHandleA(NULL),path,MAX_PATH);
+    *strrchr(path,'\\') = 0;
+    return std::string(path);
+}
+
+std::wstring GetCurrentDirW()
+{
+    WCHAR path[MAX_PATH];
+    ::GetModuleFileNameW(::GetModuleHandleW(NULL),path,MAX_PATH);
+    *wcsrchr(path,L'\\') = 0;
+    return std::wstring(path);
+}
+
+std::string& ModifyPath(std::string& path)
+{
+    if(path[0] == '/' || path[0] == '\\'){
+        path = CurrentDir + path;
+    }
+    std::replace(path.begin(),path.end(),'/','\\');
+
+    return path;
+}
+
+std::wstring& ModifyPath(std::wstring& path)
+{
+    if(path[0] == L'/' || path[0] == L'\\'){
+        path = CurrentDirW + path;
+    }
+    std::replace(path.begin(),path.end(),L'/',L'\\');
+    return path;
+}
+
+std::string GetLastErrSz()
+{
+    LPWSTR lpMsgBuf;
+    FormatMessageW( 
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+        FORMAT_MESSAGE_FROM_SYSTEM | 
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        GetLastError(),
+        0, // Default language
+        (LPWSTR) &lpMsgBuf,
+        0,
+        NULL 
+        );
+    std::string Err;
+	ToNarrowPath(lpMsgBuf, Err); 
+    LocalFree( lpMsgBuf );
+    return Err;
+}
+
+std::wstring GetLastErrSzW()
+{
+    LPVOID lpMsgBuf;
+    FormatMessageW( 
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+        FORMAT_MESSAGE_FROM_SYSTEM | 
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        GetLastError(),
+        0, // Default language
+        (LPWSTR) &lpMsgBuf,
+        0,
+        NULL 
+        );
+    std::wstring Err = (LPCWSTR)lpMsgBuf;
+    LocalFree(lpMsgBuf);
+    return Err;
+}
+
+WorkItemWrapper::WorkItemWrapper( ScheduleProc proc_,void* content_ ) :
+    proc(proc_),pContent(content_)
+{
+
+}
+
+DWORD WINAPI WorkItemWrapperProc(LPVOID pContent)
+{
+    WorkItemWrapper* item = static_cast<WorkItemWrapper*>(pContent);
+    ScheduleProc TempProc = item->proc;
+    void* arg = item->pContent;
+    delete item;
+    TempProc(arg);
+    return 0;
+}
+
+size_t GetPageSize()
+{
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    return std::max(si.dwPageSize,si.dwAllocationGranularity);
+}
+
+const size_t g_PageSize = GetPageSize();
+
+
+Win32SequentialFile::Win32SequentialFile( const std::string& fname ) :
+    _filename(fname),_hFile(NULL)
+{
+    _Init();
+}
+
+Win32SequentialFile::~Win32SequentialFile()
+{
+    _CleanUp();
+}
+
+Status Win32SequentialFile::Read( size_t n, Slice* result, char* scratch )
+{
+    Status sRet;
+    DWORD hasRead = 0;
+    if(_hFile && ReadFile(_hFile,scratch,n,&hasRead,NULL) ){
+        *result = Slice(scratch,hasRead);
+    } else {
+        sRet = Status::IOError(_filename, Win32::GetLastErrSz() );
+    }
+    return
