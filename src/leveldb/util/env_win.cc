@@ -567,4 +567,125 @@ Status Win32MapFile::Close()
         LARGE_INTEGER newSize;
         newSize.QuadPart = _file_offset - unused;
         if (!SetFilePointerEx(_hFile, newSize, NULL, FILE_BEGIN)) {
-            s = Status::IOError("WinMmapFile.Close::SetFilePointer: ",Win32::GetLastErrSz()
+            s = Status::IOError("WinMmapFile.Close::SetFilePointer: ",Win32::GetLastErrSz());
+        } else 
+            SetEndOfFile(_hFile);
+    }
+    if (!CloseHandle(_hFile)) {
+        if (s.ok()) {
+            s = Status::IOError("WinMmapFile.Close::CloseHandle: ", Win32::GetLastErrSz());
+        }
+    }
+    _hFile = INVALID_HANDLE_VALUE;
+    _base = NULL;
+    _base_handle = NULL;
+    _limit = NULL;
+
+    return s;
+}
+
+Status Win32MapFile::Sync()
+{
+    Status s;
+    if (_pending_sync) {
+        // Some unmapped data was not synced
+        _pending_sync = false;
+        if (!FlushFileBuffers(_hFile)) {
+            s = Status::IOError("WinMmapFile.Sync::FlushFileBuffers: ",Win32::GetLastErrSz());
+        }
+    }
+    if (_dst > _last_sync) {
+        // Find the beginnings of the pages that contain the first and last
+        // bytes to be synced.
+        size_t p1 = _TruncateToPageBoundary(_last_sync - _base);
+        size_t p2 = _TruncateToPageBoundary(_dst - _base - 1);
+        _last_sync = _dst;
+        if (!FlushViewOfFile(_base + p1, p2 - p1 + _page_size)) {
+            s = Status::IOError("WinMmapFile.Sync::FlushViewOfFile: ",Win32::GetLastErrSz());
+        }
+    }
+    return s;
+}
+
+Status Win32MapFile::Flush()
+{
+    return Status::OK();
+}
+
+Win32MapFile::~Win32MapFile()
+{
+    if (_hFile != INVALID_HANDLE_VALUE) { 
+        Win32MapFile::Close();
+    }
+}
+
+BOOL Win32MapFile::_Init( LPCWSTR Path )
+{
+    DWORD Flag = PathFileExistsW(Path) ? OPEN_EXISTING : CREATE_ALWAYS;
+    _hFile = CreateFileW(Path,
+                         GENERIC_READ | GENERIC_WRITE,
+                         FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE,
+                         NULL,
+                         Flag,
+                         FILE_ATTRIBUTE_NORMAL,
+                         NULL);
+    if(!_hFile || _hFile == INVALID_HANDLE_VALUE)
+        return FALSE;
+    else
+        return TRUE;
+}
+
+BOOL Win32MapFile::isEnable()
+{
+    return _hFile ? TRUE : FALSE;
+}
+
+Win32FileLock::Win32FileLock( const std::string& fname ) :
+    _hFile(NULL),_filename(fname)
+{
+	std::wstring path;
+	ToWidePath(fname, path);
+	_Init(path.c_str());
+}
+
+Win32FileLock::~Win32FileLock()
+{
+    _CleanUp();
+}
+
+BOOL Win32FileLock::_Init( LPCWSTR path )
+{
+    BOOL bRet = FALSE;
+    if(!_hFile)
+        _hFile = ::CreateFileW(path,0,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+    if(!_hFile || _hFile == INVALID_HANDLE_VALUE ){
+        _hFile = NULL;
+    }
+    else
+        bRet = TRUE;
+    return bRet;
+}
+
+void Win32FileLock::_CleanUp()
+{
+    ::CloseHandle(_hFile);
+    _hFile = NULL;
+}
+
+BOOL Win32FileLock::isEnable()
+{
+    return _hFile ? TRUE : FALSE;
+}
+
+Win32Logger::Win32Logger(WritableFile* pFile) : _pFileProxy(pFile)
+{
+    assert(_pFileProxy);
+}
+
+Win32Logger::~Win32Logger()
+{
+    if(_pFileProxy)
+        delete _pFileProxy;
+}
+
+void Win32L
