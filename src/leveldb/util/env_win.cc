@@ -688,4 +688,104 @@ Win32Logger::~Win32Logger()
         delete _pFileProxy;
 }
 
-void Win32L
+void Win32Logger::Logv( const char* format, va_list ap )
+{
+    uint64_t thread_id = ::GetCurrentThreadId();
+
+    // We try twice: the first time with a fixed-size stack allocated buffer,
+    // and the second time with a much larger dynamically allocated buffer.
+    char buffer[500];
+    for (int iter = 0; iter < 2; iter++) {
+        char* base;
+        int bufsize;
+        if (iter == 0) {
+            bufsize = sizeof(buffer);
+            base = buffer;
+        } else {
+            bufsize = 30000;
+            base = new char[bufsize];
+        }
+        char* p = base;
+        char* limit = base + bufsize;
+
+        SYSTEMTIME st;
+        GetLocalTime(&st);
+        p += snprintf(p, limit - p,
+            "%04d/%02d/%02d-%02d:%02d:%02d.%06d %llx ",
+            int(st.wYear),
+            int(st.wMonth),
+            int(st.wDay),
+            int(st.wHour),
+            int(st.wMinute),
+            int(st.wMinute),
+            int(st.wMilliseconds),
+            static_cast<long long unsigned int>(thread_id));
+
+        // Print the message
+        if (p < limit) {
+            va_list backup_ap;
+            va_copy(backup_ap, ap);
+            p += vsnprintf(p, limit - p, format, backup_ap);
+            va_end(backup_ap);
+        }
+
+        // Truncate to available space if necessary
+        if (p >= limit) {
+            if (iter == 0) {
+                continue;       // Try again with larger buffer
+            } else {
+                p = limit - 1;
+            }
+        }
+
+        // Add newline if necessary
+        if (p == base || p[-1] != '\n') {
+            *p++ = '\n';
+        }
+
+        assert(p <= limit);
+        DWORD hasWritten = 0;
+        if(_pFileProxy){
+            _pFileProxy->Append(Slice(base, p - base));
+            _pFileProxy->Flush();
+        }
+        if (base != buffer) {
+            delete[] base;
+        }
+        break;
+    }
+}
+
+bool Win32Env::FileExists(const std::string& fname)
+{
+	std::string path = fname;
+    std::wstring wpath;
+	ToWidePath(ModifyPath(path), wpath);
+    return ::PathFileExistsW(wpath.c_str()) ? true : false;
+}
+
+Status Win32Env::GetChildren(const std::string& dir, std::vector<std::string>* result)
+{
+    Status sRet;
+    ::WIN32_FIND_DATAW wfd;
+    std::string path = dir;
+    ModifyPath(path);
+    path += "\\*.*";
+	std::wstring wpath;
+	ToWidePath(path, wpath);
+
+	::HANDLE hFind = ::FindFirstFileW(wpath.c_str() ,&wfd);
+    if(hFind && hFind != INVALID_HANDLE_VALUE){
+        BOOL hasNext = TRUE;
+        std::string child;
+        while(hasNext){
+            ToNarrowPath(wfd.cFileName, child); 
+            if(child != ".." && child != ".")  {
+                result->push_back(child);
+            }
+            hasNext = ::FindNextFileW(hFind,&wfd);
+        }
+        ::FindClose(hFind);
+    }
+    else
+        sRet = Status::IOError(dir,"
