@@ -788,4 +788,107 @@ Status Win32Env::GetChildren(const std::string& dir, std::vector<std::string>* r
         ::FindClose(hFind);
     }
     else
-        sRet = Status::IOError(dir,"
+        sRet = Status::IOError(dir,"Could not get children.");
+    return sRet;
+}
+
+void Win32Env::SleepForMicroseconds( int micros )
+{
+    ::Sleep((micros + 999) /1000);
+}
+
+
+Status Win32Env::DeleteFile( const std::string& fname )
+{
+    Status sRet;
+    std::string path = fname;
+    std::wstring wpath;
+	ToWidePath(ModifyPath(path), wpath);
+
+    if(!::DeleteFileW(wpath.c_str())) {
+        sRet = Status::IOError(path, "Could not delete file.");
+    }
+    return sRet;
+}
+
+Status Win32Env::GetFileSize( const std::string& fname, uint64_t* file_size )
+{
+    Status sRet;
+    std::string path = fname;
+    std::wstring wpath;
+	ToWidePath(ModifyPath(path), wpath);
+
+    HANDLE file = ::CreateFileW(wpath.c_str(),
+        GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+    LARGE_INTEGER li;
+    if(::GetFileSizeEx(file,&li)){
+        *file_size = (uint64_t)li.QuadPart;
+    }else
+        sRet = Status::IOError(path,"Could not get the file size.");
+    CloseHandle(file);
+    return sRet;
+}
+
+Status Win32Env::RenameFile( const std::string& src, const std::string& target )
+{
+    Status sRet;
+    std::string src_path = src;
+    std::wstring wsrc_path;
+	ToWidePath(ModifyPath(src_path), wsrc_path);
+	std::string target_path = target;
+    std::wstring wtarget_path;
+	ToWidePath(ModifyPath(target_path), wtarget_path);
+
+    if(!MoveFileW(wsrc_path.c_str(), wtarget_path.c_str() ) ){
+        DWORD err = GetLastError();
+        if(err == 0x000000b7){
+            if(!::DeleteFileW(wtarget_path.c_str() ) )
+                sRet = Status::IOError(src, "Could not rename file.");
+			else if(!::MoveFileW(wsrc_path.c_str(),
+                                 wtarget_path.c_str() ) )
+                sRet = Status::IOError(src, "Could not rename file.");    
+        }
+    }
+    return sRet;
+}
+
+Status Win32Env::LockFile( const std::string& fname, FileLock** lock )
+{
+    Status sRet;
+    std::string path = fname;
+    ModifyPath(path);
+    Win32FileLock* _lock = new Win32FileLock(path);
+    if(!_lock->isEnable()){
+        delete _lock;
+        *lock = NULL;
+        sRet = Status::IOError(path, "Could not lock file.");
+    }
+    else
+        *lock = _lock;
+    return sRet;
+}
+
+Status Win32Env::UnlockFile( FileLock* lock )
+{
+    Status sRet;
+    delete lock;
+    return sRet;
+}
+
+void Win32Env::Schedule( void (*function)(void* arg), void* arg )
+{
+    QueueUserWorkItem(Win32::WorkItemWrapperProc,
+                      new Win32::WorkItemWrapper(function,arg),
+                      WT_EXECUTEDEFAULT);
+}
+
+void Win32Env::StartThread( void (*function)(void* arg), void* arg )
+{
+    ::_beginthread(function,0,arg);
+}
+
+Status Win32Env::GetTestDirectory( std::string* path )
+{
+    Status sRet;
+    WCHAR TempPath[MAX_PATH];
+    ::GetTempPathW(MAX_PATH,TempPath)
