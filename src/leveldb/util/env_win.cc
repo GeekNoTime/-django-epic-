@@ -996,4 +996,36 @@ Status Win32Env::NewWritableFile( const std::string& fname, WritableFile** resul
     Status sRet;
     std::string path = fname;
     Win32MapFile* pFile = new Win32MapFile(ModifyPath(path));
- 
+    if(!pFile->isEnable()){
+        *result = NULL;
+        sRet = Status::IOError(fname,Win32::GetLastErrSz());
+    }else
+        *result = pFile;
+    return sRet;
+}
+
+Win32Env::Win32Env()
+{
+
+}
+
+Win32Env::~Win32Env()
+{
+
+}
+
+
+}  // Win32 namespace
+
+static port::OnceType once = LEVELDB_ONCE_INIT;
+static Env* default_env;
+static void InitDefaultEnv() { default_env = new Win32::Win32Env(); }
+
+Env* Env::Default() {
+  port::InitOnce(&once, InitDefaultEnv);
+  return default_env;
+}
+
+}  // namespace leveldb
+
+#endif // defined(LEVELDB_PLATFORM_WINDOWS)
