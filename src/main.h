@@ -77,4 +77,94 @@ extern const std::string strMessageMagic;
 extern int64_t nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
-extern unsigned char pchMes
+extern unsigned char pchMessageStart[4];
+extern std::map<uint256, CBlock*> mapOrphanBlocks;
+
+// Settings
+extern int64_t nTransactionFee;
+extern int64_t nReserveBalance;
+extern int64_t nMinimumInputValue;
+extern bool fUseFastIndex;
+extern unsigned int nDerivationMethodIndex;
+
+extern bool fEnforceCanonical;
+
+// Minimum disk space required - used in CheckDiskSpace()
+static const uint64_t nMinDiskSpace = 52428800;
+
+class CReserveKey;
+class CTxDB;
+class CTxIndex;
+
+void RegisterWallet(CWallet* pwalletIn);
+void UnregisterWallet(CWallet* pwalletIn);
+void SyncWithWallets(const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false, bool fConnect = true);
+bool ProcessBlock(CNode* pfrom, CBlock* pblock);
+bool CheckDiskSpace(uint64_t nAdditionalBytes=0);
+FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode="rb");
+FILE* AppendBlockFile(unsigned int& nFileRet);
+bool LoadBlockIndex(bool fAllowNew=true);
+void PrintBlockTree();
+CBlockIndex* FindBlockByHeight(int nHeight);
+bool ProcessMessages(CNode* pfrom);
+bool SendMessages(CNode* pto, bool fSendTrickle);
+bool LoadExternalBlockFile(FILE* fileIn);
+
+bool CheckProofOfWork(uint256 hash, unsigned int nBits);
+unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake);
+int64_t GetProofOfWorkReward(int64_t nFees, unsigned int nHeight);
+int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees);
+unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime);
+unsigned int ComputeMinStake(unsigned int nBase, int64_t nTime, unsigned int nBlockTime);
+int GetNumBlocksOfPeers();
+bool IsInitialBlockDownload();
+std::string GetWarnings(std::string strFor);
+bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock);
+uint256 WantedByOrphan(const CBlock* pblockOrphan);
+const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake);
+void StakeMiner(CWallet *pwallet);
+void ResendWalletTransactions(bool fForce = false);
+
+
+
+
+
+
+
+
+
+
+bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
+
+/** Position on disk for a particular transaction. */
+class CDiskTxPos
+{
+public:
+    unsigned int nFile;
+    unsigned int nBlockPos;
+    unsigned int nTxPos;
+
+    CDiskTxPos()
+    {
+        SetNull();
+    }
+
+    CDiskTxPos(unsigned int nFileIn, unsigned int nBlockPosIn, unsigned int nTxPosIn)
+    {
+        nFile = nFileIn;
+        nBlockPos = nBlockPosIn;
+        nTxPos = nTxPosIn;
+    }
+
+    IMPLEMENT_SERIALIZE( READWRITE(FLATDATA(*this)); )
+    void SetNull() { nFile = (unsigned int) -1; nBlockPos = 0; nTxPos = 0; }
+    bool IsNull() const { return (nFile == (unsigned int) -1); }
+
+    friend bool operator==(const CDiskTxPos& a, const CDiskTxPos& b)
+    {
+        return (a.nFile     == b.nFile &&
+                a.nBlockPos == b.nBlockPos &&
+                a.nTxPos    == b.nTxPos);
+    }
+
+    friend bool
