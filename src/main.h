@@ -283,4 +283,138 @@ public:
         READWRITE(nSequence);
     )
 
-    bool IsF
+    bool IsFinal() const
+    {
+        return (nSequence == std::numeric_limits<unsigned int>::max());
+    }
+
+    friend bool operator==(const CTxIn& a, const CTxIn& b)
+    {
+        return (a.prevout   == b.prevout &&
+                a.scriptSig == b.scriptSig &&
+                a.nSequence == b.nSequence);
+    }
+
+    friend bool operator!=(const CTxIn& a, const CTxIn& b)
+    {
+        return !(a == b);
+    }
+
+    std::string ToStringShort() const
+    {
+        return strprintf(" %s %d", prevout.hash.ToString().c_str(), prevout.n);
+    }
+
+    std::string ToString() const
+    {
+        std::string str;
+        str += "CTxIn(";
+        str += prevout.ToString();
+        if (prevout.IsNull()){
+            str += strprintf(", coinbase %s", HexStr(scriptSig).c_str());
+        }else{
+            str += strprintf(", scriptSig=%s", scriptSig.ToString().substr(0,24).c_str());
+        }if (nSequence != std::numeric_limits<unsigned int>::max()){
+          str += strprintf(", nSequence=%u", nSequence);}
+        str += ")";
+        return str;
+    }
+
+    void print() const
+    {
+        printf("%s\n", ToString().c_str());
+    }
+};
+
+
+
+
+/** An output of a transaction.  It contains the public key that the next input
+ * must be able to sign with to claim it.
+ */
+class CTxOut
+{
+public:
+    int64_t nValue;
+    CScript scriptPubKey;
+
+    CTxOut()
+    {
+        SetNull();
+    }
+
+    CTxOut(int64_t nValueIn, CScript scriptPubKeyIn)
+    {
+        nValue = nValueIn;
+        scriptPubKey = scriptPubKeyIn;
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(nValue);
+        READWRITE(scriptPubKey);
+    )
+
+    void SetNull()
+    {
+        nValue = -1;
+        scriptPubKey.clear();
+    }
+
+    bool IsNull()
+    {
+        return (nValue == -1);
+    }
+
+    void SetEmpty()
+    {
+        nValue = 0;
+        scriptPubKey.clear();
+    }
+
+    bool IsEmpty() const
+    {
+        return (nValue == 0 && scriptPubKey.empty());
+    }
+
+    uint256 GetHash() const
+    {
+        return SerializeHash(*this);
+    }
+
+    friend bool operator==(const CTxOut& a, const CTxOut& b)
+    {
+        return (a.nValue       == b.nValue &&
+                a.scriptPubKey == b.scriptPubKey);
+    }
+
+    friend bool operator!=(const CTxOut& a, const CTxOut& b)
+    {
+        return !(a == b);
+    }
+
+    std::string ToStringShort() const
+    {
+        return strprintf(" out %s %s", FormatMoney(nValue).c_str(), scriptPubKey.ToString(true).c_str());
+    }
+
+    std::string ToString() const
+    {
+        if (IsEmpty()) return "CTxOut(empty)";
+        if (scriptPubKey.size() < 6)
+            return "CTxOut(error)";
+        return strprintf("CTxOut(nValue=%s, scriptPubKey=%s)", FormatMoney(nValue).c_str(), scriptPubKey.ToString().c_str());
+    }
+
+    void print() const
+    {
+        printf("%s\n", ToString().c_str());
+    }
+};
+
+
+
+
+enum GetMinFee_mode
+{
+    GM
