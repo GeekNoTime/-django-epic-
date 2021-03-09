@@ -167,4 +167,120 @@ public:
                 a.nTxPos    == b.nTxPos);
     }
 
-    friend bool
+    friend bool operator!=(const CDiskTxPos& a, const CDiskTxPos& b)
+    {
+        return !(a == b);
+    }
+
+
+    std::string ToString() const
+    {
+        if (IsNull())
+            return "null";
+        else
+            return strprintf("(nFile=%u, nBlockPos=%u, nTxPos=%u)", nFile, nBlockPos, nTxPos);
+    }
+
+    void print() const
+    {
+        printf("%s", ToString().c_str());
+    }
+};
+
+
+
+/** An inpoint - a combination of a transaction and an index n into its vin */
+class CInPoint
+{
+public:
+    CTransaction* ptx;
+    unsigned int n;
+
+    CInPoint() { SetNull(); }
+    CInPoint(CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
+    void SetNull() { ptx = NULL; n = (unsigned int) -1; }
+    bool IsNull() const { return (ptx == NULL && n == (unsigned int) -1); }
+};
+
+
+
+/** An outpoint - a combination of a transaction hash and an index n into its vout */
+class COutPoint
+{
+public:
+    uint256 hash;
+    unsigned int n;
+
+    COutPoint() { SetNull(); }
+    COutPoint(uint256 hashIn, unsigned int nIn) { hash = hashIn; n = nIn; }
+    IMPLEMENT_SERIALIZE( READWRITE(FLATDATA(*this)); )
+    void SetNull() { hash = 0; n = (unsigned int) -1; }
+    bool IsNull() const { return (hash == 0 && n == (unsigned int) -1); }
+
+    friend bool operator<(const COutPoint& a, const COutPoint& b)
+    {
+        return (a.hash < b.hash || (a.hash == b.hash && a.n < b.n));
+    }
+
+    friend bool operator==(const COutPoint& a, const COutPoint& b)
+    {
+        return (a.hash == b.hash && a.n == b.n);
+    }
+
+    friend bool operator!=(const COutPoint& a, const COutPoint& b)
+    {
+        return !(a == b);
+    }
+
+    std::string ToString() const
+    {
+        return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10).c_str(), n);
+    }
+
+    void print() const
+    {
+        printf("%s\n", ToString().c_str());
+    }
+};
+
+
+
+
+/** An input of a transaction.  It contains the location of the previous
+ * transaction's output that it claims and a signature that matches the
+ * output's public key.
+ */
+class CTxIn
+{
+public:
+    COutPoint prevout;
+    CScript scriptSig;
+    unsigned int nSequence;
+
+    CTxIn()
+    {
+        nSequence = std::numeric_limits<unsigned int>::max();
+    }
+
+    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), unsigned int nSequenceIn=std::numeric_limits<unsigned int>::max())
+    {
+        prevout = prevoutIn;
+        scriptSig = scriptSigIn;
+        nSequence = nSequenceIn;
+    }
+
+    CTxIn(uint256 hashPrevTx, unsigned int nOut, CScript scriptSigIn=CScript(), unsigned int nSequenceIn=std::numeric_limits<unsigned int>::max())
+    {
+        prevout = COutPoint(hashPrevTx, nOut);
+        scriptSig = scriptSigIn;
+        nSequence = nSequenceIn;
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(prevout);
+        READWRITE(scriptSig);
+        READWRITE(nSequence);
+    )
+
+    bool IsF
