@@ -525,4 +525,73 @@ public:
     bool IsCoinBase() const
     {
         return (vin.size() == 1 && vin[0].prevout.IsNull() && vout.size() >= 1);
- 
+    }
+
+    bool IsCoinStake() const
+    {
+        // ppcoin: the coin stake transaction is marked with the first output empty
+        return (vin.size() > 0 && (!vin[0].prevout.IsNull()) && vout.size() >= 2 && vout[0].IsEmpty());
+    }
+
+    /** Check for standard transaction types
+        @return True if all outputs (scriptPubKeys) use only standard transaction forms
+    */
+    bool IsStandard() const;
+
+    /** Check for standard transaction types
+        @param[in] mapInputs	Map of previous transactions that have outputs we're spending
+        @return True if all inputs (scriptSigs) use only standard transaction forms
+        @see CTransaction::FetchInputs
+    */
+    bool AreInputsStandard(const MapPrevTx& mapInputs) const;
+
+    /** Count ECDSA signature operations the old-fashioned (pre-0.6) way
+        @return number of sigops this transaction's outputs will produce when spent
+        @see CTransaction::FetchInputs
+    */
+    unsigned int GetLegacySigOpCount() const;
+
+    /** Count ECDSA signature operations in pay-to-script-hash inputs.
+
+        @param[in] mapInputs	Map of previous transactions that have outputs we're spending
+        @return maximum number of sigops required to validate this transaction's inputs
+        @see CTransaction::FetchInputs
+     */
+    unsigned int GetP2SHSigOpCount(const MapPrevTx& mapInputs) const;
+
+    /** Amount of bitcoins spent by this transaction.
+        @return sum of all outputs (note: does not include fees)
+     */
+    int64_t GetValueOut() const
+    {
+        int64_t nValueOut = 0;
+        BOOST_FOREACH(const CTxOut& txout, vout)
+        {
+            nValueOut += txout.nValue;
+            if (!MoneyRange(txout.nValue) || !MoneyRange(nValueOut))
+                throw std::runtime_error("CTransaction::GetValueOut() : value out of range");
+        }
+        return nValueOut;
+    }
+
+    /** Amount of bitcoins coming in to this transaction
+        Note that lightweight clients may not know anything besides the hash of previous transactions,
+        so may not be able to calculate this.
+
+        @param[in] mapInputs	Map of previous transactions that have outputs we're spending
+        @return	Sum of value of all inputs (scriptSigs)
+        @see CTransaction::FetchInputs
+     */
+    int64_t GetValueIn(const MapPrevTx& mapInputs) const;
+
+    int64_t GetMinFee(unsigned int nBlockSize=1, enum GetMinFee_mode mode=GMF_BLOCK, unsigned int nBytes = 0) const;
+
+    bool ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
+    {
+        CAutoFile filein = CAutoFile(OpenBlockFile(pos.nFile, 0, pfileRet ? "rb+" : "rb"), SER_DISK, CLIENT_VERSION);
+        if (!filein)
+            return error("CTransaction::ReadFromDisk() : OpenBlockFile failed");
+
+        // Read transaction
+        if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
+            return error("CTransaction::
