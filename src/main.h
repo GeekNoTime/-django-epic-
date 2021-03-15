@@ -758,3 +758,125 @@ public:
     bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true);
     bool AcceptToMemoryPool();
 };
+
+
+
+
+/**  A txdb record that contains the disk location of a transaction and the
+ * locations of transactions that spend its outputs.  vSpent is really only
+ * used as a flag, but having the location is very helpful for debugging.
+ */
+class CTxIndex
+{
+public:
+    CDiskTxPos pos;
+    std::vector<CDiskTxPos> vSpent;
+
+    CTxIndex()
+    {
+        SetNull();
+    }
+
+    CTxIndex(const CDiskTxPos& posIn, unsigned int nOutputs)
+    {
+        pos = posIn;
+        vSpent.resize(nOutputs);
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        if (!(nType & SER_GETHASH))
+            READWRITE(nVersion);
+        READWRITE(pos);
+        READWRITE(vSpent);
+    )
+
+    void SetNull()
+    {
+        pos.SetNull();
+        vSpent.clear();
+    }
+
+    bool IsNull()
+    {
+        return pos.IsNull();
+    }
+
+    friend bool operator==(const CTxIndex& a, const CTxIndex& b)
+    {
+        return (a.pos    == b.pos &&
+                a.vSpent == b.vSpent);
+    }
+
+    friend bool operator!=(const CTxIndex& a, const CTxIndex& b)
+    {
+        return !(a == b);
+    }
+    int GetDepthInMainChain() const;
+
+};
+
+
+
+
+
+/** Nodes collect new transactions into a block, hash them into a hash tree,
+ * and scan through nonce values to make the block's hash satisfy proof-of-work
+ * requirements.  When they solve the proof-of-work, they broadcast the block
+ * to everyone and the block is added to the block chain.  The first transaction
+ * in the block is a special one that creates a new coin owned by the creator
+ * of the block.
+ *
+ * Blocks are appended to blk0001.dat files on disk.  Their location on disk
+ * is indexed by CBlockIndex objects in memory.
+ */
+class CBlock
+{
+public:
+    // header
+    static const int CURRENT_VERSION=6;
+    int nVersion;
+    uint256 hashPrevBlock;
+    uint256 hashMerkleRoot;
+    unsigned int nTime;
+    unsigned int nBits;
+    unsigned int nNonce;
+
+    // network and disk
+    std::vector<CTransaction> vtx;
+
+    // ppcoin: block signature - signed by one of the coin base txout[N]'s owner
+    std::vector<unsigned char> vchBlockSig;
+
+    // memory only
+    mutable std::vector<uint256> vMerkleTree;
+
+    // Denial-of-service detection:
+    mutable int nDoS;
+    bool DoS(int nDoSIn, bool fIn) const { nDoS += nDoSIn; return fIn; }
+
+    CBlock()
+    {
+        SetNull();
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(hashPrevBlock);
+        READWRITE(hashMerkleRoot);
+        READWRITE(nTime);
+        READWRITE(nBits);
+        READWRITE(nNonce);
+
+        // ConnectBlock depends on vtx following header to generate CDiskTxPos
+        if (!(nType & (SER_GETHASH|SER_BLOCKHEADERONLY)))
+        {
+            READWRITE(vtx);
+            READWRITE(vchBlockSig);
+        }
+        else if (fRead)
+        {
+            const_cast<CBlock*>(this)->vtx.clear();
+            co
