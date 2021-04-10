@@ -1143,4 +1143,119 @@ public:
     CBlockIndex()
     {
         phashBlock = NULL;
-        pprev 
+        pprev = NULL;
+        pnext = NULL;
+        nFile = 0;
+        nBlockPos = 0;
+        nHeight = 0;
+        nChainTrust = 0;
+        nMint = 0;
+        nMoneySupply = 0;
+        nFlags = 0;
+        nStakeModifier = 0;
+        nStakeModifierChecksum = 0;
+        hashProofOfStake = 0;
+        prevoutStake.SetNull();
+        nStakeTime = 0;
+
+        nVersion       = 0;
+        hashMerkleRoot = 0;
+        nTime          = 0;
+        nBits          = 0;
+        nNonce         = 0;
+    }
+
+    CBlockIndex(unsigned int nFileIn, unsigned int nBlockPosIn, CBlock& block)
+    {
+        phashBlock = NULL;
+        pprev = NULL;
+        pnext = NULL;
+        nFile = nFileIn;
+        nBlockPos = nBlockPosIn;
+        nHeight = 0;
+        nChainTrust = 0;
+        nMint = 0;
+        nMoneySupply = 0;
+        nFlags = 0;
+        nStakeModifier = 0;
+        nStakeModifierChecksum = 0;
+        hashProofOfStake = 0;
+        if (block.IsProofOfStake())
+        {
+            SetProofOfStake();
+            prevoutStake = block.vtx[1].vin[0].prevout;
+            nStakeTime = block.vtx[1].nTime;
+        }
+        else
+        {
+            prevoutStake.SetNull();
+            nStakeTime = 0;
+        }
+
+        nVersion       = block.nVersion;
+        hashMerkleRoot = block.hashMerkleRoot;
+        nTime          = block.nTime;
+        nBits          = block.nBits;
+        nNonce         = block.nNonce;
+    }
+
+    CBlock GetBlockHeader() const
+    {
+        CBlock block;
+        block.nVersion       = nVersion;
+        if (pprev)
+            block.hashPrevBlock = pprev->GetBlockHash();
+        block.hashMerkleRoot = hashMerkleRoot;
+        block.nTime          = nTime;
+        block.nBits          = nBits;
+        block.nNonce         = nNonce;
+        return block;
+    }
+
+    uint256 GetBlockHash() const
+    {
+        return *phashBlock;
+    }
+
+    int64_t GetBlockTime() const
+    {
+        return (int64_t)nTime;
+    }
+
+    uint256 GetBlockTrust() const;
+
+    bool IsInMainChain() const
+    {
+        return (pnext || this == pindexBest);
+    }
+
+    bool CheckIndex() const
+    {
+        return true;
+    }
+
+    int64_t GetPastTimeLimit() const
+    {
+        return GetMedianTimePast();
+    }
+
+    enum { nMedianTimeSpan=11 };
+
+    int64_t GetMedianTimePast() const
+    {
+        int64_t pmedian[nMedianTimeSpan];
+        int64_t* pbegin = &pmedian[nMedianTimeSpan];
+        int64_t* pend = &pmedian[nMedianTimeSpan];
+
+        const CBlockIndex* pindex = this;
+        for (int i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
+            *(--pbegin) = pindex->GetBlockTime();
+
+        std::sort(pbegin, pend);
+        return pbegin[(pend - pbegin)/2];
+    }
+
+    int64_t GetMedianTime() const
+    {
+        const CBlockIndex* pindex = this;
+        for (in
