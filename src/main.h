@@ -1059,4 +1059,88 @@ public:
         printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu", vchBlockSig=%s)\n",
             GetHash().ToString().c_str(),
             nVersion,
-            hashPrev
+            hashPrevBlock.ToString().c_str(),
+            hashMerkleRoot.ToString().c_str(),
+            nTime, nBits, nNonce,
+            vtx.size(),
+            HexStr(vchBlockSig.begin(), vchBlockSig.end()).c_str());
+        for (unsigned int i = 0; i < vtx.size(); i++)
+        {
+            printf("  ");
+            vtx[i].print();
+        }
+        printf("  vMerkleTree: ");
+        for (unsigned int i = 0; i < vMerkleTree.size(); i++)
+            printf("%s ", vMerkleTree[i].ToString().substr(0,10).c_str());
+        printf("\n");
+    }
+
+
+    bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex);
+    bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck=false);
+    bool ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions=true);
+    bool SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew);
+    bool AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos);
+    bool CheckBlock(bool fCheckPOW=true, bool fCheckMerkleRoot=true, bool fCheckSig=true) const;
+    bool AcceptBlock();
+    bool GetCoinAge(uint64_t& nCoinAge) const; // ppcoin: calculate total coin age spent in block
+    bool SignBlock(CWallet& keystore, int64_t nFees);
+    bool CheckBlockSignature() const;
+
+private:
+    bool SetBestChainInner(CTxDB& txdb, CBlockIndex *pindexNew);
+};
+
+
+
+
+
+
+/** The block chain is a tree shaped structure starting with the
+ * genesis block at the root, with each block potentially having multiple
+ * candidates to be the next block.  pprev and pnext link a path through the
+ * main/longest chain.  A blockindex may have multiple pprev pointing back
+ * to it, but pnext will only point forward to the longest branch, or will
+ * be null if the block is not part of the longest chain.
+ */
+class CBlockIndex
+{
+public:
+    const uint256* phashBlock;
+    CBlockIndex* pprev;
+    CBlockIndex* pnext;
+    unsigned int nFile;
+    unsigned int nBlockPos;
+    uint256 nChainTrust; // ppcoin: trust score of block chain
+    int nHeight;
+
+    int64_t nMint;
+    int64_t nMoneySupply;
+
+    unsigned int nFlags;  // ppcoin: block index flags
+    enum
+    {
+        BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
+        BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
+        BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
+    };
+
+    uint64_t nStakeModifier; // hash modifier for proof-of-stake
+    unsigned int nStakeModifierChecksum; // checksum of index; in-memeory only
+
+    // proof-of-stake specific fields
+    COutPoint prevoutStake;
+    unsigned int nStakeTime;
+    uint256 hashProofOfStake;
+
+    // block header
+    int nVersion;
+    uint256 hashMerkleRoot;
+    unsigned int nTime;
+    unsigned int nBits;
+    unsigned int nNonce;
+
+    CBlockIndex()
+    {
+        phashBlock = NULL;
+        pprev 
