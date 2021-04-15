@@ -1258,4 +1258,101 @@ public:
     int64_t GetMedianTime() const
     {
         const CBlockIndex* pindex = this;
-        for (in
+        for (int i = 0; i < nMedianTimeSpan/2; i++)
+        {
+            if (!pindex->pnext)
+                return GetBlockTime();
+            pindex = pindex->pnext;
+        }
+        return pindex->GetMedianTimePast();
+    }
+
+    /**
+     * Returns true if there are nRequired or more blocks of minVersion or above
+     * in the last nToCheck blocks, starting at pstart and going backwards.
+     */
+    static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart,
+                                unsigned int nRequired, unsigned int nToCheck);
+
+
+    bool IsProofOfWork() const
+    {
+        return !(nFlags & BLOCK_PROOF_OF_STAKE);
+    }
+
+    bool IsProofOfStake() const
+    {
+        return (nFlags & BLOCK_PROOF_OF_STAKE);
+    }
+
+    void SetProofOfStake()
+    {
+        nFlags |= BLOCK_PROOF_OF_STAKE;
+    }
+
+    unsigned int GetStakeEntropyBit() const
+    {
+        return ((nFlags & BLOCK_STAKE_ENTROPY) >> 1);
+    }
+
+    bool SetStakeEntropyBit(unsigned int nEntropyBit)
+    {
+        if (nEntropyBit > 1)
+            return false;
+        nFlags |= (nEntropyBit? BLOCK_STAKE_ENTROPY : 0);
+        return true;
+    }
+
+    bool GeneratedStakeModifier() const
+    {
+        return (nFlags & BLOCK_STAKE_MODIFIER);
+    }
+
+    void SetStakeModifier(uint64_t nModifier, bool fGeneratedStakeModifier)
+    {
+        nStakeModifier = nModifier;
+        if (fGeneratedStakeModifier)
+            nFlags |= BLOCK_STAKE_MODIFIER;
+    }
+
+    std::string ToString() const
+    {
+        return strprintf("CBlockIndex(nprev=%p, pnext=%p, nFile=%u, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s)(%d)(%s), nStakeModifier=%016"PRIx64", nStakeModifierChecksum=%08x, hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
+            pprev, pnext, nFile, nBlockPos, nHeight,
+            FormatMoney(nMint).c_str(), FormatMoney(nMoneySupply).c_str(),
+            GeneratedStakeModifier() ? "MOD" : "-", GetStakeEntropyBit(), IsProofOfStake()? "PoS" : "PoW",
+            nStakeModifier, nStakeModifierChecksum,
+            hashProofOfStake.ToString().c_str(),
+            prevoutStake.ToString().c_str(), nStakeTime,
+            hashMerkleRoot.ToString().c_str(),
+            GetBlockHash().ToString().c_str());
+    }
+
+    void print() const
+    {
+        printf("%s\n", ToString().c_str());
+    }
+};
+
+
+
+/** Used to marshal pointers into hashes for db storage. */
+class CDiskBlockIndex : public CBlockIndex
+{
+private:
+    uint256 blockHash;
+
+public:
+    uint256 hashPrev;
+    uint256 hashNext;
+
+    CDiskBlockIndex()
+    {
+        hashPrev = 0;
+        hashNext = 0;
+        blockHash = 0;
+    }
+
+    explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex)
+    {
+        hashPrev = (pprev ? pprev->GetBlockHash
