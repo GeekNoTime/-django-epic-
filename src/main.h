@@ -1355,4 +1355,113 @@ public:
 
     explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex)
     {
-        hashPrev = (pprev ? pprev->GetBlockHash
+        hashPrev = (pprev ? pprev->GetBlockHash() : 0);
+        hashNext = (pnext ? pnext->GetBlockHash() : 0);
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        if (!(nType & SER_GETHASH))
+            READWRITE(nVersion);
+
+        READWRITE(hashNext);
+        READWRITE(nFile);
+        READWRITE(nBlockPos);
+        READWRITE(nHeight);
+        READWRITE(nMint);
+        READWRITE(nMoneySupply);
+        READWRITE(nFlags);
+        READWRITE(nStakeModifier);
+        if (IsProofOfStake())
+        {
+            READWRITE(prevoutStake);
+            READWRITE(nStakeTime);
+            READWRITE(hashProofOfStake);
+        }
+        else if (fRead)
+        {
+            const_cast<CDiskBlockIndex*>(this)->prevoutStake.SetNull();
+            const_cast<CDiskBlockIndex*>(this)->nStakeTime = 0;
+            const_cast<CDiskBlockIndex*>(this)->hashProofOfStake = 0;
+        }
+
+        // block header
+        READWRITE(this->nVersion);
+        READWRITE(hashPrev);
+        READWRITE(hashMerkleRoot);
+        READWRITE(nTime);
+        READWRITE(nBits);
+        READWRITE(nNonce);
+        READWRITE(blockHash);
+    )
+
+    uint256 GetBlockHash() const
+    {
+        if (fUseFastIndex && (nTime < GetAdjustedTime() - 24 * 60 * 60) && blockHash != 0)
+            return blockHash;
+
+        CBlock block;
+        block.nVersion        = nVersion;
+        block.hashPrevBlock   = hashPrev;
+        block.hashMerkleRoot  = hashMerkleRoot;
+        block.nTime           = nTime;
+        block.nBits           = nBits;
+        block.nNonce          = nNonce;
+
+        const_cast<CDiskBlockIndex*>(this)->blockHash = block.GetHash();
+
+        return blockHash;
+    }
+
+    std::string ToString() const
+    {
+        std::string str = "CDiskBlockIndex(";
+        str += CBlockIndex::ToString();
+        str += strprintf("\n                hashBlock=%s, hashPrev=%s, hashNext=%s)",
+            GetBlockHash().ToString().c_str(),
+            hashPrev.ToString().c_str(),
+            hashNext.ToString().c_str());
+        return str;
+    }
+
+    void print() const
+    {
+        printf("%s\n", ToString().c_str());
+    }
+};
+
+
+
+
+
+
+
+
+/** Describes a place in the block chain to another node such that if the
+ * other node doesn't have the same branch, it can find a recent common trunk.
+ * The further back it is, the further before the fork it may be.
+ */
+class CBlockLocator
+{
+protected:
+    std::vector<uint256> vHave;
+public:
+
+    CBlockLocator()
+    {
+    }
+
+    explicit CBlockLocator(const CBlockIndex* pindex)
+    {
+        Set(pindex);
+    }
+
+    explicit CBlockLocator(uint256 hashBlock)
+    {
+        std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
+        if (mi != mapBlockIndex.end())
+            Set((*mi).second);
+    }
+
+    CBlockLocator(const std::vector<uint256>& vHaveIn)
+    
