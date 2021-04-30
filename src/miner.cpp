@@ -145,4 +145,68 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake, int64_t* pFees)
     nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SIZE-1000), nBlockMaxSize));
 
     // How much of the block should be dedicated to high-priority transactions,
-    //
+    // included regardless of the fees they pay
+    unsigned int nBlockPrioritySize = GetArg("-blockprioritysize", 27000);
+    nBlockPrioritySize = std::min(nBlockMaxSize, nBlockPrioritySize);
+
+    // Minimum block size you want to create; block will be filled with free transactions
+    // until there are no more or the block reaches this size:
+    unsigned int nBlockMinSize = GetArg("-blockminsize", 0);
+    nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
+
+    // Fee-per-kilobyte amount considered the same as "free"
+    // Be careful setting this: if you set it to zero then
+    // a transaction spammer can cheaply fill blocks using
+    // 1-satoshi-fee transactions. It should be set above the real
+    // cost to you of processing a transaction.
+    int64_t nMinTxFee = MIN_TX_FEE;
+    if (mapArgs.count("-mintxfee"))
+        ParseMoney(mapArgs["-mintxfee"], nMinTxFee);
+
+    pblock->nBits = GetNextTargetRequired(pindexPrev, fProofOfStake);
+
+    // Collect memory pool transactions into the block
+    int64_t nFees = 0;
+    {
+        LOCK2(cs_main, mempool.cs);
+        CTxDB txdb("r");
+
+        // Priority order to process transactions
+        list<COrphan> vOrphan; // list memory doesn't move
+        map<uint256, vector<COrphan*> > mapDependers;
+
+        // This vector will be sorted into a priority queue:
+        vector<TxPriority> vecPriority;
+        vecPriority.reserve(mempool.mapTx.size());
+        for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi)
+        {
+            CTransaction& tx = (*mi).second;
+            if (tx.IsCoinBase() || tx.IsCoinStake() || !tx.IsFinal())
+                continue;
+
+            COrphan* porphan = NULL;
+            double dPriority = 0;
+            int64_t nTotalIn = 0;
+            bool fMissingInputs = false;
+            BOOST_FOREACH(const CTxIn& txin, tx.vin)
+            {
+                // Read prev transaction
+                CTransaction txPrev;
+                CTxIndex txindex;
+                if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
+                {
+                    // This should never happen; all transactions in the memory
+                    // pool should connect to either transactions in the chain
+                    // or other transactions in the memory pool.
+                    if (!mempool.mapTx.count(txin.prevout.hash))
+                    {
+                        printf("ERROR: mempool transaction missing input\n");
+                        if (fDebug) assert("mempool transaction missing input" == 0);
+                        fMissingInputs = true;
+                        if (porphan)
+                            vOrphan.pop_back();
+                        break;
+                    }
+
+                    // Has to wait for dependencies
+                    i
