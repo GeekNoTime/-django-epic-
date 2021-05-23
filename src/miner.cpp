@@ -426,4 +426,80 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
     tmp.block.nNonce         = pblock->nNonce;
 
     FormatHashBlocks(&tmp.block, sizeof(tmp.block));
-    FormatHashBlocks(&tmp.h
+    FormatHashBlocks(&tmp.hash1, sizeof(tmp.hash1));
+
+    // Byte swap all the input buffer
+    for (unsigned int i = 0; i < sizeof(tmp)/4; i++)
+        ((unsigned int*)&tmp)[i] = ByteReverse(((unsigned int*)&tmp)[i]);
+
+    // Precalc the first half of the first hash, which stays constant
+    SHA256Transform(pmidstate, &tmp.block, pSHA256InitState);
+
+    memcpy(pdata, &tmp.block, 128);
+    memcpy(phash1, &tmp.hash1, 64);
+}
+
+
+bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
+{
+    uint256 hashBlock = pblock->GetHash();
+    uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
+
+    if(!pblock->IsProofOfWork())
+        return error("CheckWork() : %s is not a proof-of-work block", hashBlock.GetHex().c_str());
+
+    if (hashBlock > hashTarget)
+        return error("CheckWork() : proof-of-work not meeting target");
+
+    //// debug print
+    printf("CheckWork() : new proof-of-work block found  \n  hash: %s  \ntarget: %s\n", hashBlock.GetHex().c_str(), hashTarget.GetHex().c_str());
+    pblock->print();
+    printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
+
+    // Found a solution
+    {
+        LOCK(cs_main);
+        if (pblock->hashPrevBlock != hashBestChain)
+            return error("CheckWork() : generated block is stale");
+
+        // Remove key from key pool
+        reservekey.KeepKey();
+
+        // Track how many getdata requests this block gets
+        {
+            LOCK(wallet.cs_wallet);
+            wallet.mapRequestCount[hashBlock] = 0;
+        }
+
+        // Process this block the same as if we had received it from another node
+        if (!ProcessBlock(NULL, pblock))
+            return error("CheckWork() : ProcessBlock, block not accepted");
+    }
+
+    return true;
+}
+
+bool CheckStake(CBlock* pblock, CWallet& wallet)
+{
+    uint256 proofHash = 0, hashTarget = 0;
+    uint256 hashBlock = pblock->GetHash();
+
+    if(!pblock->IsProofOfStake())
+        return error("CheckStake() : %s is not a proof-of-stake block", hashBlock.GetHex().c_str());
+
+    // verify hash target and signature of coinstake tx
+    if (!CheckProofOfStake(pblock->vtx[1], pblock->nBits, proofHash, hashTarget))
+        return error("CheckStake() : proof-of-stake checking failed");
+
+    //// debug print
+    printf("CheckStake() : new proof-of-stake block found  \n  hash: %s \nproofhash: %s  \ntarget: %s\n", hashBlock.GetHex().c_str(), proofHash.GetHex().c_str(), hashTarget.GetHex().c_str());
+    pblock->print();
+    printf("out %s\n", FormatMoney(pblock->vtx[1].GetValueOut()).c_str());
+
+    // Found a solution
+    {
+        LOCK(cs_main);
+        if (pblock->hashPrevBlock != hashBestChain)
+            return error("CheckStake() : generated block is stale");
+
+        // Track how many getd
