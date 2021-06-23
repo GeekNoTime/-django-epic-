@@ -37,4 +37,47 @@
         <file alias="staking_off">res/icons/staking_off.png</file>
         <file alias="staking_on">res/icons/staking_on.png</file>
         <file alias="reddit">res/icons/reddit.png</file>
-        <file alias="twitter">res/icons/TW.p
+        <file alias="twitter">res/icons/TW.png</file>
+        <file alias="face">res/icons/face.png</file>
+        <file alias="mini">res/icons/mini.png</file>
+        <file alias="/icons/HongyunCoin2-64">res/icons/HongyunCoin2task.png</file>
+        <file alias="github">res/icons/github-logo.png</file>
+        <file alias="HongyunCoin2-64">res/icons/HongyunCoin2-64.png</file>
+        <file alias="transpix">res/icons/transpix.png</file>
+        <file alias="not_synced">res/icons/notsynced.png</file>
+        <file alias="changevalbtc">res/icons/change-val-btc.png</file>
+        <file alias="changevalHongyunCoin2">res/icons/change-val-HongyunCoin2.png</file>
+        <file alias="changevaldollar">res/icons/change-val-usd.png</file>
+        <file>res/icons/QQguoup.png</file>
+    </qresource>
+    <qresource prefix="/images">
+        <file alias="splash">res/images/splash.png</file>
+        <file alias="header-top">res/images/header-top.png</file>
+        <file alias="menu">res/images/menu.png</file>
+        <file alias="encryptwallet">res/images/encrypt-wallet-btn.png</file>
+        <file alias="quicksupport">res/images/quick-support.png</file>
+        <file alias="signmessage">res/images/sign-message-btn.png</file>
+        <file alias="systemfunctions">res/images/system-functions.png</file>
+        <file alias="verifymessage">res/images/verify-message-btn.png</file>
+        <file alias="walletoptions">res/images/wallet-options.png</file>
+        <file alias="aboutHongyunCoin2">res/images/about-HongyunCoin2-btn.png</file>
+        <file alias="backupwallet">res/images/backup-wallet-btn.png</file>
+        <file alias="debugwindow">res/images/debug-window-btn.png</file>
+        <file alias="howtostake">res/images/how-to-stake-btn.png</file>
+        <file alias="newpassphrase">res/images/new-passphrase-btn.png</file>
+        <file alias="balance">res/images/balance.png</file>
+        <file alias="detail">res/images/detail.png</file>
+        <file alias="recent">res/images/recent.png</file>
+        <file alias="lockwallet">res/images/lock-wallet-btn.png</file>
+        <file alias="unlockwallet">res/images/unlock-wallet-png.png</file>
+    </qresource>
+    <qresource prefix="/translations">
+        <file alias="en">locale/bitcoin_en.qm</file>
+        <file alias="zh_CN">locale/bitcoin_zh_CN.qm</file>
+    </qresource>
+    <qresource prefix="/fonts">
+        <file>OpenSans-Bold.ttf</file>
+        <file>OpenSans-ExtraBold.ttf</file>
+        <file>OpenSans-Regular.ttf</file>
+    </qresource>
+</RCC>
