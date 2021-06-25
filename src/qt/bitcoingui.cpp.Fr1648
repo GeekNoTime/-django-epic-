@@ -24,7 +24,7 @@
 #include "overviewpage.h"
 #include "statisticspage.h"
 #include "blockbrowser.h"
-//#include "poolbrowser.h"
+#include "poolbrowser.h"
 #include "chatwindow.h"
 #include "bitcoinunits.h"
 #include "guiconstants.h"
@@ -72,7 +72,7 @@ extern CWallet* pwalletMain;
 extern int64_t nLastCoinStakeSearchInterval;
 extern unsigned int nTargetSpacing;
 double GetPoSKernelPS();
-//int convertmode = 0;
+int convertmode = 0;
 
 BitcoinGUI::BitcoinGUI(QWidget *parent):
     QMainWindow(parent),
@@ -89,9 +89,9 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 {
     setFixedSize(1000, 600);
     setWindowFlags(Qt::FramelessWindowHint);
-    setWindowTitle(tr("HongyunCoin2") + " " + tr("Wallet"));
-    setObjectName("HongyunCoin2-qt");
-    setStyleSheet("#HongyunCoin2-qt {background-color:#fbf9f6; font-family:'Open Sans';}");
+    setWindowTitle(tr("HYC") + " " + tr("Wallet"));
+    setObjectName("HYC-qt");
+    setStyleSheet("#HYC-qt {background-color:#fbf9f6; font-family:'Open Sans';}");
 
 #ifndef Q_OS_MAC
     qApp->setWindowIcon(QIcon(":icons/bitcoin"));
@@ -121,7 +121,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     statisticsPage = new StatisticsPage(this);
     chatWindow = new ChatWindow(this);
 	blockBrowser = new BlockBrowser(this);
-	//poolBrowser = new PoolBrowser(this);
+	poolBrowser = new PoolBrowser(this);
     transactionsPage = new QWidget(this);
     QVBoxLayout *transactionVbox = new QVBoxLayout();
     transactionView = new TransactionView(this);
@@ -140,7 +140,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     centralWidget->addWidget(statisticsPage);
     centralWidget->addWidget(chatWindow);
     centralWidget->addWidget(blockBrowser);
-	//centralWidget->addWidget(poolBrowser);
+	centralWidget->addWidget(poolBrowser);
     centralWidget->addWidget(transactionsPage);
     centralWidget->addWidget(addressBookPage);
     centralWidget->addWidget(receiveCoinsPage);
@@ -155,8 +155,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     labelStakingIcon = new QLabel();
     labelConnectionsIcon = new QLabel();
     labelBlocksIcon = new QLabel();
-   // actionConvertIcon = new QAction(QIcon(":/icons/changevalHongyunCoin2"), tr(""), this);
-    //actionConvertIcon->setToolTip("Convert currency");
+    actionConvertIcon = new QAction(QIcon(":/icons/changevalHYC"), tr(""), this);
+    actionConvertIcon->setToolTip("Convert currency");
 
     // Get current staking status
     if (GetBoolArg("-staking", true))
@@ -167,7 +167,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
         updateStakingIcon();
     }
 
-    // Progress bar and label for blocks download, disabled for current HongyunCoin2 wallet
+    // Progress bar and label for blocks download, disabled for current HYC wallet
     progressBarLabel = new QLabel();
     progressBarLabel->setVisible(false);
     progressBar = new QProgressBar();
@@ -175,8 +175,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Create toolbars
     createToolBars();
 
-    // When clicking the current currency logo, the currency will be converted into HongyunCoin2, BTC or USD
-   // connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    // When clicking the current currency logo, the currency will be converted into HYC, BTC or USD
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
 
     // Clicking on a transaction on the overview page simply sends you to transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
@@ -234,75 +234,74 @@ void BitcoinGUI::createActions()
     QActionGroup *tabGroup = new QActionGroup(this);
 
     // Navigation bar actions
-    overviewAction = new QAction(tr("&Dashboard"), this);
+    overviewAction = new QAction("Dashboard", this);
     overviewAction->setToolTip(tr("Show general overview"));
     overviewAction->setCheckable(true);
     overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
     tabGroup->addAction(overviewAction);
 
-    sendCoinsAction = new QAction(tr("&Send"), this);
-    sendCoinsAction->setToolTip(tr("Send coins to a HongyunCoin2 address"));
+    sendCoinsAction = new QAction("Send", this);
+    sendCoinsAction->setToolTip(tr("Send coins to a HYC address"));
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
     sendCoinsAction->setObjectName("send");
     tabGroup->addAction(sendCoinsAction);
 
-    receiveCoinsAction = new QAction(tr("&Receive"), this);
+    receiveCoinsAction = new QAction("Receive", this);
     receiveCoinsAction->setToolTip(tr("Receive addresses list"));
     receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
     receiveCoinsAction->setCheckable(true);
     tabGroup->addAction(receiveCoinsAction);
 
-    historyAction = new QAction(tr("&Transactions"), this);
+    historyAction = new QAction("Transactions", this);
     historyAction->setToolTip(tr("Browse transaction history"));
     historyAction->setCheckable(true);
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(historyAction);
 
-    addressBookAction = new QAction(tr("&Address Book"), this);
+    addressBookAction = new QAction("Address Book", this);
     addressBookAction->setToolTip(tr("Edit the list of stored addresses and labels"));
     addressBookAction->setCheckable(true);
     addressBookAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
     tabGroup->addAction(addressBookAction);
 
-//    poolAction = new QAction(tr("&Market Data"), this);
-//    poolAction->setToolTip(tr("Show market data"));
-//    poolAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
-//    poolAction->setCheckable(true);
-//    tabGroup->addAction(poolAction);
+    poolAction = new QAction("Market Data", this);
+    poolAction->setToolTip(tr("Show market data"));
+    poolAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
+    poolAction->setCheckable(true);
+    tabGroup->addAction(poolAction);
 
-    chatAction = new QAction(tr("&Social"), this);
+    chatAction = new QAction("Social", this);
     chatAction->setToolTip(tr("View social media info"));
     chatAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
     chatAction->setCheckable(true);
     tabGroup->addAction(chatAction);
 
-    blockAction = new QAction(tr("&Block Explorer"), this);
-    blockAction->setToolTip(tr("Explore the HongyunCoin2 blockchain"));
+    blockAction = new QAction("Block Explorer", this);
+    blockAction->setToolTip(tr("Explore the HYC blockchain"));
     blockAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_8));
     blockAction->setCheckable(true);
     tabGroup->addAction(blockAction);
 
-    actionmenuAction = new QAction(tr("&Actions"), this);
+    actionmenuAction = new QAction("Actions", this);
     actionmenuAction->setToolTip(tr("Multiple wallet actions"));
     actionmenuAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_9));
     actionmenuAction->setCheckable(true);
     tabGroup->addAction(actionmenuAction);
 
-    settingsAction = new QAction(tr("&Actions"), this);
+    settingsAction = new QAction("Actions", this);
     settingsAction->setToolTip(tr("Multiple wallet actions"));
     settingsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_9));
     settingsAction->setCheckable(true);
     tabGroup->addAction(settingsAction);
 
-    statisticsAction = new QAction(tr("&Statistics"), this);
-    statisticsAction->setToolTip(tr("View HongyunCoin2 statistics"));
-    statisticsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
+    statisticsAction = new QAction("Statistics", this);
+    statisticsAction->setToolTip(tr("View HYC statistics"));
     statisticsAction->setCheckable(true);
     tabGroup->addAction(statisticsAction);
-    
-    optionsAction = new QAction(tr("&Settings"), this);
-    optionsAction->setToolTip(tr("Modify settings for HongyunCoin2 wallet"));
+
+    optionsAction = new QAction("Settings", this);
+    optionsAction->setToolTip(tr("Modify settings for HYC wallet"));
     tabGroup->addAction(optionsAction);
 
     // Connect actions to functions
@@ -312,8 +311,8 @@ void BitcoinGUI::createActions()
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(blockAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(blockAction, SIGNAL(triggered()), this, SLOT(gotoBlockBrowser()));
-   // connect(poolAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-	//  connect(poolAction, SIGNAL(triggered()), this, SLOT(gotoPoolBrowser()));
+    connect(poolAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+	connect(poolAction, SIGNAL(triggered()), this, SLOT(gotoPoolBrowser()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
     connect(statisticsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -329,39 +328,39 @@ void BitcoinGUI::createActions()
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
 
     // Upper right toolbar actions
-    toggleHideAction = new QAction(QIcon(":/icons/mini"), tr("&Minimalize"), this);
+    toggleHideAction = new QAction(QIcon(":/icons/mini"), tr("&Show / Hide"), this);
 
-    quitAction = new QAction(QIcon(":/icons/quit"), tr("&Exit"), this);
-    quitAction->setToolTip(tr("Close"));
+    quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
+    quitAction->setToolTip(tr("Quit application"));
 
-    quitAction2 = new QAction(QIcon(":/icons/quit"), tr("&Exit"), this);
+    quitAction2 = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction2->setToolTip(tr("Quit application"));
     quitAction2->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
 
     // ACTIONS tab actions
-    tutoStackAction = new QAction(QIcon(":/images/howtostake"),tr("&Staking tutorial"), this);
-    aboutAction = new QAction(QIcon(":/images/aboutHongyunCoin2"), tr("&About HongyunCoin2"), this);
-    aboutAction->setToolTip(tr("Show information about HongyunCoin2"));
-    aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("&About Qt"), this);
+    tutoStackAction = new QAction(QIcon(":/images/howtostake"),tr(""), this);
+    aboutAction = new QAction(QIcon(":/images/aboutHYC"), tr(""), this);
+    aboutAction->setToolTip(tr("Show information about HYC"));
+    aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
     aboutQtAction->setToolTip(tr("Show information about Qt"));
-    encryptWalletAction = new QAction(QIcon(":/images/encryptwallet"), tr("&Encrypt wallet"), this);
+    encryptWalletAction = new QAction(QIcon(":/images/encryptwallet"), tr(""), this);
     encryptWalletAction->setToolTip(tr("Encrypt or decrypt wallet"));
     encryptWalletAction->setCheckable(true);
-    backupWalletAction = new QAction(QIcon(":/images/backupwallet"), tr("&Backup wallet"), this);
+    backupWalletAction = new QAction(QIcon(":/images/backupwallet"), tr(""), this);
     backupWalletAction->setToolTip(tr("Backup wallet to another location"));
-    changePassphraseAction = new QAction(QIcon(":/images/newpassphrase"), tr("&Change passphrase"), this);
+    changePassphraseAction = new QAction(QIcon(":/images/newpassphrase"), tr(""), this);
     changePassphraseAction->setToolTip(tr("Change the passphrase used for wallet encryption"));
-    unlockWalletAction = new QAction(QIcon(":/images/unlockwallet"), tr("&Unlock wallet"), this);
+    unlockWalletAction = new QAction(QIcon(":/images/unlockwallet"), tr(""), this);
     unlockWalletAction->setToolTip(tr("Unlock wallet"));
-    lockWalletAction = new QAction(QIcon(":/images/lockwallet"), tr("&Lock wallet"), this);
+    lockWalletAction = new QAction(QIcon(":/images/lockwallet"), tr(""), this);
     lockWalletAction->setToolTip(tr("Lock wallet"));
-    signMessageAction = new QAction(QIcon(":/images/signmessage"), tr("&Sign message"), this);
-    verifyMessageAction = new QAction(QIcon(":/images/verifymessage"), tr("&Verify message"), this);
+    signMessageAction = new QAction(QIcon(":/images/signmessage"), tr(""), this);
+    verifyMessageAction = new QAction(QIcon(":/images/verifymessage"), tr(""), this);
     exportAction = new QAction(QIcon(":/icons/export"), tr("&Export..."), this);
     exportAction->setToolTip(tr("Export the data in the current tab to a file"));
-    openRPCConsoleAction = new QAction(QIcon(":/images/debugwindow"), tr("&Debug window"), this);
+    openRPCConsoleAction = new QAction(QIcon(":/images/debugwindow"), tr(""), this);
     openRPCConsoleAction->setToolTip(tr("Open debugging and diagnostic console"));
-    signMessageAction2 = new QAction(QIcon(":/icons/edit"), tr("&Sign message..."), this);
+    signMessageAction2 = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
     verifyMessageAction2 = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
     openRPCConsoleAction2 = new QAction(QIcon(":/icons/debugwindow"), tr("&Debug window"), this);
     openRPCConsoleAction2->setToolTip(tr("Open debugging and diagnostic console"));
@@ -391,6 +390,8 @@ void BitcoinGUI::createActions()
     help->addSeparator();
     help->addAction(aboutAction);
     help->addAction(aboutQtAction);
+#else
+    //Don't create menu, frameless design
 #endif
 
     // Connect actions to slots
@@ -487,34 +488,8 @@ void BitcoinGUI::createToolBars()
     statusBar->addWidget(labelConnectionsIcon);
     statusBar->addWidget(labelBlocksIcon);
     statusBar->addWidget(labelStakingIcon);
-    statusBar->setStyleSheet("QToolBar QToolButton {border:0px;} QToolBar{background-image: url(:/images/header-top); background-repeat:no-repeat; border:0px;}");
-    //insertToolBarBreak(statusBar);
-
-    //Create toolbar to convert, minimalise and quit
-    QToolBar *quitBar = addToolBar(tr("Minimalise and Quit bar"));
-    quitBar->setObjectName("quitBar");
-    addToolBar(Qt::RightToolBarArea,quitBar);
-    quitBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
-    quitBar->setOrientation(Qt::Horizontal);
-    quitBar->setMovable(false);
-    quitBar->setIconSize(QSize(35,28));
-    quitBar->setFixedSize(128,28);
-    QWidget* quitSpacer = new QWidget();
-    quitSpacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    quitBar->addWidget(quitSpacer);
-   // quitBar->addAction(actionConvertIcon);
-    quitBar->addAction(toggleHideAction);
-    quitBar->addAction(quitAction);
-    quitBar->setStyleSheet("QToolBar QToolButton {border:0px;} QToolBar { border:0px;}");
-    QHBoxLayout *quitBarVbox = new QHBoxLayout();
-    quitBarVbox->addWidget(quitBar);
-    quitBarVbox->setContentsMargins(0,0,0,0);
-    wId = new QWidget(this);
-    wId->setFixedSize(128,28);
-    wId->move(870,0);
-    wId->setLayout(quitBarVbox);
-    wId->setFocus();
-    insertToolBarBreak(quitBar);
+    statusBar->setStyleSheet("QToolBar QToolButton {border:0px; qproperty-alignment: 'AlignBottom | AlignLeft'; qproperty-wordWrap: true;} QToolBar{background-image: url(:/images/header-top); background-repeat:no-repeat; border:0px; width:1000px; height:28px;}");
+    insertToolBarBreak(statusBar);
 
     QToolBar *navigationBar = addToolBar(tr("Navigation Bar"));
     navigationBar->setObjectName("navigationBar");
@@ -529,13 +504,39 @@ void BitcoinGUI::createToolBars()
     navigationBar->addAction(receiveCoinsAction);
     navigationBar->addAction(historyAction);
     navigationBar->addAction(addressBookAction);
-    //navigationBar->addAction(poolAction);
+    navigationBar->addAction(poolAction);
     navigationBar->addAction(chatAction);
-    navigationBar->addAction(statisticsAction);
-//    navigationBar->addAction(blockAction);
+    navigationBar->addAction(blockAction);
     navigationBar->addAction(settingsAction);
-    navigationBar->setStyleSheet("QToolBar {border: 0px; background-image: url(:/images/menu); background-repeat:no-repeat;} QToolBar QToolButton:hover{color: #F37255;} QToolBar QToolButton:checked {color: #F37255;} QToolBar QToolButton{font-weight:bold; margin-bottom:12px; padding-left:8px; font-size:10px; font-family:'Open Sans Extrabold'; color:#848890; text-align:left; background:transparent; text-transform:uppercase; height:100%;}");
+    navigationBar->setStyleSheet("QToolBar {border: 0px; height:54px; background-image: url(:/images/menu); background-repeat:no-repeat; width:1000px; height:60px;} QToolBar QToolButton:hover{color: #F37255;} QToolBar QToolButton:checked {color: #F37255;} QToolBar QToolButton{font-weight:bold; margin-bottom:12px; padding-left:8px; font-size:11px; font-family:'Open Sans Extrabold'; color:#848890; text-align:left; background:transparent; text-transform:uppercase; height:100%;}");
     insertToolBarBreak(navigationBar);
+
+    //Create toolbar to convert, minimalise and quit
+    QToolBar *quitBar = addToolBar(tr("Minimalise and Quit bar"));
+    quitBar->setObjectName("quitBar");
+    addToolBar(Qt::RightToolBarArea,quitBar);
+    quitBar->setOrientation(Qt::Horizontal);
+    quitBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    quitBar->setMovable(false);
+    quitBar->setIconSize(QSize(35,28));
+    quitBar->setFixedSize(1000,28);
+    QWidget* quitSpacer = new QWidget();
+    quitSpacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    quitBar->addWidget(quitSpacer);
+    quitBar->addAction(actionConvertIcon);
+    quitBar->addAction(toggleHideAction);
+    quitBar->addAction(quitAction);
+    //quitBar->setStyleSheet("QToolBar QToolButton {border:0px; qproperty-alignment: 'AlignBottom | AlignLeft'; qproperty-wordWrap: true; } QToolBar { border:0px; width:130px; height:28px;}");
+    quitBar->setStyleSheet("QToolBar QToolButton {border:0px;} QToolBar { border:0px; width:1000px; height:28px;}");
+    QHBoxLayout *quitBarVbox = new QHBoxLayout();
+    quitBarVbox->addWidget(quitBar);
+    quitBarVbox->setContentsMargins(0,0,0,0);
+    wId = new QWidget(this);
+    wId->setFixedSize(120,28);
+    wId->move(875,0);
+    wId->setLayout(quitBarVbox);
+    wId->setFocus();
+    insertToolBarBreak(quitBar);
 
     //Export and Settings bar
     QToolBar *extraFunctionsBar = addToolBar(tr("Extra Functions bar"));
@@ -546,7 +547,8 @@ void BitcoinGUI::createToolBars()
     extraFunctionsBar->setMovable(false);
     extraFunctionsBar->setFixedWidth(200);
     extraFunctionsBar->setFixedHeight(60);
-    extraFunctionsBar->setStyleSheet("QToolBar {border:0px;} QToolBar QToolButton:hover{color: #F37255;} QToolBar QToolButton:checked {color: #F37255;} QToolBar QToolButton{margin-bottom:13px; font-size:11px; font-family:'Open Sans Extrabold'; color:#33363B; text-align:right; background:transparent; text-transform:uppercase; height:100%; padding-left:20px;}");
+    extraFunctionsBar->setStyleSheet("QToolBar {border:0px; height:54px;} QToolBar QToolButton:hover{color: #F37255;} QToolBar QToolButton:checked {color: #F37255;} QToolBar QToolButton{margin-bottom:13px; font-size:11px; font-family:'Open Sans Extrabold'; color:#33363B; text-align:right; background:transparent; text-transform:uppercase; height:100%; padding-left:20px;}");
+    extraFunctionsBar->setFont(QFont(":/fonts/OpenSansBold"));
     QWidget* extraSpacer = new QWidget();
     extraSpacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     extraFunctionsBar->addWidget(extraSpacer);
@@ -580,7 +582,7 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
 #endif
             if(trayIcon)
             {
-                trayIcon->setToolTip(tr("HongyunCoin2 client") + QString(" ") + tr("[testnet]"));
+                trayIcon->setToolTip(tr("HYC client") + QString(" ") + tr("[testnet]"));
                 trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
                 toggleHideAction->setIcon(QIcon(":/icons/toolbar_testnet"));
             }
@@ -622,7 +624,7 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
         statisticsPage->setModel(clientModel);
         chatWindow->setModel(clientModel);
         blockBrowser->setModel(clientModel);
-        //poolBrowser->setModel(clientModel);
+        poolBrowser->setModel(clientModel);
         setEncryptionStatus(walletModel->getEncryptionStatus());
         connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
 
@@ -642,7 +644,7 @@ void BitcoinGUI::createTrayIcon()
     trayIcon = new QSystemTrayIcon(this);
     trayIconMenu = new QMenu(this);
     trayIcon->setContextMenu(trayIconMenu);
-    trayIcon->setToolTip(tr("HongyunCoin2 client"));
+    trayIcon->setToolTip(tr("HYC client"));
     trayIcon->setIcon(QIcon(":/icons/toolbar"));
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
@@ -695,24 +697,24 @@ void BitcoinGUI::optionsClicked()
     dlg.exec();
 }
 
-//void BitcoinGUI::sConvert()
-//{
-//    if (convertmode == 0)
-//    {
-//        actionConvertIcon->setIcon(QIcon(":/icons/changevaldollar").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
-//        convertmode = 1;
-//    }
-//    else if (convertmode == 1)
-//    {
-//        actionConvertIcon->setIcon(QIcon(":/icons/changevalbtc").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
-//        convertmode = 2;
-//    }
-//    else if (convertmode == 2)
-//    {
-//        actionConvertIcon->setIcon(QIcon(":/icons/changevalHongyunCoin2").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
-//        convertmode = 0;
-//    }
-//}
+void BitcoinGUI::sConvert()
+{
+    if (convertmode == 0)
+    {
+        actionConvertIcon->setIcon(QIcon(":/icons/changevaldollar").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        convertmode = 1;
+    }
+    else if (convertmode == 1)
+    {
+        actionConvertIcon->setIcon(QIcon(":/icons/changevalbtc").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        convertmode = 2;
+    }
+    else if (convertmode == 2)
+    {
+        actionConvertIcon->setIcon(QIcon(":/icons/changevalHYC").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        convertmode = 0;
+    }
+}
 
 void BitcoinGUI::tutoWriteClicked()
 {
@@ -748,7 +750,7 @@ void BitcoinGUI::setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
-    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to HongyunCoin2 network", "", count));
+    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to HYC network", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
@@ -886,7 +888,16 @@ void BitcoinGUI::changeEvent(QEvent *e)
 
 void BitcoinGUI::closeEvent(QCloseEvent *event)
 {
-#ifndef Q_OS_MAC
+    if(clientModel)
+    {
+#ifndef Q_OS_MAC*/ // Ignored on Mac
+
+//        ORIGINAL CODE
+//        if(!clientModel->getOptionsModel()->getMinimizeToTray() &&
+//           !clientModel->getOptionsModel()->getMinimizeOnClose())
+//        {
+//            qApp->quit();
+//        }
         if(clientModel->getOptionsModel()->getMinimizeOnClose())
         {
             event->ignore();
@@ -898,9 +909,9 @@ void BitcoinGUI::closeEvent(QCloseEvent *event)
             qApp->quit();
         }
 
-#else
-    qApp->quit();
 #endif
+    }
+    QMainWindow::closeEvent(event);
 }
 
 void BitcoinGUI::askFee(qint64 nFeeRequired, bool *payFee)
@@ -936,7 +947,8 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
         QIcon icon = qvariant_cast<QIcon>(ttm->index(start,
                             TransactionTableModel::ToAddress, parent)
                         .data(Qt::DecorationRole));
-
+        if (convertmode == 0)
+        {
             notificator->notify(Notificator::Information,
                                 (amount)<0 ? tr("Sent transaction") :
                                              tr("Incoming transaction"),
@@ -948,7 +960,36 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
                                 .arg(BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), amount, true))
                                 .arg(type)
                                 .arg(address), icon);
+        }
+        if (convertmode == 1)
+        {
+            notificator->notify(Notificator::Information,
+                                (amount)<0 ? tr("Sent transaction") :
+                                             tr("Incoming transaction"),
+                                tr("Date: %1\n"
+                                   "Amount: %2\n"
+                                   "Type: %3\n"
+                                   "Address: %4\n")
+                                .arg(date)
+                                .arg(BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), dollarg.toDouble()*amount, true))
+                                .arg(type)
+                                .arg(address), icon);
 
+        }
+        if (convertmode == 2)
+        {
+            notificator->notify(Notificator::Information,
+                                (amount)<0 ? tr("Sent transaction") :
+                                             tr("Incoming transaction"),
+                                tr("Date: %1\n"
+                                   "Amount: %2\n"
+                                   "Type: %3\n"
+                                   "Address: %4\n")
+                                .arg(date)
+                                .arg(BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), bitcoing.toDouble()*amount, true))
+                                .arg(type)
+                                .arg(address), icon);
+        }
     }
 }
 
@@ -956,38 +997,38 @@ void BitcoinGUI::gotoOverviewPage()
 {
     overviewAction->setChecked(true);
     centralWidget->setCurrentWidget(overviewPage);
-    //actionConvertIcon->setEnabled(true);
-    //actionConvertIcon->setVisible(true);
-    //disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
-    //connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    actionConvertIcon->setEnabled(true);
+    actionConvertIcon->setVisible(true);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
     exportAction->setVisible(false);
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
     wId->raise();
 }
 
-//void BitcoinGUI::gotoPoolBrowser()
-//{
-//    poolAction->setChecked(true);
-//    centralWidget->setCurrentWidget(poolBrowser);
-//    exportAction->setEnabled(false);
-//    actionConvertIcon->setEnabled(false);
-//    actionConvertIcon->setVisible(false);
-//    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
-//    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
-//    exportAction->setVisible(false);
-//    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
-//    wId->raise();
-//}
+void BitcoinGUI::gotoPoolBrowser()
+{
+    poolAction->setChecked(true);
+    centralWidget->setCurrentWidget(poolBrowser);
+    exportAction->setEnabled(false);
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    exportAction->setVisible(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    wId->raise();
+}
 
 void BitcoinGUI::gotoSettingsPage()
 {
     settingsAction->setChecked(true);
     centralWidget->setCurrentWidget(settingsPage);
-    //actionConvertIcon->setEnabled(false);
-    //actionConvertIcon->setVisible(false);
-    //disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
-    //connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
     exportAction->setEnabled(false);
     exportAction->setVisible(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
@@ -998,10 +1039,10 @@ void BitcoinGUI::gotoBlockBrowser()
 {
     blockAction->setChecked(true);
     centralWidget->setCurrentWidget(blockBrowser);
-    //actionConvertIcon->setEnabled(false);
-    //actionConvertIcon->setVisible(false);
-    //disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
-    //connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
     exportAction->setVisible(false);
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
@@ -1012,10 +1053,10 @@ void BitcoinGUI::gotoStatisticsPage()
 {
     statisticsAction->setChecked(true);
     centralWidget->setCurrentWidget(statisticsPage);
-    //actionConvertIcon->setEnabled(false);
-    //actionConvertIcon->setVisible(false);
-    //disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
-    //connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
     exportAction->setVisible(false);
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
@@ -1026,10 +1067,10 @@ void BitcoinGUI::gotoChatPage()
 {
     chatAction->setChecked(true);
     centralWidget->setCurrentWidget(chatWindow);
-    //actionConvertIcon->setEnabled(false);
-    //actionConvertIcon->setVisible(false);
-    //disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
-    //connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
     exportAction->setVisible(false);
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
@@ -1041,10 +1082,10 @@ void BitcoinGUI::gotoHistoryPage()
 {
     historyAction->setChecked(true);
     centralWidget->setCurrentWidget(transactionsPage);
-    //convertmode= 0;
-    //actionConvertIcon->setEnabled(false);
-    //actionConvertIcon->setVisible(false);
-    //disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    convertmode= 0;
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
     exportAction->setEnabled(true);
     exportAction->setVisible(true);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
@@ -1056,10 +1097,10 @@ void BitcoinGUI::gotoAddressBookPage()
 {
     addressBookAction->setChecked(true);
     centralWidget->setCurrentWidget(addressBookPage);
-    //convertmode = 0;
-    //actionConvertIcon->setEnabled(false);
-    //actionConvertIcon->setVisible(false);
-    //disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    convertmode = 0;
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
     exportAction->setEnabled(true);
     exportAction->setVisible(true);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
@@ -1071,10 +1112,10 @@ void BitcoinGUI::gotoReceiveCoinsPage()
 {
     receiveCoinsAction->setChecked(true);
     centralWidget->setCurrentWidget(receiveCoinsPage);
-   // convertmode = 0;
-   // actionConvertIcon->setEnabled(false);
-   // actionConvertIcon->setVisible(false);
-   // disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    convertmode = 0;
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
     exportAction->setEnabled(true);
     exportAction->setVisible(true);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
@@ -1086,10 +1127,10 @@ void BitcoinGUI::gotoSendCoinsPage()
 {
     sendCoinsAction->setChecked(true);
     centralWidget->setCurrentWidget(sendCoinsPage);
-    //convertmode = 0;
-    //actionConvertIcon->setEnabled(false);
-    //actionConvertIcon->setVisible(false);
-    //disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    convertmode = 0;
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
     exportAction->setEnabled(false);
     exportAction->setVisible(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
@@ -1137,7 +1178,7 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
         if (nValidUrisFound)
             gotoSendCoinsPage();
         else
-            notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid HongyunCoin2 address or malformed URI parameters."));
+            notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid HYC address or malformed URI parameters."));
     }
 
     event->acceptProposedAction();
@@ -1153,7 +1194,7 @@ void BitcoinGUI::handleURI(QString strURI)
     }
     else
     {
-        notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid HongyunCoin2 address or malformed URI parameters."));
+        notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid HYC address or malformed URI parameters."));
     }
 }
 
@@ -1289,11 +1330,7 @@ void BitcoinGUI::showNormalIfMinimized(bool fToggleHidden)
 
 void BitcoinGUI::toggleHidden()
 {
-#ifdef Q_OS_MAC
-    this->hide();
-#else
     showNormalIfMinimized(true);
-#endif
 }
 
 void BitcoinGUI::mousePressEvent(QMouseEvent *event) {
