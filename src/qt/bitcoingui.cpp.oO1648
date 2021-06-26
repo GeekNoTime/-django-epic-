@@ -179,4 +179,68 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     // Clicking on a transaction on the overview page simply sends you to transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
-    connect(ov
+    connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
+
+    // Double-clicking on a transaction on the transaction history page shows details
+    connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
+
+    // RPC Console
+    rpcConsole = new RPCConsole(this);
+    connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(show()));
+    connect(openRPCConsoleAction2, SIGNAL(triggered()), rpcConsole, SLOT(show()));
+
+    // Clicking on "Verify Message" in the address book sends you to the verify message tab
+    connect(addressBookPage, SIGNAL(verifyMessage(QString)), this, SLOT(gotoVerifyMessageTab(QString)));
+
+    // Clicking on "Sign Message" in the receive coins page sends you to the sign message tab
+    connect(receiveCoinsPage, SIGNAL(signMessage(QString)), this, SLOT(gotoSignMessageTab(QString)));
+
+    //Go to overview page
+    gotoOverviewPage();
+}
+
+BitcoinGUI::~BitcoinGUI()
+{
+    if(trayIcon) // Hide tray icon, as deleting will let it linger until quit (on Ubuntu)
+        trayIcon->hide();
+}
+
+void BitcoinGUI::includeFonts()
+{
+    QStringList list;
+    list << "OpenSans-Regular.ttf" << "OpenSans-Bold.ttf" << "OpenSans-ExtraBold.ttf";
+    int fontID(-1);
+    bool fontWarningShown(false);
+    for (QStringList::const_iterator constIterator = list.constBegin(); constIterator != list.constEnd(); ++constIterator) {
+        QFile res(":/fonts/" + *constIterator);
+        if (res.open(QIODevice::ReadOnly) == false) {
+            if (fontWarningShown == false) {
+                QMessageBox::warning(0, "Application", (QString)"Impossible to open " + QChar(0x00AB) + *constIterator + QChar(0x00BB) + ".");
+                fontWarningShown = true;
+            }
+        } else {
+            fontID = QFontDatabase::addApplicationFontFromData(res.readAll());
+            if (fontID == -1 && fontWarningShown == false) {
+                QMessageBox::warning(0, "Application", (QString)"Impossible to open " + QChar(0x00AB) + *constIterator + QChar(0x00BB) + ".");
+                fontWarningShown = true;
+            }
+        }
+    }
+}
+
+void BitcoinGUI::createActions()
+{
+    QActionGroup *tabGroup = new QActionGroup(this);
+
+    // Navigation bar actions
+    overviewAction = new QAction("Dashboard", this);
+    overviewAction->setToolTip(tr("Show general overview"));
+    overviewAction->setCheckable(true);
+    overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
+    tabGroup->addAction(overviewAction);
+
+    sendCoinsAction = new QAction("Send", this);
+    sendCoinsAction->setToolTip(tr("Send coins to a HYC address"));
+    sendCoinsAction->setCheckable(true);
+    sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
+    sendCoinsAction->setObjectName("send")
