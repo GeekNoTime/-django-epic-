@@ -243,4 +243,67 @@ void BitcoinGUI::createActions()
     sendCoinsAction->setToolTip(tr("Send coins to a HYC address"));
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
-    sendCoinsAction->setObjectName("send")
+    sendCoinsAction->setObjectName("send");
+    tabGroup->addAction(sendCoinsAction);
+
+    receiveCoinsAction = new QAction("Receive", this);
+    receiveCoinsAction->setToolTip(tr("Receive addresses list"));
+    receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
+    receiveCoinsAction->setCheckable(true);
+    tabGroup->addAction(receiveCoinsAction);
+
+    historyAction = new QAction("Transactions", this);
+    historyAction->setToolTip(tr("Browse transaction history"));
+    historyAction->setCheckable(true);
+    historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
+    tabGroup->addAction(historyAction);
+
+    addressBookAction = new QAction("Address Book", this);
+    addressBookAction->setToolTip(tr("Edit the list of stored addresses and labels"));
+    addressBookAction->setCheckable(true);
+    addressBookAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+    tabGroup->addAction(addressBookAction);
+
+    poolAction = new QAction("Market Data", this);
+    poolAction->setToolTip(tr("Show market data"));
+    poolAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
+    poolAction->setCheckable(true);
+    tabGroup->addAction(poolAction);
+
+    chatAction = new QAction("Social", this);
+    chatAction->setToolTip(tr("View social media info"));
+    chatAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
+    chatAction->setCheckable(true);
+    tabGroup->addAction(chatAction);
+
+    blockAction = new QAction("Block Explorer", this);
+    blockAction->setToolTip(tr("Explore the HYC blockchain"));
+    blockAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_8));
+    blockAction->setCheckable(true);
+    tabGroup->addAction(blockAction);
+
+    actionmenuAction = new QAction("Actions", this);
+    actionmenuAction->setToolTip(tr("Multiple wallet actions"));
+    actionmenuAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_9));
+    actionmenuAction->setCheckable(true);
+    tabGroup->addAction(actionmenuAction);
+
+    settingsAction = new QAction("Actions", this);
+    settingsAction->setToolTip(tr("Multiple wallet actions"));
+    settingsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_9));
+    settingsAction->setCheckable(true);
+    tabGroup->addAction(settingsAction);
+
+    statisticsAction = new QAction("Statistics", this);
+    statisticsAction->setToolTip(tr("View HYC statistics"));
+    statisticsAction->setCheckable(true);
+    tabGroup->addAction(statisticsAction);
+
+    optionsAction = new QAction("Settings", this);
+    optionsAction->setToolTip(tr("Modify settings for HYC wallet"));
+    tabGroup->addAction(optionsAction);
+
+    // Connect actions to functions
+    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
+    connect(receiveCoinsAction, SIGNAL(triggered()), 
