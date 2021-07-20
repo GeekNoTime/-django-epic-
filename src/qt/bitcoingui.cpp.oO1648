@@ -347,4 +347,58 @@ void BitcoinGUI::createActions()
     encryptWalletAction->setCheckable(true);
     backupWalletAction = new QAction(QIcon(":/images/backupwallet"), tr(""), this);
     backupWalletAction->setToolTip(tr("Backup wallet to another location"));
-    changePassphraseAction = ne
+    changePassphraseAction = new QAction(QIcon(":/images/newpassphrase"), tr(""), this);
+    changePassphraseAction->setToolTip(tr("Change the passphrase used for wallet encryption"));
+    unlockWalletAction = new QAction(QIcon(":/images/unlockwallet"), tr(""), this);
+    unlockWalletAction->setToolTip(tr("Unlock wallet"));
+    lockWalletAction = new QAction(QIcon(":/images/lockwallet"), tr(""), this);
+    lockWalletAction->setToolTip(tr("Lock wallet"));
+    signMessageAction = new QAction(QIcon(":/images/signmessage"), tr(""), this);
+    verifyMessageAction = new QAction(QIcon(":/images/verifymessage"), tr(""), this);
+    exportAction = new QAction(QIcon(":/icons/export"), tr("&Export..."), this);
+    exportAction->setToolTip(tr("Export the data in the current tab to a file"));
+    openRPCConsoleAction = new QAction(QIcon(":/images/debugwindow"), tr(""), this);
+    openRPCConsoleAction->setToolTip(tr("Open debugging and diagnostic console"));
+    signMessageAction2 = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
+    verifyMessageAction2 = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
+    openRPCConsoleAction2 = new QAction(QIcon(":/icons/debugwindow"), tr("&Debug window"), this);
+    openRPCConsoleAction2->setToolTip(tr("Open debugging and diagnostic console"));
+
+#ifdef Q_OS_MAC
+    // Create a decoupled menu bar on Mac which stays even if the window is closed
+    appMenuBar = new QMenuBar();
+    // Configure the menus
+    QMenu *file = appMenuBar->addMenu(tr("&File"));
+    file->addAction(backupWalletAction);
+    file->addAction(exportAction);
+    file->addAction(signMessageAction);
+    file->addAction(verifyMessageAction);
+    file->addSeparator();
+    file->addAction(quitAction2);
+
+    QMenu *settings = appMenuBar->addMenu(tr("&Settings"));
+    settings->addAction(encryptWalletAction);
+    settings->addAction(changePassphraseAction);
+    settings->addAction(unlockWalletAction);
+    settings->addAction(lockWalletAction);
+    settings->addSeparator();
+    settings->addAction(optionsAction);
+
+    QMenu *help = appMenuBar->addMenu(tr("&Help"));
+    help->addAction(openRPCConsoleAction);
+    help->addSeparator();
+    help->addAction(aboutAction);
+    help->addAction(aboutQtAction);
+#else
+    //Don't create menu, frameless design
+#endif
+
+    // Connect actions to slots
+    connect(quitAction, SIGNAL(triggered()), this, SLOT(close()));
+    connect(quitAction2, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(tutoStackAction, SIGNAL(triggered()), this, SLOT(tutoStackClicked()));
+    connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
+    connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+    connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
+    connect(encryptWalletAction, SIGNAL(triggered(bool)), this, SLOT(encryptWallet(bool)));
+    connect
