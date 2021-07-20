@@ -447,3 +447,57 @@ void BitcoinGUI::createContent()
     SystemFunctionsToolbar->setGeometry(53,0,270,450);
     SystemFunctionsToolbar->setOrientation(Qt::Vertical);
     SystemFunctionsToolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    SystemFunctionsToolbar->setMovable(false);
+    SystemFunctionsToolbar->setIconSize(QSize(158,49));
+    SystemFunctionsToolbar->addAction(signMessageAction);
+    SystemFunctionsToolbar->addAction(verifyMessageAction);
+    SystemFunctionsToolbar->addAction(openRPCConsoleAction);
+
+    QFrame *QuickSupport = new QFrame(settingsPage);
+    QuickSupport->setGeometry(20,200,700,300);
+    QuickSupport->setFixedSize(700,300);
+    QuickSupport->setStyleSheet("background-image:url(:/images/quicksupport);background-repeat:no-repeat;");
+    QFrame *QuickSupportButtonFrame = new QFrame(QuickSupport);
+    QuickSupportButtonFrame->setGeometry(0,45,700,300);
+    QuickSupportButtonFrame->setStyleSheet("background-image:url(:/icons/transpix);background-repeat:no-repeat;");
+    QToolBar *QuickSupportToolbar = new QToolBar(QuickSupportButtonFrame);
+    QuickSupportToolbar->setOrientation(Qt::Horizontal);
+    QuickSupportToolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    QuickSupportToolbar->setMovable(false);
+    QuickSupportToolbar->setIconSize(QSize(158,49));
+    QuickSupportToolbar->addAction(tutoStackAction);
+    QuickSupportToolbar->addAction(aboutAction);  
+}
+
+void BitcoinGUI::createToolBars()
+{
+    // Create status bar
+    addToolBarBreak(Qt::TopToolBarArea);
+    QToolBar *statusBar = addToolBar(tr("Status bar"));
+    addToolBar(Qt::TopToolBarArea,statusBar);
+    statusBar->setOrientation(Qt::Horizontal);
+    statusBar->setMovable(false);
+    statusBar->setObjectName("statusBar");
+    statusBar->setFixedSize(1000,28);
+    statusBar->setIconSize(QSize(42,28));
+    QWidget *addMargin = new QWidget(this);
+    addMargin->setFixedWidth(35);
+    statusBar->addWidget(addMargin);
+    statusBar->addWidget(labelEncryptionIcon);
+    statusBar->addWidget(labelConnectionsIcon);
+    statusBar->addWidget(labelBlocksIcon);
+    statusBar->addWidget(labelStakingIcon);
+    statusBar->setStyleSheet("QToolBar QToolButton {border:0px; qproperty-alignment: 'AlignBottom | AlignLeft'; qproperty-wordWrap: true;} QToolBar{background-image: url(:/images/header-top); background-repeat:no-repeat; border:0px; width:1000px; height:28px;}");
+    //insertToolBarBreak(statusBar);
+
+    //Create toolbar to convert, minimalise and quit
+    QToolBar *quitBar = addToolBar(tr("Minimalise and Quit bar"));
+    quitBar->setObjectName("quitBar");
+    addToolBar(Qt::RightToolBarArea,quitBar);
+    quitBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    quitBar->setOrientation(Qt::Horizontal);
+    quitBar->setMovable(false);
+    quitBar->setIconSize(QSize(35,28));
+    quitBar->setFixedSize(1000,28);
+    QWidget* quitSpacer = new QWidget();
+    quitSpacer->setSizePolicy(QSizePolicy::Exp
