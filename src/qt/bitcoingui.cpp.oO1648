@@ -401,4 +401,49 @@ void BitcoinGUI::createActions()
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
     connect(encryptWalletAction, SIGNAL(triggered(bool)), this, SLOT(encryptWallet(bool)));
-    connect
+    connect(backupWalletAction, SIGNAL(triggered()), this, SLOT(backupWallet()));
+    connect(changePassphraseAction, SIGNAL(triggered()), this, SLOT(changePassphrase()));
+    connect(unlockWalletAction, SIGNAL(triggered()), this, SLOT(unlockWallet()));
+    connect(lockWalletAction, SIGNAL(triggered()), this, SLOT(lockWallet()));
+    connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
+    connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
+    connect(signMessageAction2, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
+    connect(verifyMessageAction2, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
+}
+
+void BitcoinGUI::createContent()
+{
+    //Create Actions Page Content
+    settingsPage = new QWidget(this);
+    settingsPage->setFixedSize(1000,600);
+    settingsPage->setStyleSheet("QToolBar{border:0px;} QToolBar QToolButton{border:0px;}");
+
+    QFrame *WalletOptions = new QFrame(settingsPage);
+    WalletOptions->setGeometry(20,0,700,400);
+    WalletOptions->setFixedSize(700,400);
+    WalletOptions->setStyleSheet("background-image:url(:/images/walletoptions);background-repeat:no-repeat;");
+    QFrame *WalletOptionsButtonFrame = new QFrame(WalletOptions);
+    WalletOptionsButtonFrame->setGeometry(0,45,700,200);
+    WalletOptionsButtonFrame->setStyleSheet("background-image:url(:/icons/transpix);background-repeat:no-repeat;");
+    QToolBar *WalletOptionsToolbar = new QToolBar(WalletOptionsButtonFrame);
+    WalletOptionsToolbar->setOrientation(Qt::Horizontal);
+    WalletOptionsToolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    WalletOptionsToolbar->setMovable(false);
+    WalletOptionsToolbar->setIconSize(QSize(158,49));
+    WalletOptionsToolbar->addAction(lockWalletAction);
+    WalletOptionsToolbar->addAction(unlockWalletAction);
+    WalletOptionsToolbar->addAction(encryptWalletAction);
+    WalletOptionsToolbar->addAction(backupWalletAction);
+    WalletOptionsToolbar->addAction(changePassphraseAction);
+
+    QFrame *SystemFunctions = new QFrame(settingsPage);
+    SystemFunctions->setGeometry(713,0,267,500);
+    SystemFunctions->setFixedSize(270,500);
+    SystemFunctions->setStyleSheet("background-image:url(:/images/systemfunctions);background-repeat:no-repeat;");
+    QFrame *SystemFunctionsButtonFrame = new QFrame(SystemFunctions);
+    SystemFunctionsButtonFrame->setGeometry(0,45,270,500);
+    SystemFunctionsButtonFrame->setStyleSheet("background-image:url(:/icons/transpix);background-repeat:no-repeat;");
+    QToolBar *SystemFunctionsToolbar = new QToolBar(SystemFunctionsButtonFrame);
+    SystemFunctionsToolbar->setGeometry(53,0,270,450);
+    SystemFunctionsToolbar->setOrientation(Qt::Vertical);
+    SystemFunctionsToolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
