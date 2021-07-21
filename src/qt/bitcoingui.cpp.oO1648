@@ -546,4 +546,69 @@ void BitcoinGUI::createToolBars()
     extraFunctionsBar->setMovable(false);
     extraFunctionsBar->setFixedWidth(200);
     extraFunctionsBar->setFixedHeight(60);
-    extraFunctionsBar->setStyleSheet("QToolBar {border:0px; height:54px;} QToolBar QToolButton:hover{color: #F37255;} QToolBar QToolButton:ch
+    extraFunctionsBar->setStyleSheet("QToolBar {border:0px; height:54px;} QToolBar QToolButton:hover{color: #F37255;} QToolBar QToolButton:checked {color: #F37255;} QToolBar QToolButton{margin-bottom:13px; font-size:11px; font-family:'Open Sans Extrabold'; color:#33363B; text-align:right; background:transparent; text-transform:uppercase; height:100%; padding-left:20px;}");
+    extraFunctionsBar->setFont(QFont(":/fonts/OpenSansBold"));
+    QWidget* extraSpacer = new QWidget();
+    extraSpacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    extraFunctionsBar->addWidget(extraSpacer);
+    extraFunctionsBar->addAction(exportAction);
+    extraFunctionsBar->addAction(optionsAction);
+    insertToolBarBreak(extraFunctionsBar);
+    QHBoxLayout *extraFunctionsBarVbox = new QHBoxLayout();
+    extraFunctionsBarVbox->addWidget(extraFunctionsBar);
+    extraFunctionsBarVbox->setContentsMargins(0,0,0,0);
+    wId2 = new QWidget(this);
+    wId2->setFixedSize(200,60);
+    wId2->move(798,28);
+    wId2->setLayout(extraFunctionsBarVbox);
+    wId2->setFocus();
+}
+
+void BitcoinGUI::setClientModel(ClientModel *clientModel)
+{
+    this->clientModel = clientModel;
+    if(clientModel)
+    {
+        // Replace some strings and icons, when using the testnet
+        if(clientModel->isTestNet())
+        {
+            setWindowTitle(windowTitle() + QString(" ") + tr("[testnet]"));
+#ifndef Q_OS_MAC
+            qApp->setWindowIcon(QIcon(":icons/bitcoin_testnet"));
+            setWindowIcon(QIcon(":icons/bitcoin_testnet"));
+#else
+            MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin_testnet"));
+#endif
+            if(trayIcon)
+            {
+                trayIcon->setToolTip(tr("HYC client") + QString(" ") + tr("[testnet]"));
+                trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
+                toggleHideAction->setIcon(QIcon(":/icons/toolbar_testnet"));
+            }
+
+            aboutAction->setIcon(QIcon(":/icons/toolbar_testnet"));
+        }
+
+        // Keep up to date with client
+        setNumConnections(clientModel->getNumConnections());
+        connect(clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
+
+        setNumBlocks(clientModel->getNumBlocks(), clientModel->getNumBlocksOfPeers());
+        connect(clientModel, SIGNAL(numBlocksChanged(int,int)), this, SLOT(setNumBlocks(int,int)));
+
+        // Report errors from network/worker thread
+        connect(clientModel, SIGNAL(error(QString,QString,bool)), this, SLOT(error(QString,QString,bool)));
+
+        rpcConsole->setClientModel(clientModel);
+        addressBookPage->setOptionsModel(clientModel->getOptionsModel());
+        receiveCoinsPage->setOptionsModel(clientModel->getOptionsModel());
+    }
+}
+
+void BitcoinGUI::setWalletModel(WalletModel *walletModel)
+{
+    this->walletModel = walletModel;
+    if(walletModel)
+    {
+        // Report errors from wallet thread
+  
