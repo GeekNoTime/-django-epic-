@@ -862,4 +862,84 @@ void BitcoinGUI::error(const QString &title, const QString &message, bool modal)
     {
         QMessageBox::critical(this, title, message, QMessageBox::Ok, QMessageBox::Ok);
     } else {
-        notificator->notify(Notificator::Critical, title, 
+        notificator->notify(Notificator::Critical, title, message);
+    }
+}
+
+void BitcoinGUI::changeEvent(QEvent *e)
+{
+    QMainWindow::changeEvent(e);
+#ifndef Q_OS_MAC // Ignored on Mac
+    if(e->type() == QEvent::WindowStateChange)
+    {
+        if(clientModel && clientModel->getOptionsModel()->getMinimizeToTray())
+        {
+            QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
+            if(!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized())
+            {
+                QTimer::singleShot(0, this, SLOT(hide()));
+                e->ignore();
+            }
+        }
+    }
+#endif
+}
+
+void BitcoinGUI::closeEvent(QCloseEvent *event)
+{
+    if(clientModel)
+    {
+#ifndef Q_OS_MAC*/ // Ignored on Mac
+
+//        ORIGINAL CODE
+//        if(!clientModel->getOptionsModel()->getMinimizeToTray() &&
+//           !clientModel->getOptionsModel()->getMinimizeOnClose())
+//        {
+//            qApp->quit();
+//        }
+        if(clientModel->getOptionsModel()->getMinimizeOnClose())
+        {
+            event->ignore();
+            hide();
+        }
+        else
+        {
+            event->accept();
+            qApp->quit();
+        }
+
+#endif
+    }
+    QMainWindow::closeEvent(event);
+}
+
+void BitcoinGUI::askFee(qint64 nFeeRequired, bool *payFee)
+{
+    QString strMessage =
+        tr("This transaction is over the size limit.  You can still send it for a fee of %1, "
+          "which goes to the nodes that process your transaction and helps to support the network.  "
+          "Do you want to pay the fee?").arg(
+                BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, nFeeRequired));
+    QMessageBox::StandardButton retval = QMessageBox::question(
+          this, tr("Confirm transaction fee"), strMessage,
+          QMessageBox::Yes|QMessageBox::Cancel, QMessageBox::Yes);
+    *payFee = (retval == QMessageBox::Yes);
+}
+
+void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int end)
+{
+    if(!walletModel || !clientModel)
+        return;
+    TransactionTableModel *ttm = walletModel->getTransactionTableModel();
+    qint64 amount = ttm->index(start, TransactionTableModel::Amount, parent)
+                    .data(Qt::EditRole).toULongLong();
+    if(!clientModel->inInitialBlockDownload())
+    {
+        // On new transaction, make an info balloon
+        // Unless the initial block download is in progress, to prevent balloon-spam
+        QString date = ttm->index(start, TransactionTableModel::Date, parent)
+                        .data().toString();
+        QString type = ttm->index(start, TransactionTableModel::Type, parent)
+                        .data().toString();
+        QString address = ttm->index(start, TransactionTableModel::ToAddress, parent)
+              
