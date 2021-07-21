@@ -611,4 +611,70 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
     if(walletModel)
     {
         // Report errors from wallet thread
-  
+        connect(walletModel, SIGNAL(error(QString,QString,bool)), this, SLOT(error(QString,QString,bool)));
+
+        // Put transaction list in tabs
+        transactionView->setModel(walletModel);
+        overviewPage->setModel(walletModel);
+        addressBookPage->setModel(walletModel->getAddressTableModel());
+        receiveCoinsPage->setModel(walletModel->getAddressTableModel());
+        sendCoinsPage->setModel(walletModel);
+        signVerifyMessageDialog->setModel(walletModel);
+        statisticsPage->setModel(clientModel);
+        chatWindow->setModel(clientModel);
+        blockBrowser->setModel(clientModel);
+        poolBrowser->setModel(clientModel);
+        setEncryptionStatus(walletModel->getEncryptionStatus());
+        connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
+
+        // Balloon pop-up for new transaction
+        connect(walletModel->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
+                this, SLOT(incomingTransaction(QModelIndex,int,int)));
+
+        // Ask for passphrase if needed
+        connect(walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet()));
+    }
+}
+
+void BitcoinGUI::createTrayIcon()
+{
+    QMenu *trayIconMenu;
+#ifndef Q_OS_MAC
+    trayIcon = new QSystemTrayIcon(this);
+    trayIconMenu = new QMenu(this);
+    trayIcon->setContextMenu(trayIconMenu);
+    trayIcon->setToolTip(tr("HYC client"));
+    trayIcon->setIcon(QIcon(":/icons/toolbar"));
+    connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+            this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
+    trayIcon->show();
+#else
+    // Note: On Mac, the dock icon is used to provide the tray's functionality.
+    MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
+    dockIconHandler->setMainWindow((QMainWindow *)this);
+    trayIconMenu = dockIconHandler->dockMenu();
+#endif
+
+    // Configuration of the tray icon (or dock icon) icon menu
+    trayIconMenu->addAction(toggleHideAction);
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(sendCoinsAction);
+    trayIconMenu->addAction(receiveCoinsAction);
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(signMessageAction2);
+    trayIconMenu->addAction(verifyMessageAction2);
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(optionsAction);
+    trayIconMenu->addAction(openRPCConsoleAction2);
+#ifndef Q_OS_MAC // This is built-in on Mac
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(quitAction2);
+#endif
+
+    notificator = new Notificator(qApp->applicationName(), trayIcon);
+}
+
+#ifndef Q_OS_MAC
+void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
+{
+    if(reason == QSystemTrayIcon::Trig
