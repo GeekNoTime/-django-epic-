@@ -677,4 +677,103 @@ void BitcoinGUI::createTrayIcon()
 #ifndef Q_OS_MAC
 void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
-    if(reason == QSystemTrayIcon::Trig
+    if(reason == QSystemTrayIcon::Trigger)
+    {
+        // Click on system tray icon triggers show/hide of the main window
+        toggleHideAction->trigger();
+    }
+}
+#endif
+
+void BitcoinGUI::optionsClicked()
+{
+    if(!clientModel || !clientModel->getOptionsModel())\
+    {
+        return;
+    }
+    OptionsDialog dlg;
+    dlg.setModel(clientModel->getOptionsModel());
+    dlg.exec();
+}
+
+void BitcoinGUI::sConvert()
+{
+    if (convertmode == 0)
+    {
+        actionConvertIcon->setIcon(QIcon(":/icons/changevaldollar").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        convertmode = 1;
+    }
+    else if (convertmode == 1)
+    {
+        actionConvertIcon->setIcon(QIcon(":/icons/changevalbtc").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        convertmode = 2;
+    }
+    else if (convertmode == 2)
+    {
+        actionConvertIcon->setIcon(QIcon(":/icons/changevalHYC").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        convertmode = 0;
+    }
+}
+
+void BitcoinGUI::tutoWriteClicked()
+{
+    tutoWriteDialog dlg;
+    dlg.setModel(clientModel);
+    dlg.exec();
+}
+
+void BitcoinGUI::tutoStackClicked()
+{
+    tutoStackDialog dlg;
+    dlg.setModel(clientModel);
+    dlg.exec();
+}
+
+void BitcoinGUI::aboutClicked()
+{
+    AboutDialog dlg;
+    dlg.setModel(clientModel);
+    dlg.exec();
+}
+
+void BitcoinGUI::setNumConnections(int count)
+{
+    overviewPage->setNumberConnections(clientModel->getNumConnections());
+    QString icon;
+    switch(count)
+    {
+    case 0: icon = ":/icons/connect_0"; break;
+    case 1: case 2: case 3: icon = ":/icons/connect_1"; break;
+    case 4: case 5: case 6: icon = ":/icons/connect_2"; break;
+    case 7: case 8: case 9: icon = ":/icons/connect_3"; break;
+    default: icon = ":/icons/connect_4"; break;
+    }
+    labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to HYC network", "", count));
+}
+
+void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
+{
+    QString strStatusBarWarnings = clientModel->getStatusBarWarnings();
+    QString tooltip;
+
+    labelBlocksIcon->setPixmap(QIcon(":/icons/not_synced").pixmap(STATUSBAR_wICONSIZE, STATUSBAR_hICONSIZE));
+    labelBlocksIcon->setToolTip("Catchin up...");
+
+    // don't show / hide progress bar and its label if we have no connection to the network
+    if (!clientModel || clientModel->getNumConnections() == 0)
+    {
+        progressBarLabel->setVisible(false);
+        progressBar->setVisible(false);
+
+        return;
+    }
+
+    if(count < nTotalBlocks)
+    {
+        //int nRemainingBlocks = nTotalBlocks - count;
+        float nPercentageDone = count / (nTotalBlocks * 0.01f);
+
+        if (strStatusBarWarnings.isEmpty())
+        {
+          
