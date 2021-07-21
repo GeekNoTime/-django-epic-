@@ -776,4 +776,90 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 
         if (strStatusBarWarnings.isEmpty())
         {
-          
+            progressBarLabel->setVisible(false);
+            progressBar->setFormat(tr("%n%", "", nPercentageDone));
+            progressBar->setMaximum(nTotalBlocks);
+            progressBar->setValue(count);
+            progressBar->setVisible(false);
+        }
+
+        tooltip = tr("Downloaded %1 of %2 blocks of transaction history (%3% done).").arg(count).arg(nTotalBlocks).arg(nPercentageDone, 0, 'f', 2);
+    }
+    else
+    {
+        if (strStatusBarWarnings.isEmpty())
+            progressBarLabel->setVisible(false);
+
+        progressBar->setVisible(false);
+        tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
+    }
+
+    // Override progressBarLabel text and hide progress bar, when we have warnings to display
+    if (!strStatusBarWarnings.isEmpty())
+    {
+        progressBarLabel->setText(strStatusBarWarnings);
+        progressBarLabel->setVisible(false);
+        progressBar->setVisible(false);
+    }
+
+    QDateTime lastBlockDate = clientModel->getLastBlockDate();
+    int secs = lastBlockDate.secsTo(QDateTime::currentDateTime());
+    QString text;
+
+    // Represent time from last generated block in human readable text
+    if(secs <= 0)
+    {
+        // Fully up to date. Leave text empty.
+    }
+    else if(secs < 60)
+    {
+        text = tr("%n second(s) ago","",secs);
+    }
+    else if(secs < 60*60)
+    {
+        text = tr("%n minute(s) ago","",secs/60);
+    }
+    else if(secs < 24*60*60)
+    {
+        text = tr("%n hour(s) ago","",secs/(60*60));
+    }
+    else
+    {
+        text = tr("%n day(s) ago","",secs/(60*60*24));
+    }
+
+    // Set icon state: spinning if catching up, tick otherwise
+    if(secs < 90*60 && count >= nTotalBlocks)
+    {
+        tooltip = tr("Up to date") + QString(".<br>") + tooltip;
+        labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_wICONSIZE, STATUSBAR_hICONSIZE));
+        overviewPage->showOutOfSyncWarning(false);
+    }
+    else
+    {
+        tooltip = tr("Catching up...") + QString("<br>") + tooltip;
+        labelBlocksIcon->setPixmap(QIcon(":/icons/not_synced").pixmap(STATUSBAR_wICONSIZE, STATUSBAR_hICONSIZE));
+        overviewPage->showOutOfSyncWarning(true);
+    }
+
+    if(!text.isEmpty())
+    {
+        tooltip += QString("<br>");
+        tooltip += tr("Last received block was generated %1.").arg(text);
+    }
+
+    // Don't word-wrap this (fixed-width) tooltip
+    tooltip = QString("<nobr>") + tooltip + QString("</nobr>");
+
+    labelBlocksIcon->setToolTip(tooltip);
+    progressBar->setToolTip(tooltip);
+}
+
+void BitcoinGUI::error(const QString &title, const QString &message, bool modal)
+{
+    // Report errors from network/worker thread
+    if(modal)
+    {
+        QMessageBox::critical(this, title, message, QMessageBox::Ok, QMessageBox::Ok);
+    } else {
+        notificator->notify(Notificator::Critical, title, 
