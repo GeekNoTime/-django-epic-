@@ -1084,4 +1084,90 @@ void BitcoinGUI::gotoHistoryPage()
     convertmode= 0;
     actionConvertIcon->setEnabled(false);
     actionConvertIcon->setVisible(false);
-    disconn
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    exportAction->setEnabled(true);
+    exportAction->setVisible(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), transactionView, SLOT(exportClicked()));
+    wId->raise();
+}
+
+void BitcoinGUI::gotoAddressBookPage()
+{
+    addressBookAction->setChecked(true);
+    centralWidget->setCurrentWidget(addressBookPage);
+    convertmode = 0;
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    exportAction->setEnabled(true);
+    exportAction->setVisible(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), addressBookPage, SLOT(exportClicked()));
+    wId->raise();
+}
+
+void BitcoinGUI::gotoReceiveCoinsPage()
+{
+    receiveCoinsAction->setChecked(true);
+    centralWidget->setCurrentWidget(receiveCoinsPage);
+    convertmode = 0;
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    exportAction->setEnabled(true);
+    exportAction->setVisible(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), receiveCoinsPage, SLOT(exportClicked()));
+    wId->raise();
+}
+
+void BitcoinGUI::gotoSendCoinsPage()
+{
+    sendCoinsAction->setChecked(true);
+    centralWidget->setCurrentWidget(sendCoinsPage);
+    convertmode = 0;
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    exportAction->setEnabled(false);
+    exportAction->setVisible(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    wId->raise();
+}
+
+void BitcoinGUI::gotoSignMessageTab(QString addr)
+{
+    // call show() in showTab_SM()
+    signVerifyMessageDialog->showTab_SM(true);
+
+    if(!addr.isEmpty())
+        signVerifyMessageDialog->setAddress_SM(addr);
+}
+
+void BitcoinGUI::gotoVerifyMessageTab(QString addr)
+{
+    // call show() in showTab_VM()
+    signVerifyMessageDialog->showTab_VM(true);
+
+    if(!addr.isEmpty())
+        signVerifyMessageDialog->setAddress_VM(addr);
+}
+
+void BitcoinGUI::dragEnterEvent(QDragEnterEvent *event)
+{
+    // Accept only URIs
+    if(event->mimeData()->hasUrls())
+        event->acceptProposedAction();
+}
+
+void BitcoinGUI::dropEvent(QDropEvent *event)
+{
+    if(event->mimeData()->hasUrls())
+    {
+        int nValidUrisFound = 0;
+        QList<QUrl> uris = event->mimeData()->urls();
+        foreach(const QUrl &uri, uris)
+        {
+            if (sendCoinsPage->handleURI(uri.toString()))
+              
