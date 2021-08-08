@@ -1241,4 +1241,111 @@ void BitcoinGUI::encryptWallet(bool status)
 {
     if(!walletModel)
     {
-  
+        return;
+    }
+    AskPassphraseDialog dlg(status ? AskPassphraseDialog::Encrypt:
+                                     AskPassphraseDialog::Decrypt, this);
+    dlg.setModel(walletModel);
+    dlg.exec();
+
+    setEncryptionStatus(walletModel->getEncryptionStatus());
+}
+
+void BitcoinGUI::backupWallet()
+{
+    QString saveDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+    QString filename = QFileDialog::getSaveFileName(this, tr("Backup Wallet"), saveDir, tr("Wallet Data (*.dat)"));
+    if(!filename.isEmpty())
+    {
+        if(!walletModel->backupWallet(filename))
+        {
+            QMessageBox::warning(this, tr("Backup Failed"), tr("There was an error trying to save the wallet data to the new location."));
+        }
+    }
+}
+
+void BitcoinGUI::changePassphrase()
+{
+    AskPassphraseDialog dlg(AskPassphraseDialog::ChangePass, this);
+    dlg.setModel(walletModel);
+    dlg.exec();
+}
+
+void BitcoinGUI::unlockWallet()
+{
+    if(!walletModel)
+        return;
+    // Unlock wallet when requested by wallet model
+    if(walletModel->getEncryptionStatus() == WalletModel::Locked)
+    {
+        AskPassphraseDialog::Mode mode = sender() == unlockWalletAction ?
+              AskPassphraseDialog::UnlockStaking : AskPassphraseDialog::Unlock;
+        AskPassphraseDialog dlg(mode, this);
+        dlg.setModel(walletModel);
+        dlg.exec();
+    }
+}
+
+void BitcoinGUI::lockWallet()
+{
+    if(!walletModel)
+    {
+        return;
+    }
+
+    walletModel->setWalletLocked(true);
+}
+
+void BitcoinGUI::showNormalIfMinimized(bool fToggleHidden)
+{
+    // activateWindow() (sometimes) helps with keyboard focus on Windows
+    if (isHidden())
+    {
+        show();
+        activateWindow();
+    }
+    else if (isMinimized())
+    {
+        showNormal();
+        activateWindow();
+    }
+    else if (GUIUtil::isObscured(this))
+    {
+        raise();
+        activateWindow();
+    }
+    else if(fToggleHidden && clientModel)
+    {
+        if(clientModel->getOptionsModel()->getMinimizeToTray())
+        {
+            hide();
+        }
+        else
+        {
+            setWindowState(Qt::WindowMinimized);
+        }
+    }
+}
+
+void BitcoinGUI::toggleHidden()
+{
+    showNormalIfMinimized(true);
+}
+
+void BitcoinGUI::mousePressEvent(QMouseEvent *event) {
+    m_nMouseClick_X_Coordinate = event->x();
+    m_nMouseClick_Y_Coordinate = event->y();
+}
+
+void BitcoinGUI::mouseMoveEvent(QMouseEvent *event) {
+    move(event->globalX()-m_nMouseClick_X_Coordinate,event->globalY()-m_nMouseClick_Y_Coordinate);
+}
+
+
+void BitcoinGUI::updateStakingIcon()
+{
+    uint64_t nMinWeight = 0, nMaxWeight = 0, nWeight = 0;
+    if (pwalletMain)
+        pwalletMain->GetStakeWeight(*pwalletMain, nMinWeight, nMaxWeight, nWeight);
+
+    if (nLastCoinStakeSearchInterval && nWeight
