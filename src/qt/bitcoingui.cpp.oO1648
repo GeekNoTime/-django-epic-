@@ -1170,4 +1170,75 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
         foreach(const QUrl &uri, uris)
         {
             if (sendCoinsPage->handleURI(uri.toString()))
-              
+                nValidUrisFound++;
+        }
+
+        // if valid URIs were found
+        if (nValidUrisFound)
+            gotoSendCoinsPage();
+        else
+            notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid HYC address or malformed URI parameters."));
+    }
+
+    event->acceptProposedAction();
+}
+
+void BitcoinGUI::handleURI(QString strURI)
+{
+    // URI has to be valid
+    if (sendCoinsPage->handleURI(strURI))
+    {
+        showNormalIfMinimized();
+        gotoSendCoinsPage();
+    }
+    else
+    {
+        notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid HYC address or malformed URI parameters."));
+    }
+}
+
+void BitcoinGUI::setEncryptionStatus(int status)
+{
+    switch(status)
+    {
+    case WalletModel::Unencrypted:
+        labelEncryptionIcon->show();
+        labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_open").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        labelEncryptionIcon->setToolTip(tr("Wallet is <b>not encrypted</b>, go to actions to encrypt your wallet"));
+        encryptWalletAction->setChecked(false);
+        changePassphraseAction->setEnabled(false);
+        changePassphraseAction->setVisible(false);
+        unlockWalletAction->setVisible(false);
+        lockWalletAction->setVisible(false);
+        encryptWalletAction->setEnabled(true);
+        break;
+    case WalletModel::Unlocked:
+        labelEncryptionIcon->hide();
+        labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_open").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
+        encryptWalletAction->setChecked(true);
+        changePassphraseAction->setEnabled(true);
+        unlockWalletAction->setVisible(false);
+        lockWalletAction->setVisible(true);
+        encryptWalletAction->setVisible(false);
+        encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
+        break;
+    case WalletModel::Locked:
+        labelEncryptionIcon->hide();
+        labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_closed").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>locked</b>"));
+        encryptWalletAction->setChecked(true);
+        changePassphraseAction->setEnabled(true);
+        unlockWalletAction->setVisible(true);
+        lockWalletAction->setVisible(false);
+        encryptWalletAction->setVisible(false);
+        encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
+        break;
+    }
+}
+
+void BitcoinGUI::encryptWallet(bool status)
+{
+    if(!walletModel)
+    {
+  
