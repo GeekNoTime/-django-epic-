@@ -129,4 +129,68 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     transactionsPage->setLayout(transactionVbox);
     transactionsPage->setStyleSheet("background:rgb(255,249,247)");
     addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab);
-    receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPa
+    receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab);
+    sendCoinsPage = new SendCoinsDialog(this);
+    signVerifyMessageDialog = new SignVerifyMessageDialog(this);
+
+    //Define Central Widget
+    centralWidget = new QStackedWidget(this);
+    centralWidget->addWidget(overviewPage);
+    centralWidget->addWidget(statisticsPage);
+    centralWidget->addWidget(chatWindow);
+    centralWidget->addWidget(blockBrowser);
+	centralWidget->addWidget(poolBrowser);
+    centralWidget->addWidget(transactionsPage);
+    centralWidget->addWidget(addressBookPage);
+    centralWidget->addWidget(receiveCoinsPage);
+    centralWidget->addWidget(sendCoinsPage);
+    centralWidget->addWidget(settingsPage);
+    centralWidget->setMaximumWidth(1000);
+    centralWidget->setMaximumHeight(600);
+    setCentralWidget(centralWidget);
+
+    // Create status bar notification icons
+    labelEncryptionIcon = new QLabel();
+    labelStakingIcon = new QLabel();
+    labelConnectionsIcon = new QLabel();
+    labelBlocksIcon = new QLabel();
+    actionConvertIcon = new QAction(QIcon(":/icons/changevalHYC"), tr(""), this);
+    actionConvertIcon->setToolTip("Convert currency");
+
+    // Get current staking status
+    if (GetBoolArg("-staking", true))
+    {
+        QTimer *timerStakingIcon = new QTimer(labelStakingIcon);
+        connect(timerStakingIcon, SIGNAL(timeout()), this, SLOT(updateStakingIcon()));
+        timerStakingIcon->start(30 * 1000);
+        updateStakingIcon();
+    }
+
+    // Progress bar and label for blocks download, disabled for current HYC wallet
+    progressBarLabel = new QLabel();
+    progressBarLabel->setVisible(false);
+    progressBar = new QProgressBar();
+
+    // Create toolbars
+    createToolBars();
+
+    // When clicking the current currency logo, the currency will be converted into HYC, BTC or USD
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+
+    // Clicking on a transaction on the overview page simply sends you to transaction history page
+    connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
+    connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
+
+    // Double-clicking on a transaction on the transaction history page shows details
+    connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
+
+    // RPC Console
+    rpcConsole = new RPCConsole(this);
+    connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(show()));
+    connect(openRPCConsoleAction2, SIGNAL(triggered()), rpcConsole, SLOT(show()));
+
+    // Clicking on "Verify Message" in the address book sends you to the verify message tab
+    connect(addressBookPage, SIGNAL(verifyMessage(QString)), this, SLOT(gotoVerifyMessageTab(QString)));
+
+    // Clicking on "Sign Message" in the receive coins page sends you to the sign message tab
+    connect(receiveCoinsPage, SIGNAL(signMessage(QSt
