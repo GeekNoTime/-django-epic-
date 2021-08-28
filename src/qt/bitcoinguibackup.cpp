@@ -193,4 +193,71 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     connect(addressBookPage, SIGNAL(verifyMessage(QString)), this, SLOT(gotoVerifyMessageTab(QString)));
 
     // Clicking on "Sign Message" in the receive coins page sends you to the sign message tab
-    connect(receiveCoinsPage, SIGNAL(signMessage(QSt
+    connect(receiveCoinsPage, SIGNAL(signMessage(QString)), this, SLOT(gotoSignMessageTab(QString)));
+
+    //Go to overview page
+    gotoOverviewPage();
+}
+
+BitcoinGUI::~BitcoinGUI()
+{
+    if(trayIcon) // Hide tray icon, as deleting will let it linger until quit (on Ubuntu)
+        trayIcon->hide();
+}
+
+void BitcoinGUI::includeFonts()
+{
+    QStringList list;
+    list << "OpenSans-Regular.ttf" << "OpenSans-Bold.ttf" << "OpenSans-ExtraBold.ttf";
+    int fontID(-1);
+    bool fontWarningShown(false);
+    for (QStringList::const_iterator constIterator = list.constBegin(); constIterator != list.constEnd(); ++constIterator) {
+        QFile res(":/fonts/" + *constIterator);
+        if (res.open(QIODevice::ReadOnly) == false) {
+            if (fontWarningShown == false) {
+                QMessageBox::warning(0, "Application", (QString)"Impossible to open " + QChar(0x00AB) + *constIterator + QChar(0x00BB) + ".");
+                fontWarningShown = true;
+            }
+        } else {
+            fontID = QFontDatabase::addApplicationFontFromData(res.readAll());
+            if (fontID == -1 && fontWarningShown == false) {
+                QMessageBox::warning(0, "Application", (QString)"Impossible to open " + QChar(0x00AB) + *constIterator + QChar(0x00BB) + ".");
+                fontWarningShown = true;
+            }
+        }
+    }
+}
+
+void BitcoinGUI::createActions()
+{
+    QActionGroup *tabGroup = new QActionGroup(this);
+
+    // Navigation bar actions
+    overviewAction = new QAction("Dashboard", this);
+    overviewAction->setToolTip(tr("Show general overview"));
+    overviewAction->setCheckable(true);
+    overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
+    tabGroup->addAction(overviewAction);
+
+    sendCoinsAction = new QAction("Send", this);
+    sendCoinsAction->setToolTip(tr("Send coins to a HYC address"));
+    sendCoinsAction->setCheckable(true);
+    sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
+    sendCoinsAction->setObjectName("send");
+    tabGroup->addAction(sendCoinsAction);
+
+    receiveCoinsAction = new QAction("Receive", this);
+    receiveCoinsAction->setToolTip(tr("Receive addresses list"));
+    receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
+    receiveCoinsAction->setCheckable(true);
+    tabGroup->addAction(receiveCoinsAction);
+
+    historyAction = new QAction("Transactions", this);
+    historyAction->setToolTip(tr("Browse transaction history"));
+    historyAction->setCheckable(true);
+    historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
+    tabGroup->addAction(historyAction);
+
+    addressBookAction = new QAction("Address Book", this);
+    addressBookAction->setToolTip(tr("Edit the list of stored addresses and labels"));
+    addressBookAction->setCheckable(tru
