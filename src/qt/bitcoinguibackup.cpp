@@ -260,4 +260,60 @@ void BitcoinGUI::createActions()
 
     addressBookAction = new QAction("Address Book", this);
     addressBookAction->setToolTip(tr("Edit the list of stored addresses and labels"));
-    addressBookAction->setCheckable(tru
+    addressBookAction->setCheckable(true);
+    addressBookAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+    tabGroup->addAction(addressBookAction);
+
+    poolAction = new QAction("Market Data", this);
+    poolAction->setToolTip(tr("Show market data"));
+    poolAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
+    poolAction->setCheckable(true);
+    tabGroup->addAction(poolAction);
+
+    chatAction = new QAction("Social", this);
+    chatAction->setToolTip(tr("View social media info"));
+    chatAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
+    chatAction->setCheckable(true);
+    tabGroup->addAction(chatAction);
+
+    blockAction = new QAction("Block Explorer", this);
+    blockAction->setToolTip(tr("Explore the HYC blockchain"));
+    blockAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_8));
+    blockAction->setCheckable(true);
+    tabGroup->addAction(blockAction);
+
+    actionmenuAction = new QAction("Actions", this);
+    actionmenuAction->setToolTip(tr("Multiple wallet actions"));
+    actionmenuAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_9));
+    actionmenuAction->setCheckable(true);
+    tabGroup->addAction(actionmenuAction);
+
+    settingsAction = new QAction("Actions", this);
+    settingsAction->setToolTip(tr("Multiple wallet actions"));
+    settingsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_9));
+    settingsAction->setCheckable(true);
+    tabGroup->addAction(settingsAction);
+
+    statisticsAction = new QAction("Statistics", this);
+    statisticsAction->setToolTip(tr("View HYC statistics"));
+    statisticsAction->setCheckable(true);
+    tabGroup->addAction(statisticsAction);
+
+    optionsAction = new QAction("Settings", this);
+    optionsAction->setToolTip(tr("Modify settings for HYC wallet"));
+    tabGroup->addAction(optionsAction);
+
+    // Connect actions to functions
+    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
+    connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
+    connect(blockAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(blockAction, SIGNAL(triggered()), this, SLOT(gotoBlockBrowser()));
+    connect(poolAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+	connect(poolAction, SIGNAL(triggered()), this, SLOT(gotoPoolBrowser()));
+    connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
+    connect(statisticsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(statisticsAction, SIGNAL(triggered()), this, SLOT(gotoStatisticsPage()));
+    connect(chatAction, SI
