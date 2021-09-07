@@ -316,4 +316,46 @@ void BitcoinGUI::createActions()
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
     connect(statisticsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(statisticsAction, SIGNAL(triggered()), this, SLOT(gotoStatisticsPage()));
-    connect(chatAction, SI
+    connect(chatAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(chatAction, SIGNAL(triggered()), this, SLOT(gotoChatPage()));
+    connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
+    connect(addressBookAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(addressBookAction, SIGNAL(triggered()), this, SLOT(gotoAddressBookPage()));
+    connect(settingsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(settingsAction, SIGNAL(triggered()), this, SLOT(gotoSettingsPage()));
+    connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
+
+    // Upper right toolbar actions
+    toggleHideAction = new QAction(QIcon(":/icons/mini"), tr("&Show / Hide"), this);
+
+    quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
+    quitAction->setToolTip(tr("Quit application"));
+
+    quitAction2 = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
+    quitAction2->setToolTip(tr("Quit application"));
+    quitAction2->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
+
+    // ACTIONS tab actions
+    tutoStackAction = new QAction(QIcon(":/images/howtostake"),tr(""), this);
+    aboutAction = new QAction(QIcon(":/images/aboutHYC"), tr(""), this);
+    aboutAction->setToolTip(tr("Show information about HYC"));
+    aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
+    aboutQtAction->setToolTip(tr("Show information about Qt"));
+    encryptWalletAction = new QAction(QIcon(":/images/encryptwallet"), tr(""), this);
+    encryptWalletAction->setToolTip(tr("Encrypt or decrypt wallet"));
+    encryptWalletAction->setCheckable(true);
+    backupWalletAction = new QAction(QIcon(":/images/backupwallet"), tr(""), this);
+    backupWalletAction->setToolTip(tr("Backup wallet to another location"));
+    changePassphraseAction = new QAction(QIcon(":/images/newpassphrase"), tr(""), this);
+    changePassphraseAction->setToolTip(tr("Change the passphrase used for wallet encryption"));
+    unlockWalletAction = new QAction(QIcon(":/images/unlockwallet"), tr(""), this);
+    unlockWalletAction->setToolTip(tr("Unlock wallet"));
+    lockWalletAction = new QAction(QIcon(":/images/lockwallet"), tr(""), this);
+    lockWalletAction->setToolTip(tr("Lock wallet"));
+    signMessageAction = new QAction(QIcon(":/images/signmessage"), tr(""), this);
+    verifyMessageAction = new QAction(QIcon(":/images/verifymessage"), tr(""), this);
+    exportAction = new QAction(QIcon(":/icons/export"), tr("&Export..."), this);
+    exportAction->setToolTip(tr("Export the data in the current tab to a file"));
+    openRPCConsoleAction = new QAction(QIcon(":/images/debugwindow"), tr(""), this);
+    openRPCCo
