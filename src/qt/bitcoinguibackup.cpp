@@ -413,4 +413,49 @@ void BitcoinGUI::createContent()
 {
     //Create Actions Page Content
     settingsPage = new QWidget(this);
-    settingsPage->setFixedSize(
+    settingsPage->setFixedSize(1000,600);
+    settingsPage->setStyleSheet("QToolBar{border:0px;} QToolBar QToolButton{border:0px;}");
+
+    QFrame *WalletOptions = new QFrame(settingsPage);
+    WalletOptions->setGeometry(20,0,700,400);
+    WalletOptions->setFixedSize(700,400);
+    WalletOptions->setStyleSheet("background-image:url(:/images/walletoptions);background-repeat:no-repeat;");
+    QFrame *WalletOptionsButtonFrame = new QFrame(WalletOptions);
+    WalletOptionsButtonFrame->setGeometry(0,45,700,200);
+    WalletOptionsButtonFrame->setStyleSheet("background-image:url(:/icons/transpix);background-repeat:no-repeat;");
+    QToolBar *WalletOptionsToolbar = new QToolBar(WalletOptionsButtonFrame);
+    WalletOptionsToolbar->setOrientation(Qt::Horizontal);
+    WalletOptionsToolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    WalletOptionsToolbar->setMovable(false);
+    WalletOptionsToolbar->setIconSize(QSize(158,49));
+    WalletOptionsToolbar->addAction(lockWalletAction);
+    WalletOptionsToolbar->addAction(unlockWalletAction);
+    WalletOptionsToolbar->addAction(encryptWalletAction);
+    WalletOptionsToolbar->addAction(backupWalletAction);
+    WalletOptionsToolbar->addAction(changePassphraseAction);
+
+    QFrame *SystemFunctions = new QFrame(settingsPage);
+    SystemFunctions->setGeometry(713,0,267,500);
+    SystemFunctions->setFixedSize(270,500);
+    SystemFunctions->setStyleSheet("background-image:url(:/images/systemfunctions);background-repeat:no-repeat;");
+    QFrame *SystemFunctionsButtonFrame = new QFrame(SystemFunctions);
+    SystemFunctionsButtonFrame->setGeometry(0,45,270,500);
+    SystemFunctionsButtonFrame->setStyleSheet("background-image:url(:/icons/transpix);background-repeat:no-repeat;");
+    QToolBar *SystemFunctionsToolbar = new QToolBar(SystemFunctionsButtonFrame);
+    SystemFunctionsToolbar->setGeometry(53,0,270,450);
+    SystemFunctionsToolbar->setOrientation(Qt::Vertical);
+    SystemFunctionsToolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    SystemFunctionsToolbar->setMovable(false);
+    SystemFunctionsToolbar->setIconSize(QSize(158,49));
+    SystemFunctionsToolbar->addAction(signMessageAction);
+    SystemFunctionsToolbar->addAction(verifyMessageAction);
+    SystemFunctionsToolbar->addAction(openRPCConsoleAction);
+
+    QFrame *QuickSupport = new QFrame(settingsPage);
+    QuickSupport->setGeometry(20,200,700,300);
+    QuickSupport->setFixedSize(700,300);
+    QuickSupport->setStyleSheet("background-image:url(:/images/quicksupport);background-repeat:no-repeat;");
+    QFrame *QuickSupportButtonFrame = new QFrame(QuickSupport);
+    QuickSupportButtonFrame->setGeometry(0,45,700,300);
+    QuickSupportButtonFrame->setStyleSheet("background-image:url(:/icons/transpix);background-repeat:no-repeat;");
+    QToolBar *QuickSupportToolbar = new 
