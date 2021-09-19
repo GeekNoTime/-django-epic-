@@ -521,4 +521,55 @@ void BitcoinGUI::createToolBars()
     navigationBar->setMovable( false );
     navigationBar->setToolButtonStyle(Qt::ToolButtonTextOnly);
     navigationBar->setIconSize(QSize(30,54));
-    navi
+    navigationBar->setFixedSize(1000,60);
+    navigationBar->addAction(overviewAction);
+    navigationBar->addAction(sendCoinsAction);
+    navigationBar->addAction(receiveCoinsAction);
+    navigationBar->addAction(historyAction);
+    navigationBar->addAction(addressBookAction);
+    navigationBar->addAction(poolAction);
+    navigationBar->addAction(chatAction);
+    navigationBar->addAction(blockAction);
+    navigationBar->addAction(settingsAction);
+    navigationBar->setStyleSheet("QToolBar {border: 0px; background-image: url(:/images/menu); background-repeat:no-repeat;} QToolBar QToolButton:hover{color: #F37255;} QToolBar QToolButton:checked {color: #F37255;} QToolBar QToolButton{font-weight:bold; margin-bottom:12px; padding-left:8px; font-size:11px; font-family:'Open Sans Extrabold'; color:#848890; text-align:left; background:transparent; text-transform:uppercase; height:100%;}");
+    insertToolBarBreak(navigationBar);
+
+    //Export and Settings bar
+    QToolBar *extraFunctionsBar = addToolBar(tr("Extra Functions bar"));
+    extraFunctionsBar->setObjectName("extraFunctionsBar");
+    addToolBar(Qt::RightToolBarArea,extraFunctionsBar);
+    extraFunctionsBar->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    extraFunctionsBar->setOrientation(Qt::Horizontal);
+    extraFunctionsBar->setMovable(false);
+    extraFunctionsBar->setFixedWidth(200);
+    extraFunctionsBar->setFixedHeight(60);
+    extraFunctionsBar->setStyleSheet("QToolBar {border:0px;} QToolBar QToolButton:hover{color: #F37255;} QToolBar QToolButton:checked {color: #F37255;} QToolBar QToolButton{margin-bottom:13px; font-size:11px; font-family:'Open Sans Extrabold'; color:#33363B; text-align:right; background:transparent; text-transform:uppercase; height:100%; padding-left:20px;}");
+    extraFunctionsBar->setFont(QFont(":/fonts/OpenSansBold"));
+    QWidget* extraSpacer = new QWidget();
+    extraSpacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    extraFunctionsBar->addWidget(extraSpacer);
+    extraFunctionsBar->addAction(exportAction);
+    extraFunctionsBar->addAction(optionsAction);
+    insertToolBarBreak(extraFunctionsBar);
+    QHBoxLayout *extraFunctionsBarVbox = new QHBoxLayout();
+    extraFunctionsBarVbox->addWidget(extraFunctionsBar);
+    extraFunctionsBarVbox->setContentsMargins(0,0,0,0);
+    wId2 = new QWidget(this);
+    wId2->setFixedSize(200,60);
+    wId2->move(798,28);
+    wId2->setLayout(extraFunctionsBarVbox);
+    wId2->setFocus();
+}
+
+void BitcoinGUI::setClientModel(ClientModel *clientModel)
+{
+    this->clientModel = clientModel;
+    if(clientModel)
+    {
+        // Replace some strings and icons, when using the testnet
+        if(clientModel->isTestNet())
+        {
+            setWindowTitle(windowTitle() + QString(" ") + tr("[testnet]"));
+#ifndef Q_OS_MAC
+            qApp->setWindowIcon(QIcon(":icons/bitcoin_testnet"));
+      
