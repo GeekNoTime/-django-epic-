@@ -572,4 +572,71 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
             setWindowTitle(windowTitle() + QString(" ") + tr("[testnet]"));
 #ifndef Q_OS_MAC
             qApp->setWindowIcon(QIcon(":icons/bitcoin_testnet"));
-      
+            setWindowIcon(QIcon(":icons/bitcoin_testnet"));
+#else
+            MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin_testnet"));
+#endif
+            if(trayIcon)
+            {
+                trayIcon->setToolTip(tr("HYC client") + QString(" ") + tr("[testnet]"));
+                trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
+                toggleHideAction->setIcon(QIcon(":/icons/toolbar_testnet"));
+            }
+
+            aboutAction->setIcon(QIcon(":/icons/toolbar_testnet"));
+        }
+
+        // Keep up to date with client
+        setNumConnections(clientModel->getNumConnections());
+        connect(clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
+
+        setNumBlocks(clientModel->getNumBlocks(), clientModel->getNumBlocksOfPeers());
+        connect(clientModel, SIGNAL(numBlocksChanged(int,int)), this, SLOT(setNumBlocks(int,int)));
+
+        // Report errors from network/worker thread
+        connect(clientModel, SIGNAL(error(QString,QString,bool)), this, SLOT(error(QString,QString,bool)));
+
+        rpcConsole->setClientModel(clientModel);
+        addressBookPage->setOptionsModel(clientModel->getOptionsModel());
+        receiveCoinsPage->setOptionsModel(clientModel->getOptionsModel());
+    }
+}
+
+void BitcoinGUI::setWalletModel(WalletModel *walletModel)
+{
+    this->walletModel = walletModel;
+    if(walletModel)
+    {
+        // Report errors from wallet thread
+        connect(walletModel, SIGNAL(error(QString,QString,bool)), this, SLOT(error(QString,QString,bool)));
+
+        // Put transaction list in tabs
+        transactionView->setModel(walletModel);
+        overviewPage->setModel(walletModel);
+        addressBookPage->setModel(walletModel->getAddressTableModel());
+        receiveCoinsPage->setModel(walletModel->getAddressTableModel());
+        sendCoinsPage->setModel(walletModel);
+        signVerifyMessageDialog->setModel(walletModel);
+        statisticsPage->setModel(clientModel);
+        chatWindow->setModel(clientModel);
+        blockBrowser->setModel(clientModel);
+        poolBrowser->setModel(clientModel);
+        setEncryptionStatus(walletModel->getEncryptionStatus());
+        connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
+
+        // Balloon pop-up for new transaction
+        connect(walletModel->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
+                this, SLOT(incomingTransaction(QModelIndex,int,int)));
+
+        // Ask for passphrase if needed
+        connect(walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet()));
+    }
+}
+
+void BitcoinGUI::createTrayIcon()
+{
+    QMenu *trayIconMenu;
+#ifndef Q_OS_MAC
+    trayIcon = new QSystemTrayIcon(this);
+    trayIconMenu = new QMenu(this);
+    trayIcon->se
