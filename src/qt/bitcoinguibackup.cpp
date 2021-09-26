@@ -639,4 +639,100 @@ void BitcoinGUI::createTrayIcon()
 #ifndef Q_OS_MAC
     trayIcon = new QSystemTrayIcon(this);
     trayIconMenu = new QMenu(this);
-    trayIcon->se
+    trayIcon->setContextMenu(trayIconMenu);
+    trayIcon->setToolTip(tr("HYC client"));
+    trayIcon->setIcon(QIcon(":/icons/toolbar"));
+    connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+            this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
+    trayIcon->show();
+#else
+    // Note: On Mac, the dock icon is used to provide the tray's functionality.
+    MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
+    dockIconHandler->setMainWindow((QMainWindow *)this);
+    trayIconMenu = dockIconHandler->dockMenu();
+#endif
+
+    // Configuration of the tray icon (or dock icon) icon menu
+    trayIconMenu->addAction(toggleHideAction);
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(sendCoinsAction);
+    trayIconMenu->addAction(receiveCoinsAction);
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(signMessageAction2);
+    trayIconMenu->addAction(verifyMessageAction2);
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(optionsAction);
+    trayIconMenu->addAction(openRPCConsoleAction2);
+#ifndef Q_OS_MAC // This is built-in on Mac
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(quitAction2);
+#endif
+
+    notificator = new Notificator(qApp->applicationName(), trayIcon);
+}
+
+#ifndef Q_OS_MAC
+void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
+{
+    if(reason == QSystemTrayIcon::Trigger)
+    {
+        // Click on system tray icon triggers show/hide of the main window
+        toggleHideAction->trigger();
+    }
+}
+#endif
+
+void BitcoinGUI::optionsClicked()
+{
+    if(!clientModel || !clientModel->getOptionsModel())\
+    {
+        return;
+    }
+    OptionsDialog dlg;
+    dlg.setModel(clientModel->getOptionsModel());
+    dlg.exec();
+}
+
+void BitcoinGUI::sConvert()
+{
+    if (convertmode == 0)
+    {
+        actionConvertIcon->setIcon(QIcon(":/icons/changevaldollar").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        convertmode = 1;
+    }
+    else if (convertmode == 1)
+    {
+        actionConvertIcon->setIcon(QIcon(":/icons/changevalbtc").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        convertmode = 2;
+    }
+    else if (convertmode == 2)
+    {
+        actionConvertIcon->setIcon(QIcon(":/icons/changevalHYC").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        convertmode = 0;
+    }
+}
+
+void BitcoinGUI::tutoWriteClicked()
+{
+    tutoWriteDialog dlg;
+    dlg.setModel(clientModel);
+    dlg.exec();
+}
+
+void BitcoinGUI::tutoStackClicked()
+{
+    tutoStackDialog dlg;
+    dlg.setModel(clientModel);
+    dlg.exec();
+}
+
+void BitcoinGUI::aboutClicked()
+{
+    AboutDialog dlg;
+    dlg.setModel(clientModel);
+    dlg.exec();
+}
+
+void BitcoinGUI::setNumConnections(int count)
+{
+    overviewPage->setNumberConnec
