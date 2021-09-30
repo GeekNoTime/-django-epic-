@@ -816,4 +816,98 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     {
         text = tr("%n minute(s) ago","",secs/60);
     }
-    else if(secs <
+    else if(secs < 24*60*60)
+    {
+        text = tr("%n hour(s) ago","",secs/(60*60));
+    }
+    else
+    {
+        text = tr("%n day(s) ago","",secs/(60*60*24));
+    }
+
+    // Set icon state: spinning if catching up, tick otherwise
+    if(secs < 90*60 && count >= nTotalBlocks)
+    {
+        tooltip = tr("Up to date") + QString(".<br>") + tooltip;
+        labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_wICONSIZE, STATUSBAR_hICONSIZE));
+        overviewPage->showOutOfSyncWarning(false);
+    }
+    else
+    {
+        tooltip = tr("Catching up...") + QString("<br>") + tooltip;
+        labelBlocksIcon->setPixmap(QIcon(":/icons/not_synced").pixmap(STATUSBAR_wICONSIZE, STATUSBAR_hICONSIZE));
+        overviewPage->showOutOfSyncWarning(true);
+    }
+
+    if(!text.isEmpty())
+    {
+        tooltip += QString("<br>");
+        tooltip += tr("Last received block was generated %1.").arg(text);
+    }
+
+    // Don't word-wrap this (fixed-width) tooltip
+    tooltip = QString("<nobr>") + tooltip + QString("</nobr>");
+
+    labelBlocksIcon->setToolTip(tooltip);
+    progressBar->setToolTip(tooltip);
+}
+
+void BitcoinGUI::error(const QString &title, const QString &message, bool modal)
+{
+    // Report errors from network/worker thread
+    if(modal)
+    {
+        QMessageBox::critical(this, title, message, QMessageBox::Ok, QMessageBox::Ok);
+    } else {
+        notificator->notify(Notificator::Critical, title, message);
+    }
+}
+
+void BitcoinGUI::changeEvent(QEvent *e)
+{
+    QMainWindow::changeEvent(e);
+#ifndef Q_OS_MAC // Ignored on Mac
+    if(e->type() == QEvent::WindowStateChange)
+    {
+        if(clientModel && clientModel->getOptionsModel()->getMinimizeToTray())
+        {
+            QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
+            if(!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized())
+            {
+                QTimer::singleShot(0, this, SLOT(hide()));
+                e->ignore();
+            }
+        }
+    }
+#endif
+}
+
+void BitcoinGUI::closeEvent(QCloseEvent *event)
+{
+#ifndef Q_OS_MAC
+        if(clientModel->getOptionsModel()->getMinimizeOnClose())
+        {
+            event->ignore();
+            hide();
+        }
+        else
+        {
+            event->accept();
+            qApp->quit();
+        }
+
+#else
+    qApp->quit();
+#endif
+}
+
+void BitcoinGUI::askFee(qint64 nFeeRequired, bool *payFee)
+{
+    QString strMessage =
+        tr("This transaction is over the size limit.  You can still send it for a fee of %1, "
+          "which goes to the nodes that process your transaction and helps to support the network.  "
+          "Do you want to pay the fee?").arg(
+                BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, nFeeRequired));
+    QMessageBox::StandardButton retval = QMessageBox::question(
+          this, tr("Confirm transaction fee"), strMessage,
+          QMessa
