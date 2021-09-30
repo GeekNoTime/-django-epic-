@@ -735,4 +735,85 @@ void BitcoinGUI::aboutClicked()
 
 void BitcoinGUI::setNumConnections(int count)
 {
-    overviewPage->setNumberConnec
+    overviewPage->setNumberConnections(clientModel->getNumConnections());
+    QString icon;
+    switch(count)
+    {
+    case 0: icon = ":/icons/connect_0"; break;
+    case 1: case 2: case 3: icon = ":/icons/connect_1"; break;
+    case 4: case 5: case 6: icon = ":/icons/connect_2"; break;
+    case 7: case 8: case 9: icon = ":/icons/connect_3"; break;
+    default: icon = ":/icons/connect_4"; break;
+    }
+    labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to HYC network", "", count));
+}
+
+void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
+{
+    QString strStatusBarWarnings = clientModel->getStatusBarWarnings();
+    QString tooltip;
+
+    labelBlocksIcon->setPixmap(QIcon(":/icons/not_synced").pixmap(STATUSBAR_wICONSIZE, STATUSBAR_hICONSIZE));
+    labelBlocksIcon->setToolTip("Catchin up...");
+
+    // don't show / hide progress bar and its label if we have no connection to the network
+    if (!clientModel || clientModel->getNumConnections() == 0)
+    {
+        progressBarLabel->setVisible(false);
+        progressBar->setVisible(false);
+
+        return;
+    }
+
+    if(count < nTotalBlocks)
+    {
+        //int nRemainingBlocks = nTotalBlocks - count;
+        float nPercentageDone = count / (nTotalBlocks * 0.01f);
+
+        if (strStatusBarWarnings.isEmpty())
+        {
+            progressBarLabel->setVisible(false);
+            progressBar->setFormat(tr("%n%", "", nPercentageDone));
+            progressBar->setMaximum(nTotalBlocks);
+            progressBar->setValue(count);
+            progressBar->setVisible(false);
+        }
+
+        tooltip = tr("Downloaded %1 of %2 blocks of transaction history (%3% done).").arg(count).arg(nTotalBlocks).arg(nPercentageDone, 0, 'f', 2);
+    }
+    else
+    {
+        if (strStatusBarWarnings.isEmpty())
+            progressBarLabel->setVisible(false);
+
+        progressBar->setVisible(false);
+        tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
+    }
+
+    // Override progressBarLabel text and hide progress bar, when we have warnings to display
+    if (!strStatusBarWarnings.isEmpty())
+    {
+        progressBarLabel->setText(strStatusBarWarnings);
+        progressBarLabel->setVisible(false);
+        progressBar->setVisible(false);
+    }
+
+    QDateTime lastBlockDate = clientModel->getLastBlockDate();
+    int secs = lastBlockDate.secsTo(QDateTime::currentDateTime());
+    QString text;
+
+    // Represent time from last generated block in human readable text
+    if(secs <= 0)
+    {
+        // Fully up to date. Leave text empty.
+    }
+    else if(secs < 60)
+    {
+        text = tr("%n second(s) ago","",secs);
+    }
+    else if(secs < 60*60)
+    {
+        text = tr("%n minute(s) ago","",secs/60);
+    }
+    else if(secs <
