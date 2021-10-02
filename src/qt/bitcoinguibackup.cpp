@@ -964,4 +964,80 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
 
         }
         if (convertmode == 2)
- 
+        {
+            notificator->notify(Notificator::Information,
+                                (amount)<0 ? tr("Sent transaction") :
+                                             tr("Incoming transaction"),
+                                tr("Date: %1\n"
+                                   "Amount: %2\n"
+                                   "Type: %3\n"
+                                   "Address: %4\n")
+                                .arg(date)
+                                .arg(BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), bitcoing.toDouble()*amount, true))
+                                .arg(type)
+                                .arg(address), icon);
+        }
+    }
+}
+
+void BitcoinGUI::gotoOverviewPage()
+{
+    overviewAction->setChecked(true);
+    centralWidget->setCurrentWidget(overviewPage);
+    actionConvertIcon->setEnabled(true);
+    actionConvertIcon->setVisible(true);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    exportAction->setVisible(false);
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    wId->raise();
+}
+
+void BitcoinGUI::gotoPoolBrowser()
+{
+    poolAction->setChecked(true);
+    centralWidget->setCurrentWidget(poolBrowser);
+    exportAction->setEnabled(false);
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    exportAction->setVisible(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    wId->raise();
+}
+
+void BitcoinGUI::gotoSettingsPage()
+{
+    settingsAction->setChecked(true);
+    centralWidget->setCurrentWidget(settingsPage);
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    exportAction->setEnabled(false);
+    exportAction->setVisible(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    wId->raise();
+}
+
+void BitcoinGUI::gotoBlockBrowser()
+{
+    blockAction->setChecked(true);
+    centralWidget->setCurrentWidget(blockBrowser);
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    exportAction->setVisible(false);
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    wId->raise();
+}
+
+void BitcoinGUI::gotoStatisticsPage()
+{
+    statisticsAction->setChecked(true);
+    centralWidget->setCurrentWidget(statisticsPage);
+    acti
