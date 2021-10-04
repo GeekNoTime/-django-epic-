@@ -1040,4 +1040,82 @@ void BitcoinGUI::gotoStatisticsPage()
 {
     statisticsAction->setChecked(true);
     centralWidget->setCurrentWidget(statisticsPage);
-    acti
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    exportAction->setVisible(false);
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    wId->raise();
+}
+
+void BitcoinGUI::gotoChatPage()
+{
+    chatAction->setChecked(true);
+    centralWidget->setCurrentWidget(chatWindow);
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    connect(actionConvertIcon, SIGNAL(triggered()), this, SLOT(sConvert()));
+    exportAction->setVisible(false);
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    wId->raise();
+}
+
+
+void BitcoinGUI::gotoHistoryPage()
+{
+    historyAction->setChecked(true);
+    centralWidget->setCurrentWidget(transactionsPage);
+    convertmode= 0;
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    exportAction->setEnabled(true);
+    exportAction->setVisible(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), transactionView, SLOT(exportClicked()));
+    wId->raise();
+}
+
+void BitcoinGUI::gotoAddressBookPage()
+{
+    addressBookAction->setChecked(true);
+    centralWidget->setCurrentWidget(addressBookPage);
+    convertmode = 0;
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    exportAction->setEnabled(true);
+    exportAction->setVisible(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), addressBookPage, SLOT(exportClicked()));
+    wId->raise();
+}
+
+void BitcoinGUI::gotoReceiveCoinsPage()
+{
+    receiveCoinsAction->setChecked(true);
+    centralWidget->setCurrentWidget(receiveCoinsPage);
+    convertmode = 0;
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    exportAction->setEnabled(true);
+    exportAction->setVisible(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), receiveCoinsPage, SLOT(exportClicked()));
+    wId->raise();
+}
+
+void BitcoinGUI::gotoSendCoinsPage()
+{
+    sendCoinsAction->setChecked(true);
+    centralWidget->setCurrentWidget(sendCoinsPage);
+    convertmode = 0;
+    actionConvertIcon->setEnabled(false);
+    actionConvertIcon->setVisible(false);
+    disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
+    
