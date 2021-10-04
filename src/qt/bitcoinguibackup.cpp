@@ -1118,4 +1118,90 @@ void BitcoinGUI::gotoSendCoinsPage()
     actionConvertIcon->setEnabled(false);
     actionConvertIcon->setVisible(false);
     disconnect(actionConvertIcon, SIGNAL(triggered()), 0, 0);
-    
+    exportAction->setEnabled(false);
+    exportAction->setVisible(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    wId->raise();
+}
+
+void BitcoinGUI::gotoSignMessageTab(QString addr)
+{
+    // call show() in showTab_SM()
+    signVerifyMessageDialog->showTab_SM(true);
+
+    if(!addr.isEmpty())
+        signVerifyMessageDialog->setAddress_SM(addr);
+}
+
+void BitcoinGUI::gotoVerifyMessageTab(QString addr)
+{
+    // call show() in showTab_VM()
+    signVerifyMessageDialog->showTab_VM(true);
+
+    if(!addr.isEmpty())
+        signVerifyMessageDialog->setAddress_VM(addr);
+}
+
+void BitcoinGUI::dragEnterEvent(QDragEnterEvent *event)
+{
+    // Accept only URIs
+    if(event->mimeData()->hasUrls())
+        event->acceptProposedAction();
+}
+
+void BitcoinGUI::dropEvent(QDropEvent *event)
+{
+    if(event->mimeData()->hasUrls())
+    {
+        int nValidUrisFound = 0;
+        QList<QUrl> uris = event->mimeData()->urls();
+        foreach(const QUrl &uri, uris)
+        {
+            if (sendCoinsPage->handleURI(uri.toString()))
+                nValidUrisFound++;
+        }
+
+        // if valid URIs were found
+        if (nValidUrisFound)
+            gotoSendCoinsPage();
+        else
+            notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid HYC address or malformed URI parameters."));
+    }
+
+    event->acceptProposedAction();
+}
+
+void BitcoinGUI::handleURI(QString strURI)
+{
+    // URI has to be valid
+    if (sendCoinsPage->handleURI(strURI))
+    {
+        showNormalIfMinimized();
+        gotoSendCoinsPage();
+    }
+    else
+    {
+        notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid HYC address or malformed URI parameters."));
+    }
+}
+
+void BitcoinGUI::setEncryptionStatus(int status)
+{
+    switch(status)
+    {
+    case WalletModel::Unencrypted:
+        labelEncryptionIcon->show();
+        labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_open").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        labelEncryptionIcon->setToolTip(tr("Wallet is <b>not encrypted</b>, go to actions to encrypt your wallet"));
+        encryptWalletAction->setChecked(false);
+        changePassphraseAction->setEnabled(false);
+        changePassphraseAction->setVisible(false);
+        unlockWalletAction->setVisible(false);
+        lockWalletAction->setVisible(false);
+        encryptWalletAction->setEnabled(true);
+        break;
+    case WalletModel::Unlocked:
+        labelEncryptionIcon->hide();
+        labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_open").pixmap(STATUSBAR_wICONSIZE,STATUSBAR_hICONSIZE));
+        labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
+        encryptWalletAc
