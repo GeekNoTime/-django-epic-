@@ -169,3 +169,34 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Cannot downgrade wallet"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Cannot initialize keypool"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Cannot write default address"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Rescanning..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Importing blockchain data file."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Importing bootstrap blockchain data file."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Loading addresses..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: could not start node"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Done loading"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Unable to bind to %s on this computer. HongyunCoin2 is probably already running."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Unable to bind to %s on this computer (bind returned error %d, %s)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: Wallet locked, unable to create transaction  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: Wallet unlocked for staking only, unable to create transaction."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Error: This transaction requires a transaction fee of at least %s because of "
+"its amount, complexity, or use of recently received funds  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: Transaction creation failed  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Sending..."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Error: The transaction was rejected.  This might happen if some of the coins "
+"in your wallet were already spent, such as if you used a copy of wallet.dat "
+"and coins were spent in the copy but not marked as spent here."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Insufficient funds"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Warning: Please check that your computer's date and time are correct! If "
+"your clock is wrong HongyunCoin2 will not work properly."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Warning: This version is obsolete, upgrade required!"),
+QT_TRANSLATE_NOOP("bitcoin-core", "WARNING: syncronized checkpoint violation detected, but skipped!"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Warning: Disk space is low!"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"WARNING: Invalid checkpoint found! Displayed transactions may not be "
+"correct! You may need to upgrade, or notify developers."),
+};
