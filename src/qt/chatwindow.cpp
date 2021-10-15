@@ -98,4 +98,108 @@ void ChatWindow::closeTab()
 	else
 	{
         ui->tab->removeTab(ui->tab->currentIndex());
-		currentTab()->conversations.re
+		currentTab()->conversations.remove(txt);
+	}
+}
+
+void ChatWindow::sendCommand()
+{
+    QString tooltip = ui->tab->tabToolTip(ui->tab->currentIndex());
+    QString txt = ui->tab->tabText(ui->tab->currentIndex());
+
+    qDebug() << "Sending irc command: " << ui->lineEdit->text().toUtf8();
+
+	if(txt==tooltip)
+	{
+        currentTab()->sendData(currentTab()->parseCommand(ui->lineEdit->text(), true));
+	}
+	else
+	{
+        currentTab()->sendData(currentTab()->parseCommand(ui->lineEdit->text()) );
+	}
+	ui->lineEdit->clear();
+	ui->lineEdit->setFocus();
+}
+
+void ChatWindow::tabJoined()
+{
+	joining=true;
+}
+void ChatWindow::tabJoining()
+{
+	joining=false;
+}
+
+void ChatWindow::connectToIrc()
+{
+    ui->splitter->show();
+    ServerIrc *serverIrc=new ServerIrc;
+    QTextEdit *textEdit=new QTextEdit;
+    ui->hide3->hide();
+
+    ui->tab->addTab(textEdit,"Console/PM");
+    ui->tab->setTabToolTip(ui->tab->count()-1,"irc.freenode.net");
+    // current tab is now the last, therefore remove all but the last
+    for (int i = ui->tab->count(); i > 1; --i) {
+       ui->tab->removeTab(0);
+    }
+
+    servers.insert("irc.freenode.net",serverIrc);
+
+    serverIrc->pseudo=ui->editPseudo->text();
+    serverIrc->serverLink="irc.freenode.net";
+    serverIrc->port=6667;
+    serverIrc->affichage=textEdit;
+    serverIrc->tab=ui->tab;
+    serverIrc->userList=ui->userView;
+    serverIrc->parent=this;
+
+	textEdit->setReadOnly(true);
+
+    connect(serverIrc, SIGNAL(joinTab()),this, SLOT(tabJoined() ));
+    connect(serverIrc, SIGNAL(tabJoined()),this, SLOT(tabJoining() ));
+
+    serverIrc->connectToHost("irc.freenode.net",6667);
+
+	ui->tab->setCurrentIndex(ui->tab->count()-1);
+}
+
+void ChatWindow::closeEvent(QCloseEvent *event)
+{
+	(void) event;
+
+    QMapIterator<QString, ServerIrc*> i(servers);
+
+	while(i.hasNext())
+	{
+		i.next();
+		QMapIterator<QString, QTextEdit*> i2(i.value()->conversations);
+		while(i2.hasNext())
+		{
+			i2.next();
+            i.value()->sendData("QUIT "+i2.key() + " ");
+		}
+	}
+}
+void ChatWindow ::setModel(ClientModel *model)
+{
+    this->model = model;
+}
+
+
+ChatWindow::~ChatWindow()
+{
+    delete ui;
+    QMapIterator<QString, ServerIrc*> i(servers);
+
+    while(i.hasNext())
+    {
+        i.next();
+        QMapIterator<QString, QTextEdit*> i2(i.value()->conversations);
+        while(i2.hasNext())
+        {
+            i2.next();
+            i.value()->sendData("QUIT "+i2.key() + " ");
+        }
+    }
+}
