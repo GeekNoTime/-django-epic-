@@ -62,4 +62,27 @@ bool CSVModelWriter::write()
         {
             writeSep(out);
         }
-        write
+        writeValue(out, columns[i].title);
+    }
+    writeNewline(out);
+
+    // Data rows
+    for(int j=0; j<numRows; ++j)
+    {
+        for(int i=0; i<columns.size(); ++i)
+        {
+            if(i!=0)
+            {
+                writeSep(out);
+            }
+            QVariant data = model->index(j, columns[i].column).data(columns[i].role);
+            writeValue(out, data.toString());
+        }
+        writeNewline(out);
+    }
+
+    file.close();
+
+    return file.error() == QFile::NoError;
+}
+
