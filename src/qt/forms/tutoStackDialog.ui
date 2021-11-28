@@ -136,4 +136,38 @@
         </size>
        </property>
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;As you may already know, HongyunCoin2 is a 100% Proof-of-Stake (PoS) coin.&lt;/p&gt;&lt;p&gt;For those who don't really know what that means, here's a little explanation.&lt;/p&gt;&lt;p&gt;Your coins have what we call a &lt;span style=&quot; font-style:italic;&quot;&gt;coin-age &lt;/span&gt;they start gaining age if they don't move during &lt;span style=&quot; font-weight:600;&quot;&gt;8-10 hours&lt;/span&gt; in your wallet, your &lt;span style=&quot; font-style:italic;&quot;&gt;stake 
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;As you may already know, HongyunCoin2 is a 100% Proof-of-Stake (PoS) coin.&lt;/p&gt;&lt;p&gt;For those who don't really know what that means, here's a little explanation.&lt;/p&gt;&lt;p&gt;Your coins have what we call a &lt;span style=&quot; font-style:italic;&quot;&gt;coin-age &lt;/span&gt;they start gaining age if they don't move during &lt;span style=&quot; font-weight:600;&quot;&gt;8-10 hours&lt;/span&gt; in your wallet, your &lt;span style=&quot; font-style:italic;&quot;&gt;stake weight&lt;/span&gt; is the cumulated coin age you have. Before those 8-10 hours, coins don't get matured so you won't be able to hit a Stake Block.&lt;/p&gt;&lt;p&gt;Your coins always gain coin-age even if your wallet is closed. But to hit a Stake Block you need to have your wallet open.&lt;/p&gt;&lt;p&gt;To see how much time is needed to hit a stake block just hover the lightning icon in the wallet it will tell you the expected time. But beware, like POW blocks, POS blocks are a bit random so expected time may be lower or higher.&lt;/p&gt;&lt;p&gt;This is when your coin-age is important. The more cumulated coin-age you got, the more chances you have of hitting a stake block. Once you hit this block and gain interest, coins which have been used have their coin-age reset, are moved to stake and blocked for 500 blocks.&lt;/p&gt;&lt;p&gt;Interest is fixed at 5% per year, but since coin start gaining age 8-10 hours after with compound interest this percentage is much higher.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;Some options available to handle day to day staking :&lt;/span&gt;&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-style:italic;&quot;&gt;settings-&amp;gt;options&lt;/span&gt; you can set a reserve balance (the amount of coins u don't want to be staking, they'll be available to spend 24/7)&lt;br/&gt;In &lt;span style=&quot; font-style:italic;&quot;&gt;settings-&amp;gt;options-&amp;gt;display&lt;/span&gt; you can tick coin control, so you can control what coin you send (don't send old coins)&lt;br/&gt;In &lt;span style=&quot; font-style:italic;&quot;&gt;settings&lt;/span&gt; you can unlock wallet for staking only if you encrypted it.&lt;/p&gt;&lt;p&gt;&lt;b&gt;If you want to get HongyunCoin2 with your mining equipment, you can point your miners to our multipool: &lt;a href=&quot;http://www.thepool.pw/HongyunCoin2&quot;&gt;thepool.pw/HongyunCoin2&lt;/a&gt;.&lt;/b&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>tutoStackDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>360</x>
+     <y>308</
