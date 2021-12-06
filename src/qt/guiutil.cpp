@@ -150,4 +150,100 @@ QString HtmlEscape(const std::string& str, bool fMultiLine)
     return HtmlEscape(QString::fromStdString(str), fMultiLine);
 }
 
-void co
+void copyEntryData(QAbstractItemView *view, int column, int role)
+{
+    if(!view || !view->selectionModel())
+        return;
+    QModelIndexList selection = view->selectionModel()->selectedRows(column);
+
+    if(!selection.isEmpty())
+    {
+        // Copy first item
+        QApplication::clipboard()->setText(selection.at(0).data(role).toString());
+    }
+}
+
+QString getSaveFileName(QWidget *parent, const QString &caption,
+                                 const QString &dir,
+                                 const QString &filter,
+                                 QString *selectedSuffixOut)
+{
+    QString selectedFilter;
+    QString myDir;
+    if(dir.isEmpty()) // Default to user documents location
+    {
+        myDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+    }
+    else
+    {
+        myDir = dir;
+    }
+    QString result = QFileDialog::getSaveFileName(parent, caption, myDir, filter, &selectedFilter);
+
+    /* Extract first suffix from filter pattern "Description (*.foo)" or "Description (*.foo *.bar ...) */
+    QRegExp filter_re(".* \\(\\*\\.(.*)[ \\)]");
+    QString selectedSuffix;
+    if(filter_re.exactMatch(selectedFilter))
+    {
+        selectedSuffix = filter_re.cap(1);
+    }
+
+    /* Add suffix if needed */
+    QFileInfo info(result);
+    if(!result.isEmpty())
+    {
+        if(info.suffix().isEmpty() && !selectedSuffix.isEmpty())
+        {
+            /* No suffix specified, add selected suffix */
+            if(!result.endsWith("."))
+                result.append(".");
+            result.append(selectedSuffix);
+        }
+    }
+
+    /* Return selected suffix if asked to */
+    if(selectedSuffixOut)
+    {
+        *selectedSuffixOut = selectedSuffix;
+    }
+    return result;
+}
+
+Qt::ConnectionType blockingGUIThreadConnection()
+{
+    if(QThread::currentThread() != QCoreApplication::instance()->thread())
+    {
+        return Qt::BlockingQueuedConnection;
+    }
+    else
+    {
+        return Qt::DirectConnection;
+    }
+}
+
+bool checkPoint(const QPoint &p, const QWidget *w)
+{
+    QWidget *atW = qApp->widgetAt(w->mapToGlobal(p));
+    if (!atW) return false;
+    return atW->topLevelWidget() == w;
+}
+
+bool isObscured(QWidget *w)
+{
+    return !(checkPoint(QPoint(0, 0), w)
+        && checkPoint(QPoint(w->width() - 1, 0), w)
+        && checkPoint(QPoint(0, w->height() - 1), w)
+        && checkPoint(QPoint(w->width() - 1, w->height() - 1), w)
+        && checkPoint(QPoint(w->width() / 2, w->height() / 2), w));
+}
+
+void openDebugLogfile()
+{
+    boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+
+    /* Open debug.log with the associated application */
+    if (boost::filesystem::exists(pathDebug))
+        QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdString(pathDebug.string())));
+}
+
+ToolTipToRichTextFilter::ToolTipToRichTextFilter(int size_threshold, QObject *p
