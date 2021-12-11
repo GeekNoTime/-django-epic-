@@ -327,4 +327,97 @@ bool SetStartOnSystemStartup(bool fAutoStart)
                 ppf->Release();
                 psl->Release();
                 CoUninitialize();
-                
+                return true;
+            }
+            psl->Release();
+        }
+        CoUninitialize();
+        return false;
+    }
+    return true;
+}
+
+#elif defined(LINUX)
+
+// Follow the Desktop Application Autostart Spec:
+//  http://standards.freedesktop.org/autostart-spec/autostart-spec-latest.html
+
+boost::filesystem::path static GetAutostartDir()
+{
+    namespace fs = boost::filesystem;
+
+    char* pszConfigHome = getenv("XDG_CONFIG_HOME");
+    if (pszConfigHome) return fs::path(pszConfigHome) / "autostart";
+    char* pszHome = getenv("HOME");
+    if (pszHome) return fs::path(pszHome) / ".config" / "autostart";
+    return fs::path();
+}
+
+boost::filesystem::path static GetAutostartFilePath()
+{
+    return GetAutostartDir() / "HongyunCoin2.desktop";
+}
+
+bool GetStartOnSystemStartup()
+{
+    boost::filesystem::ifstream optionFile(GetAutostartFilePath());
+    if (!optionFile.good())
+        return false;
+    // Scan through file for "Hidden=true":
+    std::string line;
+    while (!optionFile.eof())
+    {
+        getline(optionFile, line);
+        if (line.find("Hidden") != std::string::npos &&
+            line.find("true") != std::string::npos)
+            return false;
+    }
+    optionFile.close();
+
+    return true;
+}
+
+bool SetStartOnSystemStartup(bool fAutoStart)
+{
+    if (!fAutoStart)
+        boost::filesystem::remove(GetAutostartFilePath());
+    else
+    {
+        char pszExePath[MAX_PATH+1];
+        memset(pszExePath, 0, sizeof(pszExePath));
+        if (readlink("/proc/self/exe", pszExePath, sizeof(pszExePath)-1) == -1)
+            return false;
+
+        boost::filesystem::create_directories(GetAutostartDir());
+
+        boost::filesystem::ofstream optionFile(GetAutostartFilePath(), std::ios_base::out|std::ios_base::trunc);
+        if (!optionFile.good())
+            return false;
+        // Write a bitcoin.desktop file to the autostart directory:
+        optionFile << "[Desktop Entry]\n";
+        optionFile << "Type=Application\n";
+        optionFile << "Name=HongyunCoin2\n";
+        optionFile << "Exec=" << pszExePath << " -min\n";
+        optionFile << "Terminal=false\n";
+        optionFile << "Hidden=false\n";
+        optionFile.close();
+    }
+    return true;
+}
+#else
+
+// TODO: OSX startup stuff; see:
+// https://developer.apple.com/library/mac/#documentation/MacOSX/Conceptual/BPSystemStartup/Articles/CustomLogin.html
+
+bool GetStartOnSystemStartup() { return false; }
+bool SetStartOnSystemStartup(bool fAutoStart) { return false; }
+
+#endif
+
+HelpMessageBox::HelpMessageBox(QWidget *parent) :
+    QMessageBox(parent)
+{
+    header = tr("HongyunCoin2-Qt") + " " + tr("version") + " " +
+        QString::fromStdString(FormatFullVersion()) + "\n\n" +
+        tr("Usage:") + "\n" +
+        "  HongyunCoin2-qt [" + tr("command-line options") + "]                     " + "\n"
