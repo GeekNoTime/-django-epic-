@@ -99,4 +99,72 @@ The wallet uses some images that are available under a free public license by GL
         <translation>Copy the currently selected address to the system clipboard</translation>
     </message>
     <message>
-       
+        <location line="+3"/>
+        <source>&amp;Copy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>&amp;Show QR</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Sign a message to prove you own a HongyunCoin2 address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Verify a message to ensure it was signed with a specified HongyunCoin2 address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-33"/>
+        <source>&amp;Sign Message</source>
+        <translation type="unfinished">&amp;Sign Message</translation>
+    </message>
+    <message>
+        <source>&amp;New Address</source>
+        <translation type="vanished">&amp;New Address</translation>
+    </message>
+    <message>
+        <source>These are your BlackCoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <translation type="vanished">These are your BlackCoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation type="vanished">&amp;Copy Address</translation>
+    </message>
+    <message>
+        <source>Show &amp;QR Code</source>
+        <translation type="vanished">Show &amp;QR Code</translation>
+    </message>
+    <message>
+        <source>Sign a message to prove you own a BlackCoin address</source>
+        <translation type="vanished">Sign a message to prove you own a BlackCoin address</translation>
+    </message>
+    <message>
+        <location line="+69"/>
+        <source>Delete the currently selected address from the list</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Verify a message to ensure it was signed with a specified BlackCoin address</source>
+        <translation type="vanished">Verify a message to ensure it was signed with a specified BlackCoin address</translation>
+    </message>
+    <message>
+        <location line="-33"/>
+        <source>&amp;Verify Message</source>
+        <translation>&amp;Verify Message</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>&amp;Delete</source>
+        <translation>&amp;Delete</translation>
+    </message>
+    <message>
+        <location filename="../addressbookpage.cpp" line="+65"/>
+        <source>Copy &amp;Label</source>
+        <translation>Copy &amp;Label</translation>
+    </message>
+    <
