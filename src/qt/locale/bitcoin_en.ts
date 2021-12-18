@@ -451,4 +451,83 @@ The wallet uses some images that are available under a free public license by GL
         <translation type="vanished">&amp;Backup Wallet...</translation>
     </message>
     <message>
-        <
+        <source>&amp;Change Passphrase...</source>
+        <translation type="vanished">&amp;Change Passphrase...</translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n block(s) remaining</source>
+        <translation type="vanished">
+            <numerusform>~%n block remaining</numerusform>
+            <numerusform>~%n blocks remaining</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+439"/>
+        <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
+        <translation>Downloaded %1 of %2 blocks of transaction history (%3% done).</translation>
+    </message>
+    <message>
+        <location line="-425"/>
+        <source>&amp;Export...</source>
+        <translation>&amp;Export...</translation>
+    </message>
+    <message>
+        <source>Send coins to a BlackCoin address</source>
+        <translation type="vanished">Send coins to a BlackCoin address</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for BlackCoin</source>
+        <translation type="vanished">Modify configuration options for BlackCoin</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Export the data in the current tab to a file</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Encrypt or decrypt wallet</source>
+        <translation>Encrypt or decrypt wallet</translation>
+    </message>
+    <message>
+        <location line="-111"/>
+        <source>&amp;Dashboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show general overview</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Send</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Receive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Receive addresses list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>&amp;Social</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>View social media info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Block Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <loca
