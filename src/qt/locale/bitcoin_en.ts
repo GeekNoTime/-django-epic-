@@ -373,4 +373,82 @@ The wallet uses some images that are available under a free public license by GL
         <translation type="vanished">Sign &amp;message...</translation>
     </message>
     <message>
-        
+        <source>Synchronizing with network...</source>
+        <translation type="vanished">Synchronizing with network...</translation>
+    </message>
+    <message>
+        <source>&amp;Overview</source>
+        <translation type="vanished">&amp;Overview</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation type="vanished">Show general overview of wallet</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="+255"/>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Transactions</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse transaction history</source>
+        <translation>Browse transaction history</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Address Book</source>
+        <translation>&amp;Address Book</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Edit the list of stored addresses and labels</source>
+        <translation>Edit the list of stored addresses and labels</translation>
+    </message>
+    <message>
+        <source>&amp;Receive coins</source>
+        <translation type="vanished">&amp;Receive coins</translation>
+    </message>
+    <message>
+        <source>Show the list of addresses for receiving payments</source>
+        <translation type="vanished">Show the list of addresses for receiving payments</translation>
+    </message>
+    <message>
+        <source>&amp;Send coins</source>
+        <translation type="vanished">&amp;Send coins</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation type="vanished">E&amp;xit</translation>
+    </message>
+    <message>
+        <location line="+75"/>
+        <source>Quit application</source>
+        <translation>Quit application</translation>
+    </message>
+    <message>
+        <source>Show information about BlackCoin</source>
+        <translation type="vanished">Show information about BlackCoin</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation type="vanished">About &amp;Qt</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Show information about Qt</source>
+        <translation>Show information about Qt</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation type="vanished">&amp;Options...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation type="vanished">&amp;Encrypt Wallet...</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation type="vanished">&amp;Backup Wallet...</translation>
+    </message>
+    <message>
+        <
