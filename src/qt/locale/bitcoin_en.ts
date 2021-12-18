@@ -707,4 +707,83 @@ The wallet uses some images that are available under a free public license by GL
     </message>
     <message>
         <location line="+8"/>
-        <source>&amp;Help</sourc
+        <source>&amp;Help</source>
+        <translation>&amp;Help</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation type="vanished">Tabs toolbar</translation>
+    </message>
+    <message>
+        <source>Actions toolbar</source>
+        <translation type="vanished">Actions toolbar</translation>
+    </message>
+    <message>
+        <location line="+185"/>
+        <location line="+9"/>
+        <source>[testnet]</source>
+        <translation>[testnet]</translation>
+    </message>
+    <message>
+        <source>BlackCoin client</source>
+        <translation type="vanished">BlackCoin client</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to BlackCoin network</source>
+        <translation type="vanished">
+            <numerusform>%n active connection to BlackCoin network</numerusform>
+            <numerusform>%n active connections to BlackCoin network</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+210"/>
+        <source>Downloaded %1 blocks of transaction history.</source>
+        <translation>Downloaded %1 blocks of transaction history.</translation>
+    </message>
+    <message>
+        <location line="+374"/>
+        <source>Wallet is &lt;b&gt;not encrypted&lt;/b&gt;, go to actions to encrypt your wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+172"/>
+        <source>Staking.&lt;br&gt;Your weight is %1&lt;br&gt;Network weight is %2&lt;br&gt;Expected time to earn reward is %3</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Not staking because wallet is locked</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Not staking because wallet is offline</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Not staking because wallet is syncing</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Not staking because you don&apos;t have mature coins</source>
+        <translation></translation>
+    </message>
+    <message numerus="yes">
+        <location line="-537"/>
+        <source>%n second(s) ago</source>
+        <translation>
+            <numerusform>%n second ago</numerusform>
+            <numerusform>%n seconds ago</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="-723"/>
+        <source>HongyunCoin2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+152"/>
+        <source>Send coins to a HongyunCoin2 address</source>
+        <translation type="unfinished"><
