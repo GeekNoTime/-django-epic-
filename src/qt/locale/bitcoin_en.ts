@@ -619,4 +619,92 @@ The wallet uses some images that are available under a free public license by GL
     </message>
     <message>
         <location line="+3"/>
-        <lo
+        <location line="+4"/>
+        <source>&amp;Debug window</source>
+        <translation>&amp;Debug window</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <location line="+4"/>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Open debugging and diagnostic console</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>&amp;Sign message...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;Verify message...</translation>
+    </message>
+    <message>
+        <location line="+111"/>
+        <source>Status bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Minimalise and Quit bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Navigation Bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Extra Functions bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+238"/>
+        <source>%n%</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>BlackCoin</source>
+        <translation type="vanished">BlackCoin</translation>
+    </message>
+    <message>
+        <location line="-687"/>
+        <source>Wallet</source>
+        <translation>Wallet</translation>
+    </message>
+    <message>
+        <source>&amp;About BlackCoin</source>
+        <translation type="vanished">&amp;About BlackCoin</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation type="vanished">&amp;Show / Hide</translation>
+    </message>
+    <message>
+        <location line="+263"/>
+        <source>Unlock wallet</source>
+        <translation type="unfinished">Unlock wallet</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Lock wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>&amp;File</source>
+        <translation>&amp;File</translation>
+    </message>
+    <message>
+        <location line="-69"/>
+        <location line="+77"/>
+        <source>&amp;Settings</source>
+        <translation>&amp;Settings</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>&amp;Help</sourc
