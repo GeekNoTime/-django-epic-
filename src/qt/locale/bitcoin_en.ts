@@ -1118,4 +1118,25 @@ Address: %4
     </message>
     <message>
         <location line="+55"/>
-        <source>Disconnect</sourc
+        <source>Disconnect</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;&lt;span style=&quot; font-family:&apos;arial&apos;; font-size:10pt;&quot;&gt;Connect with our community by checking out our our dedicated forum at &lt;/span&gt;&lt;a href=&quot;http://forum.vcm666.com&quot;&gt;&lt;span style=&quot; font-family:&apos;arial&apos;; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;forum.vcm666.com&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;arial&apos;; font-size:10pt;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;We are also active on various social media including weibo, tieba and tencent.&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A few IRC commands :&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;/JOIN #channel&lt;/span&gt;&lt;span style=&quot; color:#9a9a9a;&quot;&gt; - Join a channel&lt;/span&gt;&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;/NICK nickname&lt;/span&gt;&lt;span style=&quot; color:#9a9a9a;&quot;&gt; - Change nickname&lt;/span&gt;&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;/PRIVMSG nickname message&lt;/span&gt;&lt;span style=&quot; color:#9a9a9a;&quot;&gt; - Send PM &lt;/span&gt;&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;If u have an issue with the user list, just switch tabs and it will be fixed&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Nickname:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Connect to IRC</source>
+        <translation type="unfinished"></transla
