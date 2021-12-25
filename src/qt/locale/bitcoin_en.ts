@@ -1622,4 +1622,66 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+41"/>
         <source>Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached.</source>
-        <translation>Detach block and address databases at shutd
+        <translation>Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Detach databases at shutdown</source>
+        <translation>&amp;Detach databases at shutdown</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>&amp;Network</source>
+        <translation>&amp;Network</translation>
+    </message>
+    <message>
+        <source>Automatically open the BlackCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="vanished">Automatically open the BlackCoin client port on the router. This only works when your router supports UPnP and it is enabled.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Map port using &amp;UPnP</source>
+        <translation>Map port using &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Connect to the BlackCoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
+        <translation type="vanished">Connect to the BlackCoin network through a SOCKS proxy (e.g. when connecting through Tor).</translation>
+    </message>
+    <message>
+        <location line="-43"/>
+        <source>Automatically start HongyunCoin2 after logging in to the system.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Start HongyunCoin2 on system login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Automatically open the HongyunCoin2 client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Connect to the HongyunCoin2 network through a SOCKS proxy (e.g. when connecting through Tor).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Connect through SOCKS proxy:</source>
+        <translation>&amp;Connect through SOCKS proxy:</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Proxy &amp;IP:</source>
+        <translation>Proxy &amp;IP:</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>IP address of the proxy (e.g. 127.0.0.1)</source>
+        <translation>IP address of the proxy (e.g. 127.0.0.1)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Port:</sou
