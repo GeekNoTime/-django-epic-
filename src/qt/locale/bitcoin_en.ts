@@ -1391,4 +1391,92 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>low</source>
-        <translation></trans
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lowest</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+156"/>
+        <source>DUST</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>This label turns red, if the transaction size is bigger than 10000 bytes.
+
+ This means a fee of at least %1 per kb is required.
+
+ Can vary +/- 1 Byte per input.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transactions with higher priority get more likely into a block.
+
+This label turns red, if the priority is smaller than &quot;medium&quot;.
+
+ This means a fee of at least %1 per kb is required.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This label turns red, if any recipient receives an amount smaller than %1.
+
+ This means a fee of at least %2 is required. 
+
+ Amounts below 0.546 times the minimum relay fee are shown as DUST.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This label turns red, if the change is smaller than %1.
+
+ This means a fee of at least %2 is required.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <location line="+66"/>
+        <source>(no label)</source>
+        <translation type="unfinished">(no label)</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <source>change from %1 (%2)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>(change)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>EditAddressDialog</name>
+    <message>
+        <location filename="../forms/editaddressdialog.ui" line="+14"/>
+        <source>Edit Address</source>
+        <translation>Edit Address</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>&amp;Label</source>
+        <translation>&amp;Label</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The label associated with this address book entry</source>
+        <translation>The label associated with this address book entry</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Address</source>
+        <translation
