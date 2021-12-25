@@ -1163,4 +1163,48 @@ Address: %4
     </message>
     <message>
         <location line="-22"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://tieba.baidu.com/f?kw=%E9%B8%BF%E8%BF%90%E5%B8%81&amp;fr=wwwt&quot;&gt;&lt;img src=&quot;:/icons/face&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://tieba.baidu.com/f?kw=%E9%B8%BF%E8%BF%90%E5%B8%81&amp;fr=wwwt&quot;&gt;&lt;span style=&quot; fon
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://tieba.baidu.com/f?kw=%E9%B8%BF%E8%BF%90%E5%B8%81&amp;fr=wwwt&quot;&gt;&lt;img src=&quot;:/icons/face&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://tieba.baidu.com/f?kw=%E9%B8%BF%E8%BF%90%E5%B8%81&amp;fr=wwwt&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline; color:#0000ff;&quot;&gt;Baidutieba&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://t.qq.com/hycoin8&quot;&gt;&lt;img src=&quot;:/icons/twitter&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://t.qq.com/hycoin8&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline; color:#0000ff;&quot;&gt;Tencent Weibo&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://weibo.com/hycoin&quot;&gt;&lt;img src=&quot;:/icons/reddit&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://weibo.com/hycoin&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline; color:#0000ff;&quot;&gt;Sina Weibo&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://shang.qq.com/wpa/qunwpa?idkey=e36b9a8b501e202d56b4116173b85584b28042773aa1646a01699a9daee8cd74&quot;&gt;&lt;img src=&quot;://icons/res/icons/QQguoup.png&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://shang.qq.com/wpa/qunwpa?idkey=e36b9a8b501e202d56b4116173b85584b28042773aa1646a01699a9daee8cd74&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline; color:#0000ff;&quot;&gt;QQ group&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Quitter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Ctrl+Q</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Fermer l&apos;onglet</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ClientModel</name>
+    <message>
+        <location filename="../clientmodel.cpp" line="+90"/>
+        <source>Network Alert</source>
+        <translation>Network Alert</translation>
+    </message>
+</context>
+<context>
+    <name>CoinControlDialog</name>
+    <mess
