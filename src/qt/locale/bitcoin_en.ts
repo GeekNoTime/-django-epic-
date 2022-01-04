@@ -2329,4 +2329,70 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+16"/>
         <source>Command-line options</source>
-        <translation>Command-line options</tra
+        <translation>Command-line options</translation>
+    </message>
+    <message>
+        <source>Show the BlackCoin-Qt help message to get a list with possible BlackCoin command-line options.</source>
+        <translation type="vanished">Show the BlackCoin-Qt help message to get a list with possible BlackCoin command-line options.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>&amp;Show</source>
+        <translation>&amp;Show</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>&amp;Console</source>
+        <translation>&amp;Console</translation>
+    </message>
+    <message>
+        <location line="-260"/>
+        <source>Build date</source>
+        <translation>Build date</translation>
+    </message>
+    <message>
+        <source>BlackCoin - Debug window</source>
+        <translation type="vanished">BlackCoin - Debug window</translation>
+    </message>
+    <message>
+        <source>BlackCoin Core</source>
+        <translation type="vanished">BlackCoin Core</translation>
+    </message>
+    <message>
+        <location line="+200"/>
+        <source>Debug log file</source>
+        <translation>Debug log file</translation>
+    </message>
+    <message>
+        <source>Open the BlackCoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation type="vanished">Open the BlackCoin debug log file from the current data directory. This can take a few seconds for large log files.</translation>
+    </message>
+    <message>
+        <location line="+109"/>
+        <source>Clear console</source>
+        <translation>Clear console</translation>
+    </message>
+    <message>
+        <source>Welcome to the BlackCoin RPC console.</source>
+        <translation type="vanished">Welcome to the BlackCoin RPC console.</translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="-33"/>
+        <source>Welcome to the HongyunCoin2 RPC console.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
+        <translation>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
+        <translation>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</translation>
+    </message>
+</context>
+<context>
+    <name>SendCoinsDialog</name>
+    <message>
+        <location filename=".
