@@ -3593,4 +3593,68 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+2"/>
         <source>List commands</source>
         <translation>List commands</translation>
-    </messa
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Get help for a command</source>
+        <translation>Get help for a command</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Options:</source>
+        <translation>Options:</translation>
+    </message>
+    <message>
+        <source>Specify configuration file (default: blackcoin.conf)</source>
+        <translation type="vanished">Specify configuration file (default: blackcoin.conf)</translation>
+    </message>
+    <message>
+        <source>Specify pid file (default: blackcoind.pid)</source>
+        <translation type="vanished">Specify pid file (default: blackcoind.pid)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Specify wallet file (within data directory)</source>
+        <translation>Specify wallet file (within data directory)</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>Specify data directory</source>
+        <translation>Specify data directory</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation>Set database cache size in megabytes (default: 25)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set database disk log size in megabytes (default: 100)</source>
+        <translation>Set database disk log size in megabytes (default: 100)</translation>
+    </message>
+    <message>
+        <source>Listen for connections on &lt;port&gt; (default: 15714 or testnet: 25714)</source>
+        <translation type="vanished">Listen for connections on &lt;port&gt; (default: 15714 or testnet: 25714)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
+        <translation>Maintain at most &lt;n&gt; connections to peers (default: 125)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
+        <translation>Connect to a node to retrieve peer addresses, and disconnect</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Specify your own public address</source>
+        <translation>Specify your own public address</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Bind to given address. Use [host]:port notation for IPv6</source>
+        <translation>Bind to given address. Use [host]:port notation for IPv6</translation>
+    </message>
+    <message>
+    
