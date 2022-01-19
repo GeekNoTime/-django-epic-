@@ -3827,4 +3827,64 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="-6"/>
-        <sour
+        <source>Listen for connections on &lt;port&gt; (default: 16666 or testnet: 25714)</source>
+        <translation type="unfinished">Listen for connections on &lt;port&gt; (default: 15714 or testnet: 25714) {16666 ?} {25714)?}</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Output extra debugging information. Implies all other -debug* options</source>
+        <translation>Output extra debugging information. Implies all other -debug* options</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Output extra network debugging information</source>
+        <translation>Output extra network debugging information</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Prepend debug output with timestamp</source>
+        <translation>Prepend debug output with timestamp</translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</translation>
+    </message>
+    <message>
+        <location line="-74"/>
+        <source>Select the version of socks proxy to use (4-5, default: 5)</source>
+        <translation>Select the version of socks proxy to use (4-5, default: 5)</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Send trace/debug info to console instead of debug.log file</source>
+        <translation>Send trace/debug info to console instead of debug.log file</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Send trace/debug info to debugger</source>
+        <translation>Send trace/debug info to debugger</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Set maximum block size in bytes (default: 250000)</source>
+        <translation>Set maximum block size in bytes (default: 250000)</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>Set minimum block size in bytes (default: 0)</source>
+        <translation>Set minimum block size in bytes (default: 0)</translation>
+    </message>
+    <message>
+        <location line="-29"/>
+        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
+        <translation>Shrink debug.log file on client startup (default: 1 when no -debug)</translation>
+    </message>
+    <message>
+        <location line="-42"/>
+        <source>Specify connection timeout in milliseconds (default: 5000)</source>
+        <translation>Specify connection timeout in milliseconds (default: 5000)</translation>
+    </message>
+    <message>
+        <location line="+109"/>
+        <source>Unable t
