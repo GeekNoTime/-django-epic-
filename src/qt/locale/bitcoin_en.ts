@@ -3958,4 +3958,70 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
 It is recommended you use the following random password:
 rpcuser=HongyunCoin2rpc
 rpcpassword=%s
-(you do not need to re
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s &quot;HongyunCoin2 Alert&quot; admin@foo.com
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>HongyunCoin2 version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Send command to -server or HongyunCoin2d</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>HongyunCoin2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Specify configuration file (default: HongyunCoin2.conf)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Specify pid file (default: HongyunCoin2d.pid)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Find peers using internet relay chat (default: 0)</source>
+        <translation type="unfinished">Find peers using internet relay chat (default: 1) {0)?}</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sync time with other nodes. Disable if time on your system is precise e.g. syncing with NTP (default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>When creating transactions, ignore inputs with value less than this (default: 0.01)</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 16667 or testnet: 25715)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Allow JSON-RPC connections from specified IP address</source>
+        <translation>Allow JSON-RPC connections from specified IP address</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
+        <translation>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
+        <t
