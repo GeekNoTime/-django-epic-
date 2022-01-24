@@ -4152,4 +4152,72 @@ for example: alertnotify=echo %%s | mail -s &quot;HongyunCoin2 Alert&quot; admin
     <message>
         <location line="+2"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Error loading wallet.dat: Wa
+        <translation>Error loading wallet.dat: Wallet corrupted</translation>
+    </message>
+    <message>
+        <source>Error loading wallet.dat: Wallet requires newer version of BlackCoin</source>
+        <translation type="vanished">Error loading wallet.dat: Wallet requires newer version of BlackCoin</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart BlackCoin to complete</source>
+        <translation type="vanished">Wallet needed to be rewritten: restart BlackCoin to complete</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Error loading wallet.dat</source>
+        <translation>Error loading wallet.dat</translation>
+    </message>
+    <message>
+        <location line="-16"/>
+        <source>Invalid -proxy address: &apos;%s&apos;</source>
+        <translation>Invalid -proxy address: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <translation>Unknown network specified in -onlynet: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>Unknown -socks proxy version requested: %i</source>
+        <translation>Unknown -socks proxy version requested: %i</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
+        <translation>Cannot resolve -bind address: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
+        <translation>Cannot resolve -externalip address: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>Error: could not start node</source>
+        <translation>Error: could not start node</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Sending...</source>
+        <translation>Sending...</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Invalid amount</source>
+        <translation>Invalid amount</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Insufficient funds</source>
+        <translation>Insufficient funds</translation>
+    </message>
+    <message>
+        <location line="-34"/>
+        <source>Loading block index...</source>
+        <translat
