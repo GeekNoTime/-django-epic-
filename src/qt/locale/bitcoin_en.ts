@@ -4296,4 +4296,28 @@ for example: alertnotify=echo %%s | mail -s &quot;HongyunCoin2 Alert&quot; admin
         <source>Error</source>
         <translation>Error</translation>
     </message>
-    <
+    <message>
+        <location line="+6"/>
+        <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
+%s
+If the file does not exist, create it with owner-readable-only file permissions.</source>
+        <translation>You must set rpcpassword=&lt;password&gt; in the configuration file:
+%s
+If the file does not exist, create it with owner-readable-only file permissions.</translation>
+    </message>
+</context>
+<context>
+    <name>tutoStackDialog</name>
+    <message>
+        <location filename="../forms/tutoStackDialog.ui" line="+26"/>
+        <source>How to Stake</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+66"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;HongyunCoin2 version: &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+47"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;As you may already know, HongyunCoin2 is a 100% Proof-of-Stake (PoS) coin.&lt;/p&gt;&lt;p&gt;For those who don&apos;t really know what that means, here&apos;s a little explanation.&lt;/p&gt;&lt;p&gt;Your coins have what we call a &lt;span style=&quot; font-style:italic;&quot;&gt;coin-age &lt;/span&gt;they start gaining age if they don&apos;t move during &lt;span style=&quot; font-weight:600;&quot;&gt;8-10 hours&lt;/span&gt; in your wallet, your &lt;span style=&quot; font-style:italic;&quot;&gt;stake weight&lt;/span&gt; is the cumulated coin age you have. Before those 8-10 hours, coins don&apos;t get matured so you won&apos;t be able to hit a Stake Block.&lt;/p&gt;&lt;p&gt;Your coins always gain coin-age even if your wallet is closed. But to hit a Stake Block you need to have your wallet open.&lt;/p&gt;&lt;p&gt;To see how much time is needed to hit a stake block just hover the lightning icon in the wallet it will tell you the expected time. But beware, like POW blocks, POS blocks are a bit random so expected time may be lower or higher.&lt;/p&gt;&lt;p&gt;This is when your coin-age is important. The more cumulated coin-age you got, the more chances you have of hitting a stake block. Once you hit this block and gain interest, coins which have been used have their coin-age reset, are moved to stake and blocked for 500 blocks.&lt;/p&gt;&lt;p&gt;Interest is fixed at 5% per year, but since coin start gaining age 8-10 hours after with compound interest this percentage is much higher.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;Some options available to handle day to day staking :&lt;/span&gt;&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-style:italic;&quot;&gt;settings-&amp;gt;options&lt;/span&gt; you can set a reserve balance (the amount of coins u don&apos;t want to
