@@ -4320,4 +4320,53 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location line="+47"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;As you may already know, HongyunCoin2 is a 100% Proof-of-Stake (PoS) coin.&lt;/p&gt;&lt;p&gt;For those who don&apos;t really know what that means, here&apos;s a little explanation.&lt;/p&gt;&lt;p&gt;Your coins have what we call a &lt;span style=&quot; font-style:italic;&quot;&gt;coin-age &lt;/span&gt;they start gaining age if they don&apos;t move during &lt;span style=&quot; font-weight:600;&quot;&gt;8-10 hours&lt;/span&gt; in your wallet, your &lt;span style=&quot; font-style:italic;&quot;&gt;stake weight&lt;/span&gt; is the cumulated coin age you have. Before those 8-10 hours, coins don&apos;t get matured so you won&apos;t be able to hit a Stake Block.&lt;/p&gt;&lt;p&gt;Your coins always gain coin-age even if your wallet is closed. But to hit a Stake Block you need to have your wallet open.&lt;/p&gt;&lt;p&gt;To see how much time is needed to hit a stake block just hover the lightning icon in the wallet it will tell you the expected time. But beware, like POW blocks, POS blocks are a bit random so expected time may be lower or higher.&lt;/p&gt;&lt;p&gt;This is when your coin-age is important. The more cumulated coin-age you got, the more chances you have of hitting a stake block. Once you hit this block and gain interest, coins which have been used have their coin-age reset, are moved to stake and blocked for 500 blocks.&lt;/p&gt;&lt;p&gt;Interest is fixed at 5% per year, but since coin start gaining age 8-10 hours after with compound interest this percentage is much higher.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;Some options available to handle day to day staking :&lt;/span&gt;&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-style:italic;&quot;&gt;settings-&amp;gt;options&lt;/span&gt; you can set a reserve balance (the amount of coins u don&apos;t want to
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;As you may already know, HongyunCoin2 is a 100% Proof-of-Stake (PoS) coin.&lt;/p&gt;&lt;p&gt;For those who don&apos;t really know what that means, here&apos;s a little explanation.&lt;/p&gt;&lt;p&gt;Your coins have what we call a &lt;span style=&quot; font-style:italic;&quot;&gt;coin-age &lt;/span&gt;they start gaining age if they don&apos;t move during &lt;span style=&quot; font-weight:600;&quot;&gt;8-10 hours&lt;/span&gt; in your wallet, your &lt;span style=&quot; font-style:italic;&quot;&gt;stake weight&lt;/span&gt; is the cumulated coin age you have. Before those 8-10 hours, coins don&apos;t get matured so you won&apos;t be able to hit a Stake Block.&lt;/p&gt;&lt;p&gt;Your coins always gain coin-age even if your wallet is closed. But to hit a Stake Block you need to have your wallet open.&lt;/p&gt;&lt;p&gt;To see how much time is needed to hit a stake block just hover the lightning icon in the wallet it will tell you the expected time. But beware, like POW blocks, POS blocks are a bit random so expected time may be lower or higher.&lt;/p&gt;&lt;p&gt;This is when your coin-age is important. The more cumulated coin-age you got, the more chances you have of hitting a stake block. Once you hit this block and gain interest, coins which have been used have their coin-age reset, are moved to stake and blocked for 500 blocks.&lt;/p&gt;&lt;p&gt;Interest is fixed at 5% per year, but since coin start gaining age 8-10 hours after with compound interest this percentage is much higher.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;Some options available to handle day to day staking :&lt;/span&gt;&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-style:italic;&quot;&gt;settings-&amp;gt;options&lt;/span&gt; you can set a reserve balance (the amount of coins u don&apos;t want to be staking, they&apos;ll be available to spend 24/7)&lt;br/&gt;In &lt;span style=&quot; font-style:italic;&quot;&gt;settings-&amp;gt;options-&amp;gt;display&lt;/span&gt; you can tick coin control, so you can control what coin you send (don&apos;t send old coins)&lt;br/&gt;In &lt;span style=&quot; font-style:italic;&quot;&gt;settings&lt;/span&gt; you can unlock wallet for staking only if you encrypted it.&lt;/p&gt;&lt;p&gt;&lt;b&gt;If you want to get HongyunCoin2 with your mining equipment, you can point your miners to our multipool: &lt;a href=&quot;http://www.thepool.pw/HongyunCoin2&quot;&gt;thepool.pw/HongyunCoin2&lt;/a&gt;.&lt;/b&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>tutoWriteDialog</name>
+    <message>
+        <location filename="../forms/tutoWriteDialog.ui" line="+14"/>
+        <source>How to mine FoxCoin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+66"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;HongyunCoin2 version &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;How to solo dig:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>With CPU:
+
+Go to the dig site in the FoxCoin-qt, a menu should appear with a lot of options. The options you want to select are:
+[Solo Dig], [Minerd [CPU]], [CPU Cores * 4], [90]] - Next line - [127.0.0.1], [9919], [RPC Username], [RPC Password]
+
+With GPU:
+
+nVIDIA GPU:
+
+Go to the dig site page, and enter in the following options:
+[Solo Dig], [CUDAMiner [nVIDIA GPU]], [N/A], [90] - Next Line - [127.0.0.1], [9919], [RPC Username], [RPC Password] 
+
+AMD:
+
+Go to the dig site page, and enter in the following options:
+[Solo Dig], [CGMiner [AMD GPU]], [GPUs], [90] - Next Line - [127.0.0.1], [9919], [RPC Username], [RPC Password]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;How to dig in a herd:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Requirements:
+-Knowledge of a p2pool, such
