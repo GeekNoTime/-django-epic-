@@ -4369,4 +4369,26 @@ Go to the dig site page, and enter in the following options:
     <message>
         <location line="+13"/>
         <source>Requirements:
--Knowledge of a p2pool, such
+-Knowledge of a p2pool, such as fox.doxmon.com
+
+Follow the instructions above for solo digging, but switch dig type to Herd Dig, set the URL to the p2pool of your choice, and
+set your username to your FoxCoin address, and your password to anything. This type of minining is perferred and will
+automatically send you your coins.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;How to dig in a pond:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Requirements:
+-A registered pond worker (can be made via fox.luckyminers.com, for example)
+
+Follow the instructions above for solo digging, but switch digging mode to pond dig, enter in your pool URL (stratum+tcp:// 
+NOT required) and Port, enter in your Username.Worker and your Worker password.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+</TS>
