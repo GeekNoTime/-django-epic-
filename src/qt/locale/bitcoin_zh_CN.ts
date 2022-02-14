@@ -120,4 +120,77 @@ The wallet uses some images that are available under a free public license by GL
     </message>
     <message>
         <location line="+33"/>
-        <sou
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation>复制当前选中的地址到系统剪贴板</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Copy</source>
+        <translation>&amp;复制</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>&amp;Show QR</source>
+        <translation>&amp;显示二维码</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Sign a message to prove you own a HongyunCoin2 address</source>
+        <translation>对信息进行签名以证明您对该鸿运币地址的所有权</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Verify a message to ensure it was signed with a specified HongyunCoin2 address</source>
+        <translation>验证信息以保证其经过指定鸿运币地址的签名</translation>
+    </message>
+    <message>
+        <location line="-33"/>
+        <source>&amp;Sign Message</source>
+        <translation>签名消息(&amp;S)</translation>
+    </message>
+    <message>
+        <source>&amp;New Address</source>
+        <translation type="vanished">新建地址(&amp;N)</translation>
+    </message>
+    <message>
+        <source>These are your BlackCoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <translation type="vanished">这是您用来接收支付的黑币地址列表。为不同的支付方建立不同的地址以便于了解支付来源。</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation type="vanished">复制地址(&amp;C)</translation>
+    </message>
+    <message>
+        <source>Show &amp;QR Code</source>
+        <translation type="vanished">显示二维码(&amp;Q)</translation>
+    </message>
+    <message>
+        <source>Sign a message to prove you own a BlackCoin address</source>
+        <translation type="vanished">对信息进行签名以证明您对该黑币地址的所有权</translation>
+    </message>
+    <message>
+        <source>Sign &amp;Message</source>
+        <translation type="vanished">签名(&amp;M)</translation>
+    </message>
+    <message>
+        <location line="+69"/>
+        <source>Delete the currently selected address from the list</source>
+        <translation>从列表中删除选中的地址</translation>
+    </message>
+    <message>
+        <source>Verify a message to ensure it was signed with a specified BlackCoin address</source>
+        <translation type="vanished">验证信息以保证其经过指定黑币地址的签名</translation>
+    </message>
+    <message>
+        <location line="-33"/>
+        <source>&amp;Verify Message</source>
+        <translation>验证消息(&amp;V)</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>&amp;Delete</source>
+        <translation>删除(&amp;D)</translation>
+    </message>
+    <message>
+        <location filename="../addressbookpage.cpp" line="+65"/>
+     
