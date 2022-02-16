@@ -193,4 +193,89 @@ The wallet uses some images that are available under a free public license by GL
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="+65"/>
-     
+        <source>Copy &amp;Label</source>
+        <translation>复制标签(&amp;L)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&amp;Edit</source>
+        <translation>编辑(&amp;E)</translation>
+    </message>
+    <message>
+        <location line="+250"/>
+        <source>Export Address Book Data</source>
+        <translation>导出地址簿数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation>逗号分隔文件 (*.csv)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Error exporting</source>
+        <translation>导出时发生错误</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Could not write to file %1.</source>
+        <translation>无法写入文件 %1 。</translation>
+    </message>
+</context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <location filename="../addresstablemodel.cpp" line="+144"/>
+        <source>Label</source>
+        <translation>标签</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Address</source>
+        <translation>地址</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>(no label)</source>
+        <translation>(没有标签)</translation>
+    </message>
+</context>
+<context>
+    <name>AskPassphraseDialog</name>
+    <message>
+        <location filename="../forms/askpassphrasedialog.ui" line="+26"/>
+        <source>Passphrase Dialog</source>
+        <translation>密码对话框</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Enter passphrase</source>
+        <translation>输入密码</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>New passphrase</source>
+        <translation>新密码</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Repeat new passphrase</source>
+        <translation>重复新密码</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
+        <translation>在系统允许的情况下用于防止sendmoney欺诈，并未提供真正的安全防护措施。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>For staking only</source>
+        <translation>仅用于权益增值</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="+35"/>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>输入钱包的新密码。&lt;br/&gt;使用的密码请至少包含&lt;b&gt;10个以上随机字符&lt;/&gt;，或者是&lt;b&gt;8个以上的单词&lt;/b&gt;。</translation>
+    </message>
+    <message>
+        <loca
