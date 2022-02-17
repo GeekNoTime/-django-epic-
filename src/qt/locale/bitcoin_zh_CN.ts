@@ -421,4 +421,87 @@ The wallet uses some images that are available under a free public license by GL
     <message>
         <location line="+1"/>
         <source>Browse transaction history</source>
-        <translation>查看交易历史</translation
+        <translation>查看交易历史</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Address Book</source>
+        <translation>地址簿(&amp;A)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Edit the list of stored addresses and labels</source>
+        <translation>管理已储存的地址和标签</translation>
+    </message>
+    <message>
+        <source>&amp;Receive coins</source>
+        <translation type="vanished">接收黑币(&amp;R)</translation>
+    </message>
+    <message>
+        <source>Show the list of addresses for receiving payments</source>
+        <translation type="vanished">显示用于接收支付的地址列表</translation>
+    </message>
+    <message>
+        <source>&amp;Send coins</source>
+        <translation type="vanished">发送货币(&amp;S)</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation type="vanished">退出(&amp;X)</translation>
+    </message>
+    <message>
+        <location line="+75"/>
+        <source>Quit application</source>
+        <translation>退出程序</translation>
+    </message>
+    <message>
+        <source>Show information about BlackCoin</source>
+        <translation type="vanished">显示关于黑币的信息</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation type="vanished">关于 &amp;Qt</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Show information about Qt</source>
+        <translation>显示关于鸿运币相关信息</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation type="vanished">选项(&amp;O)...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation type="vanished">加密钱包(&amp;E)...</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation type="vanished">备份钱包(&amp;B)...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation type="vanished">更改密码(&amp;C)...</translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n block(s) remaining</source>
+        <translation type="vanished">
+            <numerusform>~%n 个区块未完成</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+439"/>
+        <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
+        <translation>交易记录已下载%3% (%1 / %2 个区块)</translation>
+    </message>
+    <message>
+        <location line="-425"/>
+        <source>&amp;Export...</source>
+        <translation>导出(&amp;E)</translation>
+    </message>
+    <message>
+        <source>Send coins to a BlackCoin address</source>
+        <translation type="vanished">向指定的地址发送黑币</translation>
+    </message>
+    <message>
+        <source>Modify confi
