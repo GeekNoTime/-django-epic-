@@ -504,4 +504,98 @@ The wallet uses some images that are available under a free public license by GL
         <translation type="vanished">向指定的地址发送黑币</translation>
     </message>
     <message>
-        <source>Modify confi
+        <source>Modify configuration options for BlackCoin</source>
+        <translation type="vanished">更改设置选项</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>导出当前标签页的数据</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Encrypt or decrypt wallet</source>
+        <translation>加密/解密钱包</translation>
+    </message>
+    <message>
+        <location line="-111"/>
+        <source>&amp;Dashboard</source>
+        <translation type="unfinished">&amp;钱包概况</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show general overview</source>
+        <translation>显示鸿运币概述</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Send</source>
+        <translation>&amp;发送鸿运币</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Receive</source>
+        <translation>&amp;接收鸿运币</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Receive addresses list</source>
+        <translation>接收鸿运币的地址簿</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>&amp;Social</source>
+        <translation>&amp;社区/QQ群</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>View social media info</source>
+        <translation>访问社区以及媒体信息</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Block Explorer</source>
+        <translation>&amp;区块查询</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+6"/>
+        <source>&amp;Actions</source>
+        <translation>&amp;功能表/帮助</translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <location line="+6"/>
+        <source>Multiple wallet actions</source>
+        <translation>钱包一些功能</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Statistics</source>
+        <translation>&amp;数据概况</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>&amp;Minimalize</source>
+        <translation>&amp;最小化</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location line="+3"/>
+        <source>&amp;Exit</source>
+        <translation>&amp;退出</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Staking tutorial</source>
+        <translation>&amp;产生利息的一些简单帮助</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;About Qt</source>
+        <
