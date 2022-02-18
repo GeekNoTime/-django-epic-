@@ -598,4 +598,96 @@ The wallet uses some images that are available under a free public license by GL
     <message>
         <location line="+3"/>
         <source>&amp;About Qt</source>
-        <
+        <translation>&amp;关于钱包</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&amp;Encrypt wallet</source>
+        <translation>&amp;加密钱包</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Backup wallet</source>
+        <translation>&amp;备份钱包</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Backup wallet to another location</source>
+        <translation>备份钱包到其他文件夹</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Change passphrase</source>
+        <translation>&amp;更改钱包密码</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>更改钱包加密口令</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Unlock wallet</source>
+        <translation>&amp;解锁钱包</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&amp;Lock wallet</source>
+        <translation>&amp;锁定钱包</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&amp;Sign message</source>
+        <translation>&amp;签名信息</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Verify message</source>
+        <translation>&amp;验证信息</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <location line="+4"/>
+        <source>&amp;Debug window</source>
+        <translation>调试窗口(&amp;D)</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <location line="+4"/>
+        <source>Open debugging and diagnostic console</source>
+        <translation>打开调试和诊断控制台</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>&amp;Sign message...</source>
+        <translation>&amp;签名信息</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Verify message...</source>
+        <translation>验证消息(&amp;V)...</translation>
+    </message>
+    <message>
+        <location line="+111"/>
+        <source>Status bar</source>
+        <translation>功能栏</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Minimalise and Quit bar</source>
+        <translation>最小化并且退出功能栏</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Navigation Bar</source>
+        <translation>菜单栏</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Extra Functions bar</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <location line="+62"/>
+        <source>Hongyun
