@@ -690,4 +690,92 @@ The wallet uses some images that are available under a free public license by GL
     <message>
         <location line="+42"/>
         <location line="+62"/>
-        <source>Hongyun
+        <source>HongyunCoin2 client</source>
+        <translation>鸿运币客户端</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+106"/>
+        <source>%n active connection(s) to HongyunCoin2 network</source>
+        <translation>
+            <numerusform>到鸿运币的连接有%n条</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+389"/>
+        <location line="+16"/>
+        <source>URI can not be parsed! This can be caused by an invalid HongyunCoin2 address or malformed URI parameters.</source>
+        <translation>无法解析URI：无效的鸿运币地址或错误的URI参数。</translation>
+    </message>
+    <message numerus="yes">
+        <location line="-377"/>
+        <source>%n%</source>
+        <translation>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>BlackCoin</source>
+        <translation type="vanished">黑币</translation>
+    </message>
+    <message>
+        <location line="-687"/>
+        <source>Wallet</source>
+        <translation>钱包</translation>
+    </message>
+    <message>
+        <source>&amp;About BlackCoin</source>
+        <translation type="vanished">关于黑币(&amp;A)</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation type="vanished">显示 / 隐藏(&amp;S)</translation>
+    </message>
+    <message>
+        <location line="+263"/>
+        <source>Unlock wallet</source>
+        <translation>解锁钱包</translation>
+    </message>
+    <message>
+        <source>&amp;Lock Wallet</source>
+        <translation type="vanished">锁定钱包(&amp;L)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Lock wallet</source>
+        <translation>锁定钱包</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>&amp;File</source>
+        <translation>文件(&amp;F)</translation>
+    </message>
+    <message>
+        <location line="-69"/>
+        <location line="+77"/>
+        <source>&amp;Settings</source>
+        <translation>设置(&amp;S)</translation>
+    </message>
+    <message>
+        <location line="-289"/>
+        <source>HongyunCoin2</source>
+        <translation>鸿运币</translation>
+    </message>
+    <message>
+        <location line="+152"/>
+        <source>Send coins to a HongyunCoin2 address</source>
+        <translation>发送币到一个鸿运地址</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Explore the HongyunCoin2 blockchain</source>
+        <translation>解析一个鸿运币区块</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>View HongyunCoin2 statistics</source>
+        <translation>访问鸿运币的全网动态</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Modify settings for HongyunCoin2 wallet</source>
+        <transla
