@@ -778,4 +778,81 @@ The wallet uses some images that are available under a free public license by GL
     <message>
         <location line="+6"/>
         <source>Modify settings for HongyunCoin2 wallet</source>
-        <transla
+        <translation>更改设置选项</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>&amp;About HongyunCoin2</source>
+        <translation>关于鸿运币&amp;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show information about HongyunCoin2</source>
+        <translation>显示关于鸿运币的信息</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>&amp;Help</source>
+        <translation>帮助(&amp;H)</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation type="vanished">分页工具栏</translation>
+    </message>
+    <message>
+        <source>Actions toolbar</source>
+        <translation type="vanished">工具栏</translation>
+    </message>
+    <message>
+        <location line="+185"/>
+        <location line="+9"/>
+        <source>[testnet]</source>
+        <translation>[测试网络]</translation>
+    </message>
+    <message>
+        <source>BlackCoin client</source>
+        <translation type="vanished">黑币客户端</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to BlackCoin network</source>
+        <translation type="vanished">
+            <numerusform>与黑币网络建立了 %n 个连接</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+210"/>
+        <source>Downloaded %1 blocks of transaction history.</source>
+        <translation>已下载 %1 个区块的交易记录</translation>
+    </message>
+    <message>
+        <location line="+374"/>
+        <source>Wallet is &lt;b&gt;not encrypted&lt;/b&gt;, go to actions to encrypt your wallet</source>
+        <translation>钱包 &lt;b&gt;没有加密&lt;/b&gt;，请到设置菜单加密你的钱包</translation>
+    </message>
+    <message>
+        <location line="+172"/>
+        <source>Staking.&lt;br&gt;Your weight is %1&lt;br&gt;Network weight is %2&lt;br&gt;Expected time to earn reward is %3</source>
+        <translation>权益增值中 &lt;br&gt;您的权重为 %1 &lt;br&gt;网络总权重为 %2&lt;br&gt;预计将在 %3 之后获得收益</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Not staking because wallet is locked</source>
+        <translation>未进行权益增值，因为钱包已锁定</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Not staking because wallet is offline</source>
+        <translation>未进行权益增值，因为钱包处于离线状态</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Not staking because wallet is syncing</source>
+        <translation>未进行权益增值，因为钱包正在同步</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Not staking because you don&apos;t have mature coins</source>
+        <translation>未进行权益增值，因为钱包中没有成熟的黑币</translation>
+    </message>
+    <message numerus="yes">
+        <location li
