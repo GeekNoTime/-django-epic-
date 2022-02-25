@@ -855,4 +855,98 @@ The wallet uses some images that are available under a free public license by GL
         <translation>未进行权益增值，因为钱包中没有成熟的黑币</translation>
     </message>
     <message numerus="yes">
-        <location li
+        <location line="-537"/>
+        <source>%n second(s) ago</source>
+        <translation>
+            <numerusform>%n 秒前</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>About BlackCoin card</source>
+        <translation type="vanished">关于黑币卡</translation>
+    </message>
+    <message>
+        <source>Show information about BlackCoin card</source>
+        <translation type="vanished">显示关于黑币卡的信息</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock Wallet...</source>
+        <translation type="vanished">解锁钱包(&amp;U)</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n minute(s) ago</source>
+        <translation>
+            <numerusform>%n 分钟前</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n hour(s) ago</source>
+        <translation>
+            <numerusform>%n 小时前</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n day(s) ago</source>
+        <translation>
+            <numerusform>%n 天前</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Up to date</source>
+        <translation>已是最新</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Catching up...</source>
+        <translation>更新中...</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Last received block was generated %1.</source>
+        <translation>最近生成的区块接收于%1</translation>
+    </message>
+    <message>
+        <location line="+62"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
+        <translation>该笔交易数据量太大，需支付%1手续费给执行该笔交易的网络结点。您愿意支付吗？</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Confirm transaction fee</source>
+        <translation>手续费确认</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Sent transaction</source>
+        <translation>发送交易</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Incoming transaction</source>
+        <translation>流入交易</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Date: %1
+Amount: %2
+Type: %3
+Address: %4
+</source>
+        <translation>日期: %1
+金额: %2
+类别: %3
+地址: %4
+</translation>
+    </message>
+    <message>
+        <location line="+197"/>
+        <location line="+16"/>
+        <source>URI handling</source>
+        <translation>URI处理</translation>
+    </message>
+    <message>
+        <source>URI can not be parsed! This can be caused by an in
