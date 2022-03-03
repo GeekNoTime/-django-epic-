@@ -1120,4 +1120,45 @@ Address: %4
         <location line="+16"/>
         <source>Inputs:</source>
         <translation type="unfinished"></translation>
-    <
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Value out:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>0000 MH/s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Jump to Block</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ChatWindowClass</name>
+    <message>
+        <location filename="../forms/chatwindow.ui" line="+90"/>
+        <source>Tab 1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Tab 2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+55"/>
+        <source>Disconnect</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;&lt;span style=&quot; font-family:&apos;arial&apos;; font-size:10pt;&quot;&gt;Connect with our community by checking out our our dedicated forum at &lt;/span&gt;&lt;a href=&quot;http://forum.vcm666.com&quot;&gt;&lt;span style=&quot; font-family:&apos;arial&apos;; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;forum.vcm666.com&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;arial&apos;; font-size:10pt;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;We are also active on various social media including weibo, tieba and tencent.&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;&lt;span style=&quot; font-family:&apos;arial&apos;; font-size:10pt;&quot;&gt;社区会不定期开放送币活动，加入我们的社区，让2015年更加美好 &lt;/span&gt;&lt;a href=&quot;http://forum.vcm666.com&quot;&gt;&lt;span style=&quot; font-family:&apos;arial&apos;; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;forum.vcm666.com&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;arial&apos;; font-size:10pt;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;我们也会活跃在百度贴吧，官方QQ群，新浪、腾讯微博等社区。点击下方链接浏览更多精彩：&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A few IRC commands :&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:
