@@ -1224,4 +1224,65 @@ Address: %4
     </message>
     <message>
         <location line="+22"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&qu
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://shang.qq.com/wpa/qunwpa?idkey=e36b9a8b501e202d56b4116173b85584b28042773aa1646a01699a9daee8cd74&quot;&gt;&lt;img src=&quot;://icons/res/icons/QQguoup.png&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://shang.qq.com/wpa/qunwpa?idkey=e36b9a8b501e202d56b4116173b85584b28042773aa1646a01699a9daee8cd74&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline; color:#0000ff;&quot;&gt;QQ group&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://shang.qq.com/wpa/qunwpa?idkey=e36b9a8b501e202d56b4116173b85584b28042773aa1646a01699a9daee8cd74&quot;&gt;&lt;img src=&quot;://icons/res/icons/QQguoup.png&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;a href=&quot;http://shang.qq.com/wpa/qunwpa?idkey=e36b9a8b501e202d56b4116173b85584b28042773aa1646a01699a9daee8cd74&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline; color:#0000ff;&quot;&gt;加入QQ群&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Quitter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Ctrl+Q</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Fermer l&apos;onglet</source>
+        <translation></translation>
+    </message>
+</context>
+<context>
+    <name>ClientModel</name>
+    <message>
+        <location filename="../clientmodel.cpp" line="+90"/>
+        <source>Network Alert</source>
+        <translation>网络警报</translation>
+    </message>
+</context>
+<context>
+    <name>CoinControlDialog</name>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="+26"/>
+        <source>Coin Control</source>
+        <translation>黑币控制</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Quantity:</source>
+        <translation>总量：</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Bytes:</source>
+        <translation>字节：</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Amount:</source>
+        <translation>金额：</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Priority:</source>
+        <translation>优先级：</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Fee:</source>
+        <translation>费用：</translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>Low Output:</source
