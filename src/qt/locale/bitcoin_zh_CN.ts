@@ -1646,4 +1646,70 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+6"/>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.<
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
+        <translation>支付可选的交易手续费以加速交易(每kB)。大多数交易的数据量为1kB。推荐额0.01。</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Pay transaction &amp;fee</source>
+        <translation>支付交易费用(&amp;F)</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Reserved amount does not participate in staking and is therefore spendable at any time.</source>
+        <translation>保留金额不参与权益累积，可以随时使用。</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Reserve</source>
+        <translation>保留</translation>
+    </message>
+    <message>
+        <source>Automatically start BlackCoin after logging in to the system.</source>
+        <translation type="vanished">开机自动启动黑币客户端</translation>
+    </message>
+    <message>
+        <source>&amp;Start BlackCoin on system login</source>
+        <translation type="vanished">开机时自动启动黑币客户端(&amp;S)</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached.</source>
+        <translation>关机时断开区块和地址数据连接使得它们可以被移动到其他目录。这样做会使关机速度变慢。钱包数据总是断开存储的。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Detach databases at shutdown</source>
+        <translation>关机时断开区块和地址数据库连接(&amp;D)</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>&amp;Network</source>
+        <translation>网络(&amp;N)</translation>
+    </message>
+    <message>
+        <source>Automatically open the BlackCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="vanished">路由器自动打开黑币客户端端口。该功能仅在路由器开启UPnP支持时有效。</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Map port using &amp;UPnP</source>
+        <translation>使用 &amp;UPnP 映射端口</translation>
+    </message>
+    <message>
+        <source>Connect to the BlackCoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
+        <translation type="vanished">经SOCKS代理连接到黑币网络(例如使用Tor)</translation>
+    </message>
+    <message>
+        <location line="-43"/>
+        <source>Automatically start HongyunCoin2 after logging in to the system.</source>
+        <translation>开机自动启动鸿运币客户端</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Start HongyunCoin2 on system login</source>
+        <translation>开机时自动启动鸿运币客户端(&amp;S)</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Automatic
