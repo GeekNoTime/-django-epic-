@@ -1566,4 +1566,84 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+5"/>
-        <sour
+        <source>The entered address &quot;%1&quot; is already in the address book.</source>
+        <translation>输入的地址“%1”已经存在于地址簿中。</translation>
+    </message>
+    <message>
+        <source>The entered address &quot;%1&quot; is not a valid BlackCoin address.</source>
+        <translation type="vanished">“%1” 不是有效的黑币地址。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Could not unlock wallet.</source>
+        <translation>无法解锁钱包</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>New key generation failed.</source>
+        <translation>新的密钥生成失败。</translation>
+    </message>
+</context>
+<context>
+    <name>GUIUtil::HelpMessageBox</name>
+    <message>
+        <source>BlackCoin-Qt</source>
+        <translation type="vanished">黑币客户端BlackCoin-Qt</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="+420"/>
+        <source>version</source>
+        <translation>版本</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <location line="+12"/>
+        <source>HongyunCoin2-Qt</source>
+        <translation>鸿运币客户端HongyunCoin2-Qt</translation>
+    </message>
+    <message>
+        <location line="-10"/>
+        <source>Usage:</source>
+        <translation>使用</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>command-line options</source>
+        <translation>命令行选项</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>UI options</source>
+        <translation>用户界面选项</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
+        <translation>设定语言，例如 “de_DE&quot; (默认语言为本地操作系统语言)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Start minimized</source>
+        <translation>启动时最小化</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>登录时显示Logo界面 (默认开启)</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsDialog</name>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="+14"/>
+        <source>Options</source>
+        <translation>选项</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>&amp;Main</source>
+        <translation>主要(&amp;M)</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.<
