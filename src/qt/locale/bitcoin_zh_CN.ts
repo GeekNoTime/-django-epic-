@@ -1783,4 +1783,78 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+21"/>
         <source>&amp;Display</source>
-        <translation>显示(&am
+        <translation>显示(&amp;D)</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>User Interface &amp;language:</source>
+        <translation>用户界面语言(&amp;L)：</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>The user interface language can be set here. This setting will take effect after restarting HongyunCoin2.</source>
+        <translation>在此设置用户界面语言。重启鸿运币客户端后设置生效。</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Whether to show HongyunCoin2 addresses in the transaction list or not.</source>
+        <translation>是否在交易列表中显示鸿运币地址</translation>
+    </message>
+    <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting BlackCoin.</source>
+        <translation type="vanished">在此设置用户界面语言。重启黑币客户端后设置生效。</translation>
+    </message>
+    <message>
+        <location line="-22"/>
+        <source>&amp;Unit to show amounts in:</source>
+        <translation>鸿运币金额单位(&amp;U)：</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
+        <translation>选择鸿运币单位。</translation>
+    </message>
+    <message>
+        <source>Whether to show BlackCoin addresses in the transaction list or not.</source>
+        <translation type="vanished">是否在交易列表中显示黑币地址</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>&amp;Display addresses in transaction list</source>
+        <translation>在交易清单中显示黑币地址(&amp;D)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Whether to show coin control features or not.</source>
+        <translation>是否需要交易源地址控制功能。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Display coin &amp;control features (experts only!)</source>
+        <translation>显示鸿运币控制选项(仅用于专家用户)</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>&amp;OK</source>
+        <translation>确定(&amp;O)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Cancel</source>
+        <translation>取消(&amp;C)</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>&amp;Apply</source>
+        <translation>应用(&amp;A)</translation>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="+55"/>
+        <source>default</source>
+        <translation>默认</translation>
+    </message>
+    <message>
+        <location line="+149"/>
+        <location line="+9"/>
+        <source>Warning</source>
+        <translation>警告</translation>
