@@ -1858,3 +1858,80 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+9"/>
         <source>Warning</source>
         <translation>警告</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <location line="+9"/>
+        <source>This setting will take effect after restarting HongyunCoin2.</source>
+        <translation>重启客户端后设置生效</translation>
+    </message>
+    <message>
+        <source>This setting will take effect after restarting BlackCoin.</source>
+        <translation type="vanished">重启客户端后设置生效</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>The supplied proxy address is invalid.</source>
+        <translation>提供的代理服务器地址无效。</translation>
+    </message>
+</context>
+<context>
+    <name>OverviewPage</name>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="+35"/>
+        <source>Form</source>
+        <translation>表单</translation>
+    </message>
+    <message>
+        <location line="+136"/>
+        <source>Total number of transactions in wallet</source>
+        <translation type="unfinished">您当前可使用的余额</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Number of total network connections</source>
+        <translation>当前钱包连接节点数量</translation>
+    </message>
+    <message>
+        <location line="+126"/>
+        <source>Your current balance</source>
+        <translation type="unfinished">钱包内可用鸿运币数量</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Balance that is currently staking</source>
+        <translation type="unfinished">正在产生</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Balance that has not yet matured</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Total HongyunCoin2 in wallet</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BlackCoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="vanished">所显示的信息尚未更新，建立连接后钱包客户端会自动和网络进行同步，但目前该过程尚未完成。</translation>
+    </message>
+    <message>
+        <source>Stake:</source>
+        <translation type="vanished">用于权益累积：</translation>
+    </message>
+    <message>
+        <source>Unconfirmed:</source>
+        <translation type="vanished">未确认：</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation type="vanished">钱包</translation>
+    </message>
+    <message>
+        <source>Spendable:</source>
+        <translation type="vanished">可用金额：</translation>
+    </message>
+    <message>
+        <source>Your current spendable balance</source>
+        <translation type="vanished">您当前可使用的余额</translatio
