@@ -2291,4 +2291,96 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+0"/>
         <source>PNG Images (*.png)</source>
-        <tr
+        <translation>PNG图片(*.png)</translation>
+    </message>
+</context>
+<context>
+    <name>RPCConsole</name>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="+49"/>
+        <source>Client name</source>
+        <translation>客户端名称</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location line="+23"/>
+        <location line="+29"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location line="+36"/>
+        <location line="+53"/>
+        <location line="+23"/>
+        <location line="+23"/>
+        <location filename="../rpcconsole.cpp" line="+348"/>
+        <source>N/A</source>
+        <translation>不可用</translation>
+    </message>
+    <message>
+        <location line="-220"/>
+        <source>Client version</source>
+        <translation>客户端版本</translation>
+    </message>
+    <message>
+        <location line="-45"/>
+        <source>&amp;Information</source>
+        <translation>信息(&amp;I)</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>HongyunCoin2 - Debug window</source>
+        <translation>鸿运币客户端-调试窗口</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>HongyunCoin2 Core</source>
+        <translation>鸿运币核心进程</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Using OpenSSL version</source>
+        <translation>使用 OpenSSL 版本</translation>
+    </message>
+    <message>
+        <location line="+49"/>
+        <source>Startup time</source>
+        <translation>启动时间</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Network</source>
+        <translation>网络</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Number of connections</source>
+        <translation>连接数</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>On testnet</source>
+        <translation>测试网</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Block chain</source>
+        <translation>数据链</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Current number of blocks</source>
+        <translation>当前数据块数量</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Estimated total blocks</source>
+        <translation>预计数据块数量</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Last block time</source>
+        <translation>上一数据块时间</translation>
+    </message>
+    <message>
+        <location line="+49"/>
+        <source>Open the HongyunCoin2 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>打开调试日志文件，对于较大的文件，这可能持续几秒钟。</tran
