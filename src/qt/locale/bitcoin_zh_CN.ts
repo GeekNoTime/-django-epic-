@@ -2217,3 +2217,78 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+274"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Volume HYC&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:20px; font-weight:600;&quot;&gt;Cryptsy&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+159"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Price chart for the last 100 trades&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QRCodeDialog</name>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="+14"/>
+        <source>QR Code Dialog</source>
+        <translation>QR二维码对话框</translation>
+    </message>
+    <message>
+        <location line="+62"/>
+        <source>Request Payment</source>
+        <translation>请求支付</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Amount:</source>
+        <translation>金额：</translation>
+    </message>
+    <message>
+        <location line="-44"/>
+        <source>Label:</source>
+        <translation>标签：</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Message:</source>
+        <translation>信息：</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>&amp;Save As...</source>
+        <translation>另存为(&amp;S)...</translation>
+    </message>
+    <message>
+        <location filename="../qrcodedialog.cpp" line="+62"/>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>URI编为QR二维码时出错。</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>The entered amount is invalid, please check.</source>
+        <translation>输入的金额无效，请检查。</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>生成的URI过长，请减短标签或消息的长度。</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Save QR Code</source>
+        <translation>保存QR二维码</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>PNG Images (*.png)</source>
+        <tr
