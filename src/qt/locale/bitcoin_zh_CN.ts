@@ -1934,4 +1934,74 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <source>Your current spendable balance</source>
-        <translation type="vanished">您当前可使用的余额</translatio
+        <translation type="vanished">您当前可使用的余额</translation>
+    </message>
+    <message>
+        <source>Immature:</source>
+        <translation type="vanished">未成熟的：</translation>
+    </message>
+    <message>
+        <source>Mined balance that has not yet matured</source>
+        <translation type="vanished">尚未成熟的挖矿收入余额</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation type="vanished">总额：</translation>
+    </message>
+    <message>
+        <source>Your current total balance</source>
+        <translation type="vanished">您当前的总余额</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
+        <translation type="vanished">&lt;b&gt;最近交易记录&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location line="-296"/>
+        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
+        <translation>尚未确认的交易总额（不计入目前钱包余额）</translation>
+    </message>
+    <message>
+        <source>Total of coins that was staked, and do not yet count toward the current balance</source>
+        <translation type="vanished">正在进行权益累积的货币总额（不计入目前钱包余额）</translation>
+    </message>
+    <message>
+        <source>out of sync</source>
+        <translation type="vanished">数据未同步</translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="+217"/>
+        <source>&lt;font color=&quot;#de4949&quot;&gt;Out of sync&lt;/font&gt;</source>
+        <translation>&lt;font color=&quot;#de4949&quot;&gt;未同步&lt;/font&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;font color=&quot;#037e8c&quot;&gt;Synced)&lt;/font&gt;</source>
+        <translation>&lt;font color=&quot;#037e8c&quot;&gt;已同步&lt;/font&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>PoolBrowser</name>
+    <message>
+        <location filename="../forms/poolbrowser.ui" line="+17"/>
+        <source>Digging</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#767676;&quot;&gt;Bitcoin Price&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>1000 $</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#767676;&quot;&gt;Convert HYC :&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
+    
