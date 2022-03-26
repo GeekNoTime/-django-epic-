@@ -2383,4 +2383,79 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+49"/>
         <source>Open the HongyunCoin2 debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>打开调试日志文件，对于较大的文件，这可能持续几秒钟。</tran
+        <translation>打开调试日志文件，对于较大的文件，这可能持续几秒钟。</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Show the HongyunCoin2-Qt help message to get a list with possible HongyunCoin2 command-line options.</source>
+        <translation>显示关于命令行选项的帮助信息。</translation>
+    </message>
+    <message>
+        <location line="-23"/>
+        <source>&amp;Open</source>
+        <translation>打开(&amp;O)</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Command-line options</source>
+        <translation>命令行选项</translation>
+    </message>
+    <message>
+        <source>Show the BlackCoin-Qt help message to get a list with possible BlackCoin command-line options.</source>
+        <translation type="vanished">显示关于命令行选项的帮助信息。</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>&amp;Show</source>
+        <translation>显示(&amp;S)</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>&amp;Console</source>
+        <translation>控制台(&amp;C)</translation>
+    </message>
+    <message>
+        <location line="-260"/>
+        <source>Build date</source>
+        <translation>创建时间</translation>
+    </message>
+    <message>
+        <source>BlackCoin - Debug window</source>
+        <translation type="vanished">黑币客户端-调试窗口</translation>
+    </message>
+    <message>
+        <source>BlackCoin Core</source>
+        <translation type="vanished">黑币核心进程</translation>
+    </message>
+    <message>
+        <location line="+200"/>
+        <source>Debug log file</source>
+        <translation>调试日志文件</translation>
+    </message>
+    <message>
+        <source>Open the BlackCoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation type="vanished">打开调试日志文件，对于较大的文件，这可能持续几秒钟。</translation>
+    </message>
+    <message>
+        <location line="+109"/>
+        <source>Clear console</source>
+        <translation>清空控制台</translation>
+    </message>
+    <message>
+        <source>Welcome to the BlackCoin RPC console.</source>
+        <translation type="vanished">欢迎使用黑币RPC控制台。</translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="-33"/>
+        <source>Welcome to the HongyunCoin2 RPC console.</source>
+        <translation>欢迎使用鸿运币RPC控制台。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
+        <translation>使用上下方向键浏览历史,  &lt;b&gt;Ctrl-L&lt;/b&gt;清除屏幕。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
+        <translation>使用 &lt;b&gt;help&lt;/b&gt; 命令显示帮助信息。</t
