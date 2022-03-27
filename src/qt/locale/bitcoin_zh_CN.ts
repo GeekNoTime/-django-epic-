@@ -2458,4 +2458,99 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+1"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>使用 &lt;b&gt;help&lt;/b&gt; 命令显示帮助信息。</t
+        <translation>使用 &lt;b&gt;help&lt;/b&gt; 命令显示帮助信息。</translation>
+    </message>
+</context>
+<context>
+    <name>SendCoinsDialog</name>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
+        <location filename="../sendcoinsdialog.cpp" line="+182"/>
+        <location line="+5"/>
+        <location line="+5"/>
+        <location line="+5"/>
+        <location line="+6"/>
+        <location line="+5"/>
+        <location line="+5"/>
+        <source>Send Coins</source>
+        <translation>发送货币</translation>
+    </message>
+    <message>
+        <source>Coin Control Features</source>
+        <translation type="vanished">交易源地址控制功能</translation>
+    </message>
+    <message>
+        <location line="+127"/>
+        <source>Inputs...</source>
+        <translation>输入...</translation>
+    </message>
+    <message>
+        <source>automatically selected</source>
+        <translation type="vanished">自动选择</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Insufficient funds!</source>
+        <translation>存款不足！</translation>
+    </message>
+    <message>
+        <location line="+86"/>
+        <source>Quantity:</source>
+        <translation>总量：</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <location line="+35"/>
+        <source>0</source>
+        <translation>0</translation>
+    </message>
+    <message>
+        <location line="-19"/>
+        <source>Bytes:</source>
+        <translation>字节：</translation>
+    </message>
+    <message>
+        <location line="+51"/>
+        <source>Amount:</source>
+        <translation>金额：</translation>
+    </message>
+    <message>
+        <source>0.00 BC</source>
+        <translation type="vanished">123.456 BC {0.00 ?}</translation>
+    </message>
+    <message>
+        <location line="-221"/>
+        <source>COIN CONTROL FEATURES</source>
+        <translation>交易源地址控制功能</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Automatically selected</source>
+        <translation>自动选择</translation>
+    </message>
+    <message>
+        <location line="+216"/>
+        <location line="+86"/>
+        <location line="+86"/>
+        <location line="+32"/>
+        <source>0.00 HYC</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="-191"/>
+        <source>Priority:</source>
+        <translation>优先级：</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>medium</source>
+        <translation>中等</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Fee:</source>
+        <translation>费用：</translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>L
