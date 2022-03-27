@@ -2553,4 +2553,93 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+35"/>
-        <source>L
+        <source>Low Output:</source>
+        <translation>低输出</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>no</source>
+        <translation>no</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>After Fee:</source>
+        <translation>加上交易费用后:</translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>Change:</source>
+        <translation>变更 : </translation>
+    </message>
+    <message>
+        <location line="+191"/>
+        <source>&amp;Add Recipient</source>
+        <translation>添加收款人(&amp;R)</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>&amp;Clear All</source>
+        <translation>清除所有(&amp;A)</translation>
+    </message>
+    <message>
+        <location line="+63"/>
+        <source>123.456 HYC</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>Change</source>
+        <translation type="vanished">零钱</translation>
+    </message>
+    <message>
+        <location line="-240"/>
+        <source>custom change address</source>
+        <translation>自定义零钱地址</translation>
+    </message>
+    <message>
+        <location line="+135"/>
+        <source>Send to multiple recipients at once</source>
+        <translation>一次发送给多个接收者</translation>
+    </message>
+    <message>
+        <source>Add &amp;Recipient</source>
+        <translation type="vanished">添加收款人(&amp;R)</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>Remove all transaction fields</source>
+        <translation>删除所有交易区域</translation>
+    </message>
+    <message>
+        <source>Clear &amp;All</source>
+        <translation type="vanished">清除所有(&amp;A)</translation>
+    </message>
+    <message>
+        <location line="+47"/>
+        <source>Balance:</source>
+        <translation>余额：</translation>
+    </message>
+    <message>
+        <source>123.456 BC</source>
+        <translation type="vanished">123.456 BC</translation>
+    </message>
+    <message>
+        <location line="+59"/>
+        <source>Confirm the send action</source>
+        <translation>确认并发送货币</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>S&amp;end</source>
+        <translation>发送(&amp;E)</translation>
+    </message>
+    <message>
+        <source>Enter a BlackCoin address (e.g. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="vanished">输入黑币地址(例如：B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="-173"/>
+        <source>Enter a HongyunCoin2 address (e.g. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation>输入鸿运币地址(例如HB8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
+    </message>
+    <message>
+        <locatio
