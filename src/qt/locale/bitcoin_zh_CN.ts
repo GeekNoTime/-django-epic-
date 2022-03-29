@@ -2873,4 +2873,76 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+18"/>
         <source>The address to sign the message with (e.g. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
-        <translation>用来签名该消息的地址(例：
+        <translation>用来签名该消息的地址(例： H8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location line="+204"/>
+        <source>Choose an address from the address book</source>
+        <translation>从地址簿里选择一个地址</translation>
+    </message>
+    <message>
+        <location line="-194"/>
+        <location line="+204"/>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <location line="-194"/>
+        <source>Paste address from clipboard</source>
+        <translation>从剪贴板粘贴地址</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Enter the message you want to sign here</source>
+        <translation>请输入您要发送的签名消息</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Copy the current signature to the system clipboard</source>
+        <translation>复制当前签名至剪切板</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Sign the message to prove you own this HongyunCoin2 address</source>
+        <translation>对该消息进行签名以证明您对该鸿运币地址的所有权</translation>
+    </message>
+    <message>
+        <location line="+146"/>
+        <source>Verify the message to ensure it was signed with the specified HongyunCoin2 address</source>
+        <translation>确认该消息以保证它经由指定的鸿运币地址签名</translation>
+    </message>
+    <message>
+        <source>Sign the message to prove you own this BlackCoin address</source>
+        <translation type="vanished">对该消息进行签名以证明您对该黑币地址的所有权</translation>
+    </message>
+    <message>
+        <location line="-129"/>
+        <source>Reset all sign message fields</source>
+        <translation>清空所有签名消息栏</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <location line="+146"/>
+        <source>Clear &amp;All</source>
+        <translation>清除所有(&amp;A)</translation>
+    </message>
+    <message>
+        <location line="-87"/>
+        <location line="+70"/>
+        <source>&amp;Verify Message</source>
+        <translation>验证消息(&amp;V)</translation>
+    </message>
+    <message>
+        <location line="-64"/>
+        <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
+        <translation>在下面输入签名地址，消息（请确保换行符、空格符、制表符等等一个不漏）和签名以验证消息。请确保签名信息准确，提防中间人攻击。</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>The address the message was signed w
