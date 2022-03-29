@@ -2945,4 +2945,78 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+21"/>
-        <source>The address the message was signed w
+        <source>The address the message was signed with (e.g. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation>用来签名该消息的鸿运币地址(例： H8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
+    </message>
+    <message>
+        <source>Verify the message to ensure it was signed with the specified BlackCoin address</source>
+        <translation type="vanished">确认该消息以保证它经由指定的黑币地址签名</translation>
+    </message>
+    <message>
+        <location line="+57"/>
+        <source>Reset all verify message fields</source>
+        <translation>清空所有验证消息栏</translation>
+    </message>
+    <message>
+        <source>Enter a BlackCoin address (e.g. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation type="vanished">输入黑币地址(例： B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
+    </message>
+    <message>
+        <location filename="../signverifymessagedialog.cpp" line="+28"/>
+        <source>Click &quot;Sign Message&quot; to generate signature</source>
+        <translation>单击“签名消息“产生签名。</translation>
+    </message>
+    <message>
+        <source>Enter BlackCoin signature</source>
+        <translation type="vanished">输入黑币签名</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <location line="+3"/>
+        <source>Enter a HongyunCoin2 address (e.g. B8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</source>
+        <translation>输入鸿运币地址(例： H8gZqgY4r2RoEdqYk3QsAqFckyf9pRHN6i)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Enter HongyunCoin2 signature</source>
+        <translation>输入鸿运币签名</translation>
+    </message>
+    <message>
+        <location line="+82"/>
+        <location line="+81"/>
+        <source>The entered address is invalid.</source>
+        <translation>输入的地址非法。</translation>
+    </message>
+    <message>
+        <location line="-81"/>
+        <location line="+8"/>
+        <location line="+73"/>
+        <location line="+8"/>
+        <source>Please check the address and try again.</source>
+        <translation>请检查地址后重试。</translation>
+    </message>
+    <message>
+        <location line="-81"/>
+        <location line="+81"/>
+        <source>The entered address does not refer to a key.</source>
+        <translation>输入的地址没有关联的公私钥对。</translation>
+    </message>
+    <message>
+        <location line="-73"/>
+        <source>Wallet unlock was cancelled.</source>
+        <translation>钱包解锁动作取消。</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Private key for the entered address is not available.</source>
+        <translation>找不到输入地址关联的私钥。</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Message signing failed.</source>
+        <translation>消息签名失败。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Message signed.</source>
+        <translation>消息已签名。</tran
