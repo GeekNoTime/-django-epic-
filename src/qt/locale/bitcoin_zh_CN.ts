@@ -3830,4 +3830,55 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="-38"/>
-        <source>An error 
+        <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
+        <translation>在IPv6模式下设置RPC监听端口 %u 失败，返回到IPv4模式: %s</translation>
+    </message>
+    <message>
+        <location line="+117"/>
+        <source>Error initializing database environment %s! To recover, BACKUP THAT DIRECTORY, then remove everything from it except for wallet.dat.</source>
+        <translation>数据库环境 %s 初始化错误。要修复，备份该目录并将其下除wallet.dat以外的文件全部删除。</translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
+        <translation>设置高优先度/低手续费交易的最大字节数 (默认: 27000)</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>警告：-paytxfee 交易费设置得太高了！每笔交易都将支付交易费。</translation>
+    </message>
+    <message>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong BlackCoin will not work properly.</source>
+        <translation type="vanished">警告：请确认您计算机的本地时间。如果时钟错误，黑币客户端将不能正常工作。</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>警告：钱包文件wallet.dat读取失败！最重要的公钥、私钥数据都没有问题，但是交易记录或地址簿数据不正确，或者存在数据丢失。</translation>
+    </message>
+    <message>
+        <location line="-18"/>
+        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>警告：钱包文件wallet.dat损坏! 原始的钱包文件已经备份到%s目录下并重命名为{timestamp}.bak 。如果您的账户余额或者交易记录不正确，请使用您的钱包备份文件恢复。</translation>
+    </message>
+    <message>
+        <location line="-30"/>
+        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
+        <translation>尝试从损坏的钱包文件wallet.dat中恢复私钥</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Block creation options:</source>
+        <translation>数据块创建选项：</translation>
+    </message>
+    <message>
+        <location line="-62"/>
+        <source>Connect only to the specified node(s)</source>
+        <translation>仅连接到指定节点</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
+        <translation>发现自己的IP地址(缺省:不带 -externalip 参数监听时设置为1)</translation>
+    
