@@ -3693,4 +3693,74 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
 </translation>
     </message>
     <message>
-        <source>Specify configuration file (default: black
+        <source>Specify configuration file (default: blackcoin.conf)</source>
+        <translation type="vanished">指定配置文件(默认: blackcoin.conf)</translation>
+    </message>
+    <message>
+        <source>Specify pid file (default: blackcoind.pid)</source>
+        <translation type="vanished">指定pid文件(默认: blackcoind.pid)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Specify wallet file (within data directory)</source>
+        <translation>指定钱包文件（数据目录内）</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>Specify data directory</source>
+        <translation>指定数据目录
+</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation>设置数据库缓冲区大小 (缺省: 25MB)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set database disk log size in megabytes (default: 100)</source>
+        <translation>设置数据库日志文件大小(单位MB，默认值100)</translation>
+    </message>
+    <message>
+        <source>Listen for connections on &lt;port&gt; (default: 15714 or testnet: 25714)</source>
+        <translation type="vanished">监听&lt;port&gt;端口的连接 (默认: 15714 测试网: 25714)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
+        <translation>最大连接数 &lt;n&gt; （缺省: 125）</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
+        <translation>连接一个节点并获取对端地址，然后断开连接</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Specify your own public address</source>
+        <translation>指定您的公共地址</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Bind to given address. Use [host]:port notation for IPv6</source>
+        <translation>以IPv6 [host]:端口绑定给定地址</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Stake your coins to support network and gain reward (default: 1)</source>
+        <translation>进行权益累积以支持鸿运币网络并获得报酬(默认: 1)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
+        <translation>断开出现问题节点阀值（缺省: 100）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
+        <translation>Number of seconds to keep misbehaving peers from reconnecting (缺省: 86400)</translation>
+    </message>
+    <message>
+        <location line="-44"/>
+        <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
+        <translation>设置RPC监听端口%u时发生错
