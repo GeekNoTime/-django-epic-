@@ -3403,3 +3403,93 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>确认中 (推荐 %2个确认，已经有 %1个确认)</translation>
     </message>
     <message>
+        <location line="+6"/>
+        <source>Conflicted</source>
+        <translation>冲突的</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation>未成熟 (%1 个确认，将在 %2 个后可用)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation>此数据块未被任何其他节点接收，可能不被接受！</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Generated but not accepted</source>
+        <translation>已生成但未被接受</translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <source>Received with</source>
+        <translation>接收于</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Received from</source>
+        <translation>收款来自</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Sent to</source>
+        <translation>发送给</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Payment to yourself</source>
+        <translation>付款给自己</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Mined/Staked</source>
+        <translation>挖矿/利息所得</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation type="vanished">挖矿所得</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>(n/a)</source>
+        <translation>（不可用）</translation>
+    </message>
+    <message>
+        <location line="+190"/>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation>交易状态。 鼠标移到此区域可显示确认项数量。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Date and time that the transaction was received.</source>
+        <translation>接收到交易的时间</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Type of transaction.</source>
+        <translation>交易类别。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Destination address of transaction.</source>
+        <translation>交易目的地址。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Amount removed from or added to balance.</source>
+        <translation>从余额添加或移除的金额。</translation>
+    </message>
+</context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <location filename="../transactionview.cpp" line="+55"/>
+        <location line="+16"/>
+        <source>All</source>
+        <translation>全部</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>
