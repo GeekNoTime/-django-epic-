@@ -4234,4 +4234,76 @@ alertnotify=echo %%s | mail -s &quot;BlackCoin Alert&quot; admin@foo.com
         <translation>服务器证书 (默认为 server.cert)
 </translation>
     </message>
-    <messag
+    <message>
+        <location line="+1"/>
+        <source>Server private key (default: server.pem)</source>
+        <translation>服务器私钥 (默认为 server.pem)
+</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
+        <translation>可用加密算法 (默认: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
+    </message>
+    <message>
+        <location line="+53"/>
+        <source>Error: Wallet unlocked for staking only, unable to create transaction.</source>
+        <translation>错误：无法创建交易，已解锁的钱包仅用于权益累积。</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>WARNING: Invalid checkpoint found! Displayed transactions may not be correct! You may need to upgrade, or notify developers.</source>
+        <translation>警告：发现无效的记录点。所显示的交易信息未必正确！请升级客户端或联系开发者。</translation>
+    </message>
+    <message>
+        <location line="-158"/>
+        <source>This help message</source>
+        <translation>本帮助信息
+</translation>
+    </message>
+    <message>
+        <location line="+95"/>
+        <source>Wallet %s resides outside data directory %s.</source>
+        <translation>钱包 %s 位于数据目录 %s 之外.</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s.  BlackCoin is probably already running.</source>
+        <translation type="vanished">无法从数据目录 %s 获得锁定.  黑币客户端可能已在运行中.</translation>
+    </message>
+    <message>
+        <source>BlackCoin</source>
+        <translation type="vanished">黑币</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
+        <translation>无法绑定本机端口 %s  (返回错误消息 %d, %s)</translation>
+    </message>
+    <message>
+        <location line="-130"/>
+        <source>Connect through socks proxy</source>
+        <translation>通过socks代理连接</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
+        <translation>使用 -addnode, -seednode 和 -connect 选项时允许查询DNS</translation>
+    </message>
+    <message>
+        <location line="+122"/>
+        <source>Loading addresses...</source>
+        <translation>正在加载地址簿...</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>Error loading blkindex.dat</source>
+        <translation>blkindex.dat 文件加载出错</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Error loading wallet.dat: Wallet corrupted</source>
+        <translation>wallet.dat 钱包文件加载出错：钱包损坏</translation>
+    </message>
+    <message>
+        <source>Error loading wallet.dat: Wallet requires newer version of BlackCoin</source>
+    
