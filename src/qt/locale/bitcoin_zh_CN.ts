@@ -4020,4 +4020,75 @@ for example: alertnotify=echo %%s | mail -s &quot;HongyunCoin2 Alert&quot; admin
  %s
 建议使用如下的随机密码:
 rpcuser=HongyunCoin2rpc
-rpcpassword=%
+rpcpassword=%s
+(不需要记住该密码)
+用户名和密码不能重复。
+如果该文件不存在，请自行创建并设为用户本身只读权限。
+建议创建提示以监测可能的问题，如：
+alertnotify=echo %%s | mail -s &quot;HongyunCoin2 Alert&quot; admin@foo.com</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>HongyunCoin2 version</source>
+        <translation>鸿运币版本</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Send command to -server or HongyunCoin2d</source>
+        <translation>向-server服务器或HongyunCoin2d发送命令</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>HongyunCoin2</source>
+        <translation>鸿运币</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Specify configuration file (default: HongyunCoin2.conf)</source>
+        <translation>指定配置文件(默认: HongyunCoin2.conf)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Specify pid file (default: HongyunCoin2d.pid)</source>
+        <translation>指定pid文件(默认: HongyunCoin2d.pid)</translation>
+    </message>
+    <message>
+        <location line="+50"/>
+        <source>Username for JSON-RPC connections</source>
+        <translation>JSON-RPC 连接用户名</translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>Cannot obtain a lock on data directory %s.  HongyunCoin2 is probably already running.</source>
+        <translation>无法从数据目录 %s 获得锁定.  鸿运币客户端可能已在运行中.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Verifying database integrity...</source>
+        <translation>正在检查数据库完整性...</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Error loading wallet.dat: Wallet requires newer version of HongyunCoin2</source>
+        <translation>wallet.dat 钱包文件加载出错：需要新版本的客户端</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Wallet needed to be rewritten: restart HongyunCoin2 to complete</source>
+        <translation>需要重写钱包，重启客户端以完成该操作。</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Unable to bind to %s on this computer. HongyunCoin2 is probably already running.</source>
+        <translation>无法绑定到该计算机上的 %s. 鸿运币客户端可能已在运行中。</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong HongyunCoin2 will not work properly.</source>
+        <translation>警告：请确认您计算机的本地时间。如果时钟错误，鸿运币客户端将不能正常工作。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>WARNING: syncronized checkpoint violation detected, but skipped!</source>
+        <translation>警告：检测到同步记录点错误，已跳过。</translation>
+    </mess
