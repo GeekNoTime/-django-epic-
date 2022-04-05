@@ -4306,4 +4306,81 @@ alertnotify=echo %%s | mail -s &quot;BlackCoin Alert&quot; admin@foo.com
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of BlackCoin</source>
-    
+        <translation type="vanished">wallet.dat 钱包文件加载出错：需要新版本的客户端</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart BlackCoin to complete</source>
+        <translation type="vanished">需要重写钱包，重启客户端以完成该操作。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Error loading wallet.dat</source>
+        <translation>wallet.dat 钱包文件加载出错</translation>
+    </message>
+    <message>
+        <location line="-16"/>
+        <source>Invalid -proxy address: &apos;%s&apos;</source>
+        <translation>无效的代理地址：%s</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <translation>-onlynet 指定的是未知网络：%s</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>Unknown -socks proxy version requested: %i</source>
+        <translation>被指定的是未知socks代理版本: %i</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
+        <translation>无法解析 -bind 端口地址: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
+        <translation>无法解析 -externalip 地址: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation>非法金额 -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>Error: could not start node</source>
+        <translation>错误：无法启动节点</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Sending...</source>
+        <translation>正在发送</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Invalid amount</source>
+        <translation>无效金额</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Insufficient funds</source>
+        <translation>金额不足</translation>
+    </message>
+    <message>
+        <location line="-34"/>
+        <source>Loading block index...</source>
+        <translation>正在加载数据块索引...</translation>
+    </message>
+    <message>
+        <location line="-103"/>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
+        <translation>添加节点并与其保持连接</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. BlackCoin is probably already running.</source>
+        <translation type="vanished">无法绑定到该计算机上的 %s. 黑币客户端可能已在运行中。</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>F
