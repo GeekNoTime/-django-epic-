@@ -4465,4 +4465,62 @@ If the file does not exist, create it with owner-readable-only file permissions.
 　　&lt;/p&gt;&lt;p&gt;2)权益累积最短时间为8小时，无上限。
 
 　　&lt;/p&gt;&lt;p&gt;3)利息需10个确认，成熟时间50个块，因此产生的利息(一开始显示为方括号+灰色文字)要在60个块后方可使用。
-&lt;/p&g
+&lt;/p&gt;&lt;p&gt;4)区块经过确认后，你的stake里的钱会回到balance里，同时挖矿的利息也发到你的balance里。&lt;/p&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>tutoWriteDialog</name>
+    <message>
+        <location filename="../forms/tutoWriteDialog.ui" line="+14"/>
+        <source>How to mine FoxCoin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+66"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;HongyunCoin2 version &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;How to solo dig:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>With CPU:
+
+Go to the dig site in the FoxCoin-qt, a menu should appear with a lot of options. The options you want to select are:
+[Solo Dig], [Minerd [CPU]], [CPU Cores * 4], [90]] - Next line - [127.0.0.1], [9919], [RPC Username], [RPC Password]
+
+With GPU:
+
+nVIDIA GPU:
+
+Go to the dig site page, and enter in the following options:
+[Solo Dig], [CUDAMiner [nVIDIA GPU]], [N/A], [90] - Next Line - [127.0.0.1], [9919], [RPC Username], [RPC Password] 
+
+AMD:
+
+Go to the dig site page, and enter in the following options:
+[Solo Dig], [CGMiner [AMD GPU]], [GPUs], [90] - Next Line - [127.0.0.1], [9919], [RPC Username], [RPC Password]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;How to dig in a herd:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Requirements:
+-Knowledge of a p2pool, such as fox.doxmon.com
+
+Follow the instructions above for solo digging, but switch dig type to Herd Dig, set the URL to the p2pool of your choice, and
+set your username to your FoxCoin address, and your password to anything. This type of minining is perferred and will
+automatically send you your coins.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;How to dig in a pond:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+       
