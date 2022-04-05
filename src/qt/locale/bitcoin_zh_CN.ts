@@ -4091,4 +4091,77 @@ alertnotify=echo %%s | mail -s &quot;HongyunCoin2 Alert&quot; admin@foo.com</tra
         <location line="+4"/>
         <source>WARNING: syncronized checkpoint violation detected, but skipped!</source>
         <translation>警告：检测到同步记录点错误，已跳过。</translation>
-    </mess
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Warning: Disk space is low!</source>
+        <translation>警告：磁盘空间低。</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>Warning: This version is obsolete, upgrade required!</source>
+        <translation>警告：该软件版本已过时，请升级！</translation>
+    </message>
+    <message>
+        <location line="-48"/>
+        <source>wallet.dat corrupt, salvage failed</source>
+        <translation>钱包文件wallet.dat损坏，抢救备份失败</translation>
+    </message>
+    <message>
+        <location line="-54"/>
+        <source>Password for JSON-RPC connections</source>
+        <translation>JSON-RPC 连接密码
+</translation>
+    </message>
+    <message>
+        <source>%s, you must set a rpcpassword in the configuration file:
+ %s
+It is recommended you use the following random password:
+rpcuser=blackcoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s &quot;BlackCoin Alert&quot; admin@foo.com
+</source>
+        <translation type="vanished">%s, 必须在配置文件里设置rpc密码:
+ %s
+建议使用如下的随机密码:
+rpcuser=blackcoinrpc
+rpcpassword=%s
+(不需要记住该密码)
+用户名和密码不能重复。
+如果该文件不存在，请自行创建并设为用户本身只读权限。
+建议创建提示以监测可能的问题，如：
+alertnotify=echo %%s | mail -s &quot;BlackCoin Alert&quot; admin@foo.com
+</translation>
+    </message>
+    <message>
+        <location line="-33"/>
+        <source>Find peers using internet relay chat (default: 0)</source>
+        <translation>寻找使用互联网接力聊天的节点 (默认: 1) {0)?}</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sync time with other nodes. Disable if time on your system is precise e.g. syncing with NTP (default: 1)</source>
+        <translation>自动和其它节点同步时间。如果本地计算机世界是准确的，建议关闭。(默认: 1)</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>When creating transactions, ignore inputs with value less than this (default: 0.01)</source>
+        <translation>创建交易时自动忽略该值以下的数额 (默认：0.01)</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 16667 or testnet: 25715)</source>
+        <translation>监听 &lt;port&gt; 端口的JSON-RPC连接 (默认: 8866 测试网: 18866) {8866 ?} {18866)?}</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Allow JSON-RPC connections from specified IP address</source>
+        <translation>允许从指定IP接受到的 JSON-RPC 连接</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Send commands to node running on &lt;ip&gt; (default: 12
