@@ -125,4 +125,105 @@ void OptionsDialog::setModel(OptionsModel *model)
 
 void OptionsDialog::setMapper()
 {
-    /* Mai
+    /* Main */
+    mapper->addMapping(ui->transactionFee, OptionsModel::Fee);
+    mapper->addMapping(ui->reserveBalance, OptionsModel::ReserveBalance);
+    mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
+    mapper->addMapping(ui->detachDatabases, OptionsModel::DetachDatabases);
+
+    /* Network */
+    mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
+
+    mapper->addMapping(ui->connectSocks, OptionsModel::ProxyUse);
+    mapper->addMapping(ui->proxyIp, OptionsModel::ProxyIP);
+    mapper->addMapping(ui->proxyPort, OptionsModel::ProxyPort);
+    mapper->addMapping(ui->socksVersion, OptionsModel::ProxySocksVersion);
+
+    /* Window */
+#ifndef Q_OS_MAC
+    mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
+    mapper->addMapping(ui->minimizeOnClose, OptionsModel::MinimizeOnClose);
+#endif
+
+    /* Display */
+    mapper->addMapping(ui->lang, OptionsModel::Language);
+    mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
+    mapper->addMapping(ui->displayAddresses, OptionsModel::DisplayAddresses);
+    mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
+}
+
+void OptionsDialog::enableApplyButton()
+{
+    ui->applyButton->setEnabled(true);
+}
+
+void OptionsDialog::disableApplyButton()
+{
+    ui->applyButton->setEnabled(false);
+}
+
+void OptionsDialog::enableSaveButtons()
+{
+    /* prevent enabling of the save buttons when data modified, if there is an invalid proxy address present */
+    if(fProxyIpValid)
+        setSaveButtonState(true);
+}
+
+void OptionsDialog::disableSaveButtons()
+{
+    setSaveButtonState(false);
+}
+
+void OptionsDialog::setSaveButtonState(bool fState)
+{
+    ui->applyButton->setEnabled(fState);
+    ui->okButton->setEnabled(fState);
+}
+
+void OptionsDialog::on_okButton_clicked()
+{
+    mapper->submit();
+    accept();
+}
+
+void OptionsDialog::on_cancelButton_clicked()
+{
+    reject();
+}
+
+void OptionsDialog::on_applyButton_clicked()
+{
+    mapper->submit();
+    disableApplyButton();
+}
+
+void OptionsDialog::showRestartWarning_Proxy()
+{
+    if(!fRestartWarningDisplayed_Proxy)
+    {
+        QMessageBox::warning(this, tr("Warning"), tr("This setting will take effect after restarting HongyunCoin2."), QMessageBox::Ok);
+        fRestartWarningDisplayed_Proxy = true;
+    }
+}
+
+void OptionsDialog::showRestartWarning_Lang()
+{
+    if(!fRestartWarningDisplayed_Lang)
+    {
+        QMessageBox::warning(this, tr("Warning"), tr("This setting will take effect after restarting HongyunCoin2."), QMessageBox::Ok);
+        fRestartWarningDisplayed_Lang = true;
+    }
+}
+
+void OptionsDialog::updateDisplayUnit()
+{
+    if(model)
+    {
+        /* Update transactionFee with the current unit */
+        ui->transactionFee->setDisplayUnit(model->getDisplayUnit());
+    }
+}
+
+void OptionsDialog::handleProxyIpValid(QValidatedLineEdit *object, bool fState)
+{
+    // this is used in a check before re-e
