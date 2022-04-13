@@ -226,4 +226,33 @@ void OptionsDialog::updateDisplayUnit()
 
 void OptionsDialog::handleProxyIpValid(QValidatedLineEdit *object, bool fState)
 {
-    // this is used in a check before re-e
+    // this is used in a check before re-enabling the save buttons
+    fProxyIpValid = fState;
+
+    if(fProxyIpValid)
+    {
+        enableSaveButtons();
+        ui->statusLabel->clear();
+    }
+    else
+    {
+        disableSaveButtons();
+        object->setValid(fProxyIpValid);
+        ui->statusLabel->setStyleSheet("QLabel { color: red; }");
+        ui->statusLabel->setText(tr("The supplied proxy address is invalid."));
+    }
+}
+
+bool OptionsDialog::eventFilter(QObject *object, QEvent *event)
+{
+    if(event->type() == QEvent::FocusOut)
+    {
+        if(object == ui->proxyIp)
+        {
+            CService addr;
+            /* Check proxyIp for a valid IPv4/IPv6 address and emit the proxyIpValid signal */
+            emit proxyIpValid(ui->proxyIp, LookupNumeric(ui->proxyIp->text().toStdString().c_str(), addr));
+        }
+    }
+    return QDialog::eventFilter(object, event);
+}
