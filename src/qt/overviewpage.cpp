@@ -140,4 +140,78 @@ OverviewPage::~OverviewPage()
     delete ui;
 }
 
-void OverviewPage::setBalance(qint64 balance
+void OverviewPage::setBalance(qint64 balance, qint64 stake, qint64 unconfirmedBalance, qint64 immatureBalance)
+{
+
+    int unit = model->getOptionsModel()->getDisplayUnit();
+    currentBalance = balance;
+    currentStake = stake;
+    currentUnconfirmedBalance = unconfirmedBalance;
+    currentImmatureBalance = immatureBalance;
+
+
+        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
+        ui->labelStake->setText(BitcoinUnits::formatWithUnit(unit, stake));
+        ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance));
+        ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, immatureBalance));
+        ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balance + stake + unconfirmedBalance));
+}
+
+void OverviewPage::setNumTransactions(int count)
+{
+    ui->labelNumTransactions->setText(QLocale::system().toString(count));
+}
+
+void OverviewPage::setNumberConnections(int connections)
+{
+    ui->labelActive->setText(QLocale::system().toString(connections));
+}
+
+void OverviewPage::setModel(WalletModel *model)
+{
+    this->model = model;
+    if(model && model->getOptionsModel())
+    {
+        // Set up transaction list
+        filter = new TransactionFilterProxy();
+        filter->setSourceModel(model->getTransactionTableModel());
+        filter->setLimit(NUM_ITEMS);
+        filter->setDynamicSortFilter(true);
+        filter->setSortRole(Qt::EditRole);
+        filter->setShowInactive(false);
+        filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
+
+        ui->listTransactions->setModel(filter);
+        ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
+
+        // Keep up to date with wallet
+        setBalance(model->getBalance(), model->getStake(), model->getUnconfirmedBalance(), model->getImmatureBalance());
+        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64, qint64)));
+
+        setNumTransactions(model->getNumTransactions());
+        connect(model, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumTransactions(int)));
+
+        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+    }
+
+    // update the display unit, to not use the default ("BTC")
+    updateDisplayUnit();
+}
+
+void OverviewPage::updateDisplayUnit()
+{
+    if(model && model->getOptionsModel())
+    {
+        if(currentBalance != -1)
+            setBalance(currentBalance, model->getStake(), currentUnconfirmedBalance, currentImmatureBalance);
+
+        // Update txdelegate->unit with the current unit
+        txdelegate->unit = model->getOptionsModel()->getDisplayUnit();
+
+        ui->listTransactions->update();
+    }
+}
+
+void OverviewPage::showOutOfSyncWarning(bool fShow)
+{
+    if (fShow == true) ui->labelWalletStatus->se
