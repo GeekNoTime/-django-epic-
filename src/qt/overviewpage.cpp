@@ -214,4 +214,6 @@ void OverviewPage::updateDisplayUnit()
 
 void OverviewPage::showOutOfSyncWarning(bool fShow)
 {
-    if (fShow == true) ui->labelWalletStatus->se
+    if (fShow == true) ui->labelWalletStatus->setText(tr("<font color=\"#de4949\">Out of sync</font>"));
+    if (fShow == false) ui->labelWalletStatus->setText(tr("<font color=\"#037e8c\">Synced)</font>"));
+}
