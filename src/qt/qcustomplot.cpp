@@ -7073,3 +7073,2798 @@ void QCPAbstractPlottable::setSelectable(bool selectable)
   This function can change the selection state even when \ref setSelectable was set to false.
   
   emits the \ref selectionChanged signal when \a selected is different from the previous selection state.
+  
+  \see setSelectable, selectTest
+*/
+void QCPAbstractPlottable::setSelected(bool selected)
+{
+  if (mSelected != selected)
+  {
+    mSelected = selected;
+    emit selectionChanged(mSelected);
+  }
+}
+
+/*!
+  Rescales the key and value axes associated with this plottable to contain all displayed data, so
+  the whole plottable is visible. If the scaling of an axis is logarithmic, rescaleAxes will make
+  sure not to rescale to an illegal range i.e. a range containing different signs and/or zero.
+  Instead it will stay in the current sign domain and ignore all parts of the plottable that lie
+  outside of that domain.
+  
+  \a onlyEnlarge makes sure the ranges are only expanded, never reduced. So it's possible to show
+  multiple plottables in their entirety by multiple calls to rescaleAxes where the first call has
+  \a onlyEnlarge set to false (the default), and all subsequent set to true.
+  
+  \see rescaleKeyAxis, rescaleValueAxis, QCustomPlot::rescaleAxes, QCPAxis::rescale
+*/
+void QCPAbstractPlottable::rescaleAxes(bool onlyEnlarge) const
+{
+  rescaleKeyAxis(onlyEnlarge);
+  rescaleValueAxis(onlyEnlarge);
+}
+
+/*!
+  Rescales the key axis of the plottable so the whole plottable is visible.
+  
+  See \ref rescaleAxes for detailed behaviour.
+*/
+void QCPAbstractPlottable::rescaleKeyAxis(bool onlyEnlarge) const
+{
+  QCPAxis *keyAxis = mKeyAxis.data();
+  if (!keyAxis) { qDebug() << Q_FUNC_INFO << "invalid key axis"; return; }
+  
+  SignDomain signDomain = sdBoth;
+  if (keyAxis->scaleType() == QCPAxis::stLogarithmic)
+    signDomain = (keyAxis->range().upper < 0 ? sdNegative : sdPositive);
+  
+  bool foundRange;
+  QCPRange newRange = getKeyRange(foundRange, signDomain);
+  if (foundRange)
+  {
+    if (onlyEnlarge)
+      newRange.expand(keyAxis->range());
+    if (!QCPRange::validRange(newRange)) // likely due to range being zero (plottable has only constant data in this axis dimension), shift current range to at least center the plottable
+    {
+      double center = (newRange.lower+newRange.upper)*0.5; // upper and lower should be equal anyway, but just to make sure, incase validRange returned false for other reason
+      if (keyAxis->scaleType() == QCPAxis::stLinear)
+      {
+        newRange.lower = center-keyAxis->range().size()/2.0;
+        newRange.upper = center+keyAxis->range().size()/2.0;
+      } else // scaleType() == stLogarithmic
+      {
+        newRange.lower = center/qSqrt(keyAxis->range().upper/keyAxis->range().lower);
+        newRange.upper = center*qSqrt(keyAxis->range().upper/keyAxis->range().lower);
+      }
+    }
+    keyAxis->setRange(newRange);
+  }
+}
+
+/*!
+  Rescales the value axis of the plottable so the whole plottable is visible.
+  
+  Returns true if the axis was actually scaled. This might not be the case if this plottable has an
+  invalid range, e.g. because it has no data points.
+  
+  See \ref rescaleAxes for detailed behaviour.
+*/
+void QCPAbstractPlottable::rescaleValueAxis(bool onlyEnlarge) const
+{
+  QCPAxis *valueAxis = mValueAxis.data();
+  if (!valueAxis) { qDebug() << Q_FUNC_INFO << "invalid value axis"; return; }
+  
+  SignDomain signDomain = sdBoth;
+  if (valueAxis->scaleType() == QCPAxis::stLogarithmic)
+    signDomain = (valueAxis->range().upper < 0 ? sdNegative : sdPositive);
+  
+  bool foundRange;
+  QCPRange newRange = getValueRange(foundRange, signDomain);
+  if (foundRange)
+  {
+    if (onlyEnlarge)
+      newRange.expand(valueAxis->range());
+    if (!QCPRange::validRange(newRange)) // likely due to range being zero (plottable has only constant data in this axis dimension), shift current range to at least center the plottable
+    {
+      double center = (newRange.lower+newRange.upper)*0.5; // upper and lower should be equal anyway, but just to make sure, incase validRange returned false for other reason
+      if (valueAxis->scaleType() == QCPAxis::stLinear)
+      {
+        newRange.lower = center-valueAxis->range().size()/2.0;
+        newRange.upper = center+valueAxis->range().size()/2.0;
+      } else // scaleType() == stLogarithmic
+      {
+        newRange.lower = center/qSqrt(valueAxis->range().upper/valueAxis->range().lower);
+        newRange.upper = center*qSqrt(valueAxis->range().upper/valueAxis->range().lower);
+      }
+    }
+    valueAxis->setRange(newRange);
+  }
+}
+
+/*!
+  Adds this plottable to the legend of the parent QCustomPlot (QCustomPlot::legend).
+    
+  Normally, a QCPPlottableLegendItem is created and inserted into the legend. If the plottable
+  needs a more specialized representation in the legend, this function will take this into account
+  and instead create the specialized subclass of QCPAbstractLegendItem.
+    
+  Returns true on success, i.e. when the legend exists and a legend item associated with this plottable isn't already in
+  the legend.
+    
+  \see removeFromLegend, QCPLegend::addItem
+*/
+bool QCPAbstractPlottable::addToLegend()
+{
+  if (!mParentPlot || !mParentPlot->legend)
+    return false;
+  
+  if (!mParentPlot->legend->hasItemWithPlottable(this))
+  {
+    mParentPlot->legend->addItem(new QCPPlottableLegendItem(mParentPlot->legend, this));
+    return true;
+  } else
+    return false;
+}
+
+/*!
+  Removes the plottable from the legend of the parent QCustomPlot. This means the
+  QCPAbstractLegendItem (usually a QCPPlottableLegendItem) that is associated with this plottable
+  is removed.
+    
+  Returns true on success, i.e. if the legend exists and a legend item associated with this
+  plottable was found and removed.
+    
+  \see addToLegend, QCPLegend::removeItem
+*/
+bool QCPAbstractPlottable::removeFromLegend() const
+{
+  if (!mParentPlot->legend)
+    return false;
+  
+  if (QCPPlottableLegendItem *lip = mParentPlot->legend->itemWithPlottable(this))
+    return mParentPlot->legend->removeItem(lip);
+  else
+    return false;
+}
+
+/* inherits documentation from base class */
+QRect QCPAbstractPlottable::clipRect() const
+{
+  if (mKeyAxis && mValueAxis)
+    return mKeyAxis.data()->axisRect()->rect() & mValueAxis.data()->axisRect()->rect();
+  else
+    return QRect();
+}
+
+/* inherits documentation from base class */
+QCP::Interaction QCPAbstractPlottable::selectionCategory() const
+{
+  return QCP::iSelectPlottables;
+}
+
+/*! \internal
+  
+  Convenience function for transforming a key/value pair to pixels on the QCustomPlot surface,
+  taking the orientations of the axes associated with this plottable into account (e.g. whether key
+  represents x or y).
+  
+  \a key and \a value are transformed to the coodinates in pixels and are written to \a x and \a y.
+    
+  \see pixelsToCoords, QCPAxis::coordToPixel
+*/
+void QCPAbstractPlottable::coordsToPixels(double key, double value, double &x, double &y) const
+{
+  QCPAxis *keyAxis = mKeyAxis.data();
+  QCPAxis *valueAxis = mValueAxis.data();
+  if (!keyAxis || !valueAxis) { qDebug() << Q_FUNC_INFO << "invalid key or value axis"; return; }
+  
+  if (keyAxis->orientation() == Qt::Horizontal)
+  {
+    x = keyAxis->coordToPixel(key);
+    y = valueAxis->coordToPixel(value);
+  } else
+  {
+    y = keyAxis->coordToPixel(key);
+    x = valueAxis->coordToPixel(value);
+  }
+}
+
+/*! \internal
+  \overload
+  
+  Returns the input as pixel coordinates in a QPointF.
+*/
+const QPointF QCPAbstractPlottable::coordsToPixels(double key, double value) const
+{
+  QCPAxis *keyAxis = mKeyAxis.data();
+  QCPAxis *valueAxis = mValueAxis.data();
+  if (!keyAxis || !valueAxis) { qDebug() << Q_FUNC_INFO << "invalid key or value axis"; return QPointF(); }
+  
+  if (keyAxis->orientation() == Qt::Horizontal)
+    return QPointF(keyAxis->coordToPixel(key), valueAxis->coordToPixel(value));
+  else
+    return QPointF(valueAxis->coordToPixel(value), keyAxis->coordToPixel(key));
+}
+
+/*! \internal
+  
+  Convenience function for transforming a x/y pixel pair on the QCustomPlot surface to plot coordinates,
+  taking the orientations of the axes associated with this plottable into account (e.g. whether key
+  represents x or y).
+  
+  \a x and \a y are transformed to the plot coodinates and are written to \a key and \a value.
+    
+  \see coordsToPixels, QCPAxis::coordToPixel
+*/
+void QCPAbstractPlottable::pixelsToCoords(double x, double y, double &key, double &value) const
+{
+  QCPAxis *keyAxis = mKeyAxis.data();
+  QCPAxis *valueAxis = mValueAxis.data();
+  if (!keyAxis || !valueAxis) { qDebug() << Q_FUNC_INFO << "invalid key or value axis"; return; }
+  
+  if (keyAxis->orientation() == Qt::Horizontal)
+  {
+    key = keyAxis->pixelToCoord(x);
+    value = valueAxis->pixelToCoord(y);
+  } else
+  {
+    key = keyAxis->pixelToCoord(y);
+    value = valueAxis->pixelToCoord(x);
+  }
+}
+
+/*! \internal
+  \overload
+
+  Returns the pixel input \a pixelPos as plot coordinates \a key and \a value.
+*/
+void QCPAbstractPlottable::pixelsToCoords(const QPointF &pixelPos, double &key, double &value) const
+{
+  pixelsToCoords(pixelPos.x(), pixelPos.y(), key, value);
+}
+
+/*! \internal
+
+  Returns the pen that should be used for drawing lines of the plottable. Returns mPen when the
+  graph is not selected and mSelectedPen when it is.
+*/
+QPen QCPAbstractPlottable::mainPen() const
+{
+  return mSelected ? mSelectedPen : mPen;
+}
+
+/*! \internal
+
+  Returns the brush that should be used for drawing fills of the plottable. Returns mBrush when the
+  graph is not selected and mSelectedBrush when it is.
+*/
+QBrush QCPAbstractPlottable::mainBrush() const
+{
+  return mSelected ? mSelectedBrush : mBrush;
+}
+
+/*! \internal
+
+  A convenience function to easily set the QPainter::Antialiased hint on the provided \a painter
+  before drawing plottable lines.
+
+  This is the antialiasing state the painter passed to the \ref draw method is in by default.
+  
+  This function takes into account the local setting of the antialiasing flag as well as the
+  overrides set with \ref QCustomPlot::setAntialiasedElements and \ref
+  QCustomPlot::setNotAntialiasedElements.
+  
+  \see setAntialiased, applyFillAntialiasingHint, applyScattersAntialiasingHint, applyErrorBarsAntialiasingHint
+*/
+void QCPAbstractPlottable::applyDefaultAntialiasingHint(QCPPainter *painter) const
+{
+  applyAntialiasingHint(painter, mAntialiased, QCP::aePlottables);
+}
+
+/*! \internal
+
+  A convenience function to easily set the QPainter::Antialiased hint on the provided \a painter
+  before drawing plottable fills.
+  
+  This function takes into account the local setting of the antialiasing flag as well as the
+  overrides set with \ref QCustomPlot::setAntialiasedElements and \ref
+  QCustomPlot::setNotAntialiasedElements.
+  
+  \see setAntialiased, applyDefaultAntialiasingHint, applyScattersAntialiasingHint, applyErrorBarsAntialiasingHint
+*/
+void QCPAbstractPlottable::applyFillAntialiasingHint(QCPPainter *painter) const
+{
+  applyAntialiasingHint(painter, mAntialiasedFill, QCP::aeFills);
+}
+
+/*! \internal
+
+  A convenience function to easily set the QPainter::Antialiased hint on the provided \a painter
+  before drawing plottable scatter points.
+  
+  This function takes into account the local setting of the antialiasing flag as well as the
+  overrides set with \ref QCustomPlot::setAntialiasedElements and \ref
+  QCustomPlot::setNotAntialiasedElements.
+  
+  \see setAntialiased, applyFillAntialiasingHint, applyDefaultAntialiasingHint, applyErrorBarsAntialiasingHint
+*/
+void QCPAbstractPlottable::applyScattersAntialiasingHint(QCPPainter *painter) const
+{
+  applyAntialiasingHint(painter, mAntialiasedScatters, QCP::aeScatters);
+}
+
+/*! \internal
+
+  A convenience function to easily set the QPainter::Antialiased hint on the provided \a painter
+  before drawing plottable error bars.
+  
+  This function takes into account the local setting of the antialiasing flag as well as the
+  overrides set with \ref QCustomPlot::setAntialiasedElements and \ref
+  QCustomPlot::setNotAntialiasedElements.
+  
+  \see setAntialiased, applyFillAntialiasingHint, applyScattersAntialiasingHint, applyDefaultAntialiasingHint
+*/
+void QCPAbstractPlottable::applyErrorBarsAntialiasingHint(QCPPainter *painter) const
+{
+  applyAntialiasingHint(painter, mAntialiasedErrorBars, QCP::aeErrorBars);
+}
+
+/*! \internal
+
+  Finds the shortest squared distance of \a point to the line segment defined by \a start and \a
+  end.
+  
+  This function may be used to help with the implementation of the \ref selectTest function for
+  specific plottables.
+  
+  \note This function is identical to QCPAbstractItem::distSqrToLine
+*/
+double QCPAbstractPlottable::distSqrToLine(const QPointF &start, const QPointF &end, const QPointF &point) const
+{
+  QVector2D a(start);
+  QVector2D b(end);
+  QVector2D p(point);
+  QVector2D v(b-a);
+  
+  double vLengthSqr = v.lengthSquared();
+  if (!qFuzzyIsNull(vLengthSqr))
+  {
+    double mu = QVector2D::dotProduct(p-a, v)/vLengthSqr;
+    if (mu < 0)
+      return (a-p).lengthSquared();
+    else if (mu > 1)
+      return (b-p).lengthSquared();
+    else
+      return ((a + mu*v)-p).lengthSquared();
+  } else
+    return (a-p).lengthSquared();
+}
+
+/* inherits documentation from base class */
+void QCPAbstractPlottable::selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged)
+{
+  Q_UNUSED(event)
+  Q_UNUSED(details)
+  if (mSelectable)
+  {
+    bool selBefore = mSelected;
+    setSelected(additive ? !mSelected : true);
+    if (selectionStateChanged)
+      *selectionStateChanged = mSelected != selBefore;
+  }
+}
+
+/* inherits documentation from base class */
+void QCPAbstractPlottable::deselectEvent(bool *selectionStateChanged)
+{
+  if (mSelectable)
+  {
+    bool selBefore = mSelected;
+    setSelected(false);
+    if (selectionStateChanged)
+      *selectionStateChanged = mSelected != selBefore;
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////// QCPItemAnchor
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*! \class QCPItemAnchor
+  \brief An anchor of an item to which positions can be attached to.
+  
+  An item (QCPAbstractItem) may have one or more anchors. Unlike QCPItemPosition, an anchor doesn't
+  control anything on its item, but provides a way to tie other items via their positions to the
+  anchor.
+
+  For example, a QCPItemRect is defined by its positions \a topLeft and \a bottomRight.
+  Additionally it has various anchors like \a top, \a topRight or \a bottomLeft etc. So you can
+  attach the \a start (which is a QCPItemPosition) of a QCPItemLine to one of the anchors by
+  calling QCPItemPosition::setParentAnchor on \a start, passing the wanted anchor of the
+  QCPItemRect. This way the start of the line will now always follow the respective anchor location
+  on the rect item.
+  
+  Note that QCPItemPosition derives from QCPItemAnchor, so every position can also serve as an
+  anchor to other positions.
+  
+  To learn how to provide anchors in your own item subclasses, see the subclassing section of the
+  QCPAbstractItem documentation.
+*/
+
+/* start documentation of inline functions */
+
+/*! \fn virtual QCPItemPosition *QCPItemAnchor::toQCPItemPosition()
+  
+  Returns 0 if this instance is merely a QCPItemAnchor, and a valid pointer of type QCPItemPosition* if
+  it actually is a QCPItemPosition (which is a subclass of QCPItemAnchor).
+  
+  This safe downcast functionality could also be achieved with a dynamic_cast. However, QCustomPlot avoids
+  dynamic_cast to work with projects that don't have RTTI support enabled (e.g. -fno-rtti flag with
+  gcc compiler).
+*/
+
+/* end documentation of inline functions */
+
+/*!
+  Creates a new QCPItemAnchor. You shouldn't create QCPItemAnchor instances directly, even if
+  you want to make a new item subclass. Use \ref QCPAbstractItem::createAnchor instead, as
+  explained in the subclassing section of the QCPAbstractItem documentation.
+*/
+QCPItemAnchor::QCPItemAnchor(QCustomPlot *parentPlot, QCPAbstractItem *parentItem, const QString name, int anchorId) :
+  mName(name),
+  mParentPlot(parentPlot),
+  mParentItem(parentItem),
+  mAnchorId(anchorId)
+{
+}
+
+QCPItemAnchor::~QCPItemAnchor()
+{
+  // unregister as parent at children:
+  QList<QCPItemPosition*> currentChildren(mChildren.toList());
+  for (int i=0; i<currentChildren.size(); ++i)
+    currentChildren.at(i)->setParentAnchor(0); // this acts back on this anchor and child removes itself from mChildren
+}
+
+/*!
+  Returns the final absolute pixel position of the QCPItemAnchor on the QCustomPlot surface.
+  
+  The pixel information is internally retrieved via QCPAbstractItem::anchorPixelPosition of the
+  parent item, QCPItemAnchor is just an intermediary.
+*/
+QPointF QCPItemAnchor::pixelPoint() const
+{
+  if (mParentItem)
+  {
+    if (mAnchorId > -1)
+    {
+      return mParentItem->anchorPixelPoint(mAnchorId);
+    } else
+    {
+      qDebug() << Q_FUNC_INFO << "no valid anchor id set:" << mAnchorId;
+      return QPointF();
+    }
+  } else
+  {
+    qDebug() << Q_FUNC_INFO << "no parent item set";
+    return QPointF();
+  }
+}
+
+/*! \internal
+
+  Adds \a pos to the child list of this anchor. This is necessary to notify the children prior to
+  destruction of the anchor.
+  
+  Note that this function does not change the parent setting in \a pos.
+*/
+void QCPItemAnchor::addChild(QCPItemPosition *pos)
+{
+  if (!mChildren.contains(pos))
+    mChildren.insert(pos);
+  else
+    qDebug() << Q_FUNC_INFO << "provided pos is child already" << reinterpret_cast<quintptr>(pos);
+}
+
+/*! \internal
+
+  Removes \a pos from the child list of this anchor.
+  
+  Note that this function does not change the parent setting in \a pos.
+*/
+void QCPItemAnchor::removeChild(QCPItemPosition *pos)
+{
+  if (!mChildren.remove(pos))
+    qDebug() << Q_FUNC_INFO << "provided pos isn't child" << reinterpret_cast<quintptr>(pos);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////// QCPItemPosition
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*! \class QCPItemPosition
+  \brief Manages the position of an item.
+  
+  Every item has at least one public QCPItemPosition member pointer which provides ways to position the
+  item on the QCustomPlot surface. Some items have multiple positions, for example QCPItemRect has two:
+  \a topLeft and \a bottomRight.
+
+  QCPItemPosition has a type (\ref PositionType) that can be set with \ref setType. This type defines
+  how coordinates passed to \ref setCoords are to be interpreted, e.g. as absolute pixel coordinates, as
+  plot coordinates of certain axes, etc.
+
+  Further, QCPItemPosition may have a parent QCPItemAnchor, see \ref setParentAnchor. (Note that every
+  QCPItemPosition inherits from QCPItemAnchor and thus can itself be used as parent anchor for other
+  positions.) This way you can tie multiple items together. If the QCPItemPosition has a parent, the
+  coordinates set with \ref setCoords are considered to be absolute values in the reference frame of the
+  parent anchor, where (0, 0) means directly ontop of the parent anchor. For example, You could attach
+  the \a start position of a QCPItemLine to the \a bottom anchor of a QCPItemText to make the starting
+  point of the line always be centered under the text label, no matter where the text is moved to, or is
+  itself tied to.
+
+  To set the apparent pixel position on the QCustomPlot surface directly, use \ref setPixelPoint. This
+  works no matter what type this QCPItemPosition is or what parent-child situation it is in, as \ref
+  setPixelPoint transforms the coordinates appropriately, to make the position appear at the specified
+  pixel values.
+*/
+
+/*!
+  Creates a new QCPItemPosition. You shouldn't create QCPItemPosition instances directly, even if
+  you want to make a new item subclass. Use \ref QCPAbstractItem::createPosition instead, as
+  explained in the subclassing section of the QCPAbstractItem documentation.
+*/
+QCPItemPosition::QCPItemPosition(QCustomPlot *parentPlot, QCPAbstractItem *parentItem, const QString name) :
+  QCPItemAnchor(parentPlot, parentItem, name),
+  mPositionType(ptAbsolute),
+  mKey(0),
+  mValue(0),
+  mParentAnchor(0)
+{
+}
+
+QCPItemPosition::~QCPItemPosition()
+{
+  // unregister as parent at children:
+  // Note: this is done in ~QCPItemAnchor again, but it's important QCPItemPosition does it itself, because only then
+  //       the setParentAnchor(0) call the correct QCPItemPosition::pixelPoint function instead of QCPItemAnchor::pixelPoint
+  QList<QCPItemPosition*> currentChildren(mChildren.toList());
+  for (int i=0; i<currentChildren.size(); ++i)
+    currentChildren.at(i)->setParentAnchor(0); // this acts back on this anchor and child removes itself from mChildren
+  // unregister as child in parent:
+  if (mParentAnchor)
+    mParentAnchor->removeChild(this);
+}
+
+/* can't make this a header inline function, because QPointer breaks with forward declared types, see QTBUG-29588 */
+QCPAxisRect *QCPItemPosition::axisRect() const
+{
+  return mAxisRect.data();
+}
+
+/*!
+  Sets the type of the position. The type defines how the coordinates passed to \ref setCoords
+  should be handled and how the QCPItemPosition should behave in the plot.
+  
+  The possible values for \a type can be separated in two main categories:
+
+  \li The position is regarded as a point in plot coordinates. This corresponds to \ref ptPlotCoords
+  and requires two axes that define the plot coordinate system. They can be specified with \ref setAxes.
+  By default, the QCustomPlot's x- and yAxis are used.
+  
+  \li The position is fixed on the QCustomPlot surface, i.e. independent of axis ranges. This
+  corresponds to all other types, i.e. \ref ptAbsolute, \ref ptViewportRatio and \ref
+  ptAxisRectRatio. They differ only in the way the absolute position is described, see the
+  documentation of \ref PositionType for details. For \ref ptAxisRectRatio, note that you can specify
+  the axis rect with \ref setAxisRect. By default this is set to the main axis rect.
+  
+  Note that the position type \ref ptPlotCoords is only available (and sensible) when the position
+  has no parent anchor (\ref setParentAnchor).
+  
+  If the type is changed, the apparent pixel position on the plot is preserved. This means
+  the coordinates as retrieved with coords() and set with \ref setCoords may change in the process.
+*/
+void QCPItemPosition::setType(QCPItemPosition::PositionType type)
+{
+  if (mPositionType != type)
+  {
+    // if switching from or to coordinate type that isn't valid (e.g. because axes or axis rect
+    // were deleted), don't try to recover the pixelPoint() because it would output a qDebug warning.
+    bool recoverPixelPosition = true;
+    if ((mPositionType == ptPlotCoords || type == ptPlotCoords) && (!mKeyAxis || !mValueAxis))
+      recoverPixelPosition = false;
+    if ((mPositionType == ptAxisRectRatio || type == ptAxisRectRatio) && (!mAxisRect))
+      recoverPixelPosition = false;
+      
+    QPointF pixelP;
+    if (recoverPixelPosition)
+      pixelP = pixelPoint();
+    
+    mPositionType = type;
+    
+    if (recoverPixelPosition)
+      setPixelPoint(pixelP);
+  }
+}
+
+/*!
+  Sets the parent of this QCPItemPosition to \a parentAnchor. This means the position will now
+  follow any position changes of the anchor. The local coordinate system of positions with a parent
+  anchor always is absolute with (0, 0) being exactly on top of the parent anchor. (Hence the type
+  shouldn't be \ref ptPlotCoords for positions with parent anchors.)
+  
+  if \a keepPixelPosition is true, the current pixel position of the QCPItemPosition is preserved
+  during reparenting. If it's set to false, the coordinates are set to (0, 0), i.e. the position
+  will be exactly on top of the parent anchor.
+  
+  To remove this QCPItemPosition from any parent anchor, set \a parentAnchor to 0.
+  
+  If the QCPItemPosition previously had no parent and the type is \ref ptPlotCoords, the type is
+  set to \ref ptAbsolute, to keep the position in a valid state.
+*/
+bool QCPItemPosition::setParentAnchor(QCPItemAnchor *parentAnchor, bool keepPixelPosition)
+{
+  // make sure self is not assigned as parent:
+  if (parentAnchor == this)
+  {
+    qDebug() << Q_FUNC_INFO << "can't set self as parent anchor" << reinterpret_cast<quintptr>(parentAnchor);
+    return false;
+  }
+  // make sure no recursive parent-child-relationships are created:
+  QCPItemAnchor *currentParent = parentAnchor;
+  while (currentParent)
+  {
+    if (QCPItemPosition *currentParentPos = currentParent->toQCPItemPosition())
+    {
+      // is a QCPItemPosition, might have further parent, so keep iterating
+      if (currentParentPos == this)
+      {
+        qDebug() << Q_FUNC_INFO << "can't create recursive parent-child-relationship" << reinterpret_cast<quintptr>(parentAnchor);
+        return false;
+      }
+      currentParent = currentParentPos->mParentAnchor;
+    } else
+    {
+      // is a QCPItemAnchor, can't have further parent. Now make sure the parent items aren't the
+      // same, to prevent a position being child of an anchor which itself depends on the position,
+      // because they're both on the same item:
+      if (currentParent->mParentItem == mParentItem)
+      {
+        qDebug() << Q_FUNC_INFO << "can't set parent to be an anchor which itself depends on this position" << reinterpret_cast<quintptr>(parentAnchor);
+        return false;
+      }
+      break;
+    }
+  }
+  
+  // if previously no parent set and PosType is still ptPlotCoords, set to ptAbsolute:
+  if (!mParentAnchor && mPositionType == ptPlotCoords)
+    setType(ptAbsolute);
+  
+  // save pixel position:
+  QPointF pixelP;
+  if (keepPixelPosition)
+    pixelP = pixelPoint();
+  // unregister at current parent anchor:
+  if (mParentAnchor)
+    mParentAnchor->removeChild(this);
+  // register at new parent anchor:
+  if (parentAnchor)
+    parentAnchor->addChild(this);
+  mParentAnchor = parentAnchor;
+  // restore pixel position under new parent:
+  if (keepPixelPosition)
+    setPixelPoint(pixelP);
+  else
+    setCoords(0, 0);
+  return true;
+}
+
+/*!
+  Sets the coordinates of this QCPItemPosition. What the coordinates mean, is defined by the type
+  (\ref setType).
+  
+  For example, if the type is \ref ptAbsolute, \a key and \a value mean the x and y pixel position
+  on the QCustomPlot surface. In that case the origin (0, 0) is in the top left corner of the
+  QCustomPlot viewport. If the type is \ref ptPlotCoords, \a key and \a value mean a point in the
+  plot coordinate system defined by the axes set by \ref setAxes. By default those are the
+  QCustomPlot's xAxis and yAxis. See the documentation of \ref setType for other available
+  coordinate types and their meaning.
+
+  \see setPixelPoint
+*/
+void QCPItemPosition::setCoords(double key, double value)
+{
+  mKey = key;
+  mValue = value;
+}
+
+/*! \overload
+
+  Sets the coordinates as a QPointF \a pos where pos.x has the meaning of \a key and pos.y the
+  meaning of \a value of the \ref setCoords(double key, double value) method.
+*/
+void QCPItemPosition::setCoords(const QPointF &pos)
+{
+  setCoords(pos.x(), pos.y());
+}
+
+/*!
+  Returns the final absolute pixel position of the QCPItemPosition on the QCustomPlot surface. It
+  includes all effects of type (\ref setType) and possible parent anchors (\ref setParentAnchor).
+
+  \see setPixelPoint
+*/
+QPointF QCPItemPosition::pixelPoint() const
+{
+  switch (mPositionType)
+  {
+    case ptAbsolute:
+    {
+      if (mParentAnchor)
+        return QPointF(mKey, mValue) + mParentAnchor->pixelPoint();
+      else
+        return QPointF(mKey, mValue);
+    }
+    
+    case ptViewportRatio:
+    {
+      if (mParentAnchor)
+      {
+        return QPointF(mKey*mParentPlot->viewport().width(),
+                       mValue*mParentPlot->viewport().height()) + mParentAnchor->pixelPoint();
+      } else
+      {
+        return QPointF(mKey*mParentPlot->viewport().width(),
+                       mValue*mParentPlot->viewport().height()) + mParentPlot->viewport().topLeft();
+      }
+    }
+      
+    case ptAxisRectRatio:
+    {
+      if (mAxisRect)
+      {
+        if (mParentAnchor)
+        {
+          return QPointF(mKey*mAxisRect.data()->width(),
+                         mValue*mAxisRect.data()->height()) + mParentAnchor->pixelPoint();
+        } else
+        {
+          return QPointF(mKey*mAxisRect.data()->width(),
+                       mValue*mAxisRect.data()->height()) + mAxisRect.data()->topLeft();
+        }
+      } else
+      {
+        qDebug() << Q_FUNC_INFO << "No axis rect defined";
+        return QPointF(mKey, mValue);
+      }
+    }
+    
+    case ptPlotCoords:
+    {
+      double x, y;
+      if (mKeyAxis && mValueAxis)
+      {
+        // both key and value axis are given, translate key/value to x/y coordinates:
+        if (mKeyAxis.data()->orientation() == Qt::Horizontal)
+        {
+          x = mKeyAxis.data()->coordToPixel(mKey);
+          y = mValueAxis.data()->coordToPixel(mValue);
+        } else
+        {
+          y = mKeyAxis.data()->coordToPixel(mKey);
+          x = mValueAxis.data()->coordToPixel(mValue);
+        }
+      } else if (mKeyAxis)
+      {
+        // only key axis is given, depending on orientation only transform x or y to key coordinate, other stays pixel:
+        if (mKeyAxis.data()->orientation() == Qt::Horizontal)
+        {
+          x = mKeyAxis.data()->coordToPixel(mKey);
+          y = mValue;
+        } else
+        {
+          y = mKeyAxis.data()->coordToPixel(mKey);
+          x = mValue;
+        }
+      } else if (mValueAxis)
+      {
+        // only value axis is given, depending on orientation only transform x or y to value coordinate, other stays pixel:
+        if (mValueAxis.data()->orientation() == Qt::Horizontal)
+        {
+          x = mValueAxis.data()->coordToPixel(mValue);
+          y = mKey;
+        } else
+        {
+          y = mValueAxis.data()->coordToPixel(mValue);
+          x = mKey;
+        }
+      } else
+      {
+        // no axis given, basically the same as if mPositionType were ptAbsolute
+        qDebug() << Q_FUNC_INFO << "No axes defined";
+        x = mKey;
+        y = mValue;
+      }
+      return QPointF(x, y);
+    }
+  }
+  return QPointF();
+}
+
+/*!
+  When \ref setType is \ref ptPlotCoords, this function may be used to specify the axes the
+  coordinates set with \ref setCoords relate to. By default they are set to the initial xAxis and
+  yAxis of the QCustomPlot.
+*/
+void QCPItemPosition::setAxes(QCPAxis *keyAxis, QCPAxis *valueAxis)
+{
+  mKeyAxis = keyAxis;
+  mValueAxis = valueAxis;
+}
+
+/*!
+  When \ref setType is \ref ptAxisRectRatio, this function may be used to specify the axis rect the
+  coordinates set with \ref setCoords relate to. By default this is set to the main axis rect of
+  the QCustomPlot.
+*/
+void QCPItemPosition::setAxisRect(QCPAxisRect *axisRect)
+{
+  mAxisRect = axisRect;
+}
+
+/*!
+  Sets the apparent pixel position. This works no matter what type (\ref setType) this
+  QCPItemPosition is or what parent-child situation it is in, as coordinates are transformed
+  appropriately, to make the position finally appear at the specified pixel values.
+
+  Only if the type is \ref ptAbsolute and no parent anchor is set, this function's effect is
+  identical to that of \ref setCoords.
+
+  \see pixelPoint, setCoords
+*/
+void QCPItemPosition::setPixelPoint(const QPointF &pixelPoint)
+{
+  switch (mPositionType)
+  {
+    case ptAbsolute:
+    {
+      if (mParentAnchor)
+        setCoords(pixelPoint-mParentAnchor->pixelPoint());
+      else
+        setCoords(pixelPoint);
+      break;
+    }
+      
+    case ptViewportRatio:
+    {
+      if (mParentAnchor)
+      {
+        QPointF p(pixelPoint-mParentAnchor->pixelPoint());
+        p.rx() /= (double)mParentPlot->viewport().width();
+        p.ry() /= (double)mParentPlot->viewport().height();
+        setCoords(p);
+      } else
+      {
+        QPointF p(pixelPoint-mParentPlot->viewport().topLeft());
+        p.rx() /= (double)mParentPlot->viewport().width();
+        p.ry() /= (double)mParentPlot->viewport().height();
+        setCoords(p);
+      }
+      break;
+    }
+      
+    case ptAxisRectRatio:
+    {
+      if (mAxisRect)
+      {
+        if (mParentAnchor)
+        {
+          QPointF p(pixelPoint-mParentAnchor->pixelPoint());
+          p.rx() /= (double)mAxisRect.data()->width();
+          p.ry() /= (double)mAxisRect.data()->height();
+          setCoords(p);
+        } else
+        {
+          QPointF p(pixelPoint-mAxisRect.data()->topLeft());
+          p.rx() /= (double)mAxisRect.data()->width();
+          p.ry() /= (double)mAxisRect.data()->height();
+          setCoords(p);
+        }
+      } else
+      {
+        qDebug() << Q_FUNC_INFO << "No axis rect defined";
+        setCoords(pixelPoint);
+      }
+      break;
+    }
+      
+    case ptPlotCoords:
+    {
+      double newKey, newValue;
+      if (mKeyAxis && mValueAxis)
+      {
+        // both key and value axis are given, translate point to key/value coordinates:
+        if (mKeyAxis.data()->orientation() == Qt::Horizontal)
+        {
+          newKey = mKeyAxis.data()->pixelToCoord(pixelPoint.x());
+          newValue = mValueAxis.data()->pixelToCoord(pixelPoint.y());
+        } else
+        {
+          newKey = mKeyAxis.data()->pixelToCoord(pixelPoint.y());
+          newValue = mValueAxis.data()->pixelToCoord(pixelPoint.x());
+        }
+      } else if (mKeyAxis)
+      {
+        // only key axis is given, depending on orientation only transform x or y to key coordinate, other stays pixel:
+        if (mKeyAxis.data()->orientation() == Qt::Horizontal)
+        {
+          newKey = mKeyAxis.data()->pixelToCoord(pixelPoint.x());
+          newValue = pixelPoint.y();
+        } else
+        {
+          newKey = mKeyAxis.data()->pixelToCoord(pixelPoint.y());
+          newValue = pixelPoint.x();
+        }
+      } else if (mValueAxis)
+      {
+        // only value axis is given, depending on orientation only transform x or y to value coordinate, other stays pixel:
+        if (mValueAxis.data()->orientation() == Qt::Horizontal)
+        {
+          newKey = pixelPoint.y();
+          newValue = mValueAxis.data()->pixelToCoord(pixelPoint.x());
+        } else
+        {
+          newKey = pixelPoint.x();
+          newValue = mValueAxis.data()->pixelToCoord(pixelPoint.y());
+        }
+      } else
+      {
+        // no axis given, basically the same as if mPositionType were ptAbsolute
+        qDebug() << Q_FUNC_INFO << "No axes defined";
+        newKey = pixelPoint.x();
+        newValue = pixelPoint.y();
+      }
+      setCoords(newKey, newValue);
+      break;
+    }
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////// QCPAbstractItem
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*! \class QCPAbstractItem
+  \brief The abstract base class for all items in a plot.
+  
+  In QCustomPlot, items are supplemental graphical elements that are neither plottables
+  (QCPAbstractPlottable) nor axes (QCPAxis). While plottables are always tied to two axes and thus
+  plot coordinates, items can also be placed in absolute coordinates independent of any axes. Each
+  specific item has at least one QCPItemPosition member which controls the positioning. Some items
+  are defined by more than one coordinate and thus have two or more QCPItemPosition members (For
+  example, QCPItemRect has \a topLeft and \a bottomRight).
+  
+  This abstract base class defines a very basic interface like visibility and clipping. Since this
+  class is abstract, it can't be instantiated. Use one of the subclasses or create a subclass
+  yourself to create new items.
+  
+  The built-in items are:
+  <table>
+  <tr><td>QCPItemLine</td><td>A line defined by a start and an end point. May have different ending styles on each side (e.g. arrows).</td></tr>
+  <tr><td>QCPItemStraightLine</td><td>A straight line defined by a start and a direction point. Unlike QCPItemLine, the straight line is infinitely long and has no endings.</td></tr>
+  <tr><td>QCPItemCurve</td><td>A curve defined by start, end and two intermediate control points. May have different ending styles on each side (e.g. arrows).</td></tr>
+  <tr><td>QCPItemRect</td><td>A rectangle</td></tr>
+  <tr><td>QCPItemEllipse</td><td>An ellipse</td></tr>
+  <tr><td>QCPItemPixmap</td><td>An arbitrary pixmap</td></tr>
+  <tr><td>QCPItemText</td><td>A text label</td></tr>
+  <tr><td>QCPItemBracket</td><td>A bracket which may be used to reference/highlight certain parts in the plot.</td></tr>
+  <tr><td>QCPItemTracer</td><td>An item that can be attached to a QCPGraph and sticks to its data points, given a key coordinate.</td></tr>
+  </table>
+  
+  Items are by default clipped to the main axis rect. To make an item visible outside that axis
+  rect, disable clipping via \ref setClipToAxisRect.
+  
+  \section items-using Using items
+  
+  First you instantiate the item you want to use and add it to the plot:
+  \code
+  QCPItemLine *line = new QCPItemLine(customPlot);
+  customPlot->addItem(line);
+  \endcode
+  by default, the positions of the item are bound to the x- and y-Axis of the plot. So we can just
+  set the plot coordinates where the line should start/end:
+  \code
+  line->start->setCoords(-0.1, 0.8);
+  line->end->setCoords(1.1, 0.2);
+  \endcode
+  If we don't want the line to be positioned in plot coordinates but a different coordinate system,
+  e.g. absolute pixel positions on the QCustomPlot surface, we need to change the position type like this:
+  \code
+  line->start->setType(QCPItemPosition::ptAbsolute);
+  line->end->setType(QCPItemPosition::ptAbsolute);
+  \endcode
+  Then we can set the coordinates, this time in pixels:
+  \code
+  line->start->setCoords(100, 200);
+  line->end->setCoords(450, 320);
+  \endcode
+  
+  \section items-subclassing Creating own items
+  
+  To create an own item, you implement a subclass of QCPAbstractItem. These are the pure
+  virtual functions, you must implement:
+  \li \ref selectTest
+  \li \ref draw
+  
+  See the documentation of those functions for what they need to do.
+  
+  \subsection items-positioning Allowing the item to be positioned
+  
+  As mentioned, item positions are represented by QCPItemPosition members. Let's assume the new item shall
+  have only one point as its position (as opposed to two like a rect or multiple like a polygon). You then add
+  a public member of type QCPItemPosition like so:
+  
+  \code QCPItemPosition * const myPosition;\endcode
+  
+  the const makes sure the pointer itself can't be modified from the user of your new item (the QCPItemPosition
+  instance it points to, can be modified, of course).
+  The initialization of this pointer is made easy with the \ref createPosition function. Just assign
+  the return value of this function to each QCPItemPosition in the constructor of your item. \ref createPosition
+  takes a string which is the name of the position, typically this is identical to the variable name.
+  For example, the constructor of QCPItemExample could look like this:
+  
+  \code
+  QCPItemExample::QCPItemExample(QCustomPlot *parentPlot) :
+    QCPAbstractItem(parentPlot),
+    myPosition(createPosition("myPosition"))
+  {
+    // other constructor code
+  }
+  \endcode
+  
+  \subsection items-drawing The draw function
+  
+  To give your item a visual representation, reimplement the \ref draw function and use the passed
+  QCPPainter to draw the item. You can retrieve the item position in pixel coordinates from the
+  position member(s) via \ref QCPItemPosition::pixelPoint.
+
+  To optimize performance you should calculate a bounding rect first (don't forget to take the pen
+  width into account), check whether it intersects the \ref clipRect, and only draw the item at all
+  if this is the case.
+  
+  \subsection items-selection The selectTest function
+  
+  Your implementation of the \ref selectTest function may use the helpers \ref distSqrToLine and
+  \ref rectSelectTest. With these, the implementation of the selection test becomes significantly
+  simpler for most items. See the documentation of \ref selectTest for what the function parameters
+  mean and what the function should return.
+  
+  \subsection anchors Providing anchors
+  
+  Providing anchors (QCPItemAnchor) starts off like adding a position. First you create a public
+  member, e.g.
+  
+  \code QCPItemAnchor * const bottom;\endcode
+
+  and create it in the constructor with the \ref createAnchor function, assigning it a name and an
+  anchor id (an integer enumerating all anchors on the item, you may create an own enum for this).
+  Since anchors can be placed anywhere, relative to the item's position(s), your item needs to
+  provide the position of every anchor with the reimplementation of the \ref anchorPixelPoint(int
+  anchorId) function.
+  
+  In essence the QCPItemAnchor is merely an intermediary that itself asks your item for the pixel
+  position when anything attached to the anchor needs to know the coordinates.
+*/
+
+/* start of documentation of inline functions */
+
+/*! \fn QList<QCPItemPosition*> QCPAbstractItem::positions() const
+  
+  Returns all positions of the item in a list.
+  
+  \see anchors, position
+*/
+
+/*! \fn QList<QCPItemAnchor*> QCPAbstractItem::anchors() const
+  
+  Returns all anchors of the item in a list. Note that since a position (QCPItemPosition) is always
+  also an anchor, the list will also contain the positions of this item.
+  
+  \see positions, anchor
+*/
+
+/* end of documentation of inline functions */
+/* start documentation of pure virtual functions */
+
+/*! \fn void QCPAbstractItem::draw(QCPPainter *painter) = 0
+  \internal
+  
+  Draws this item with the provided \a painter.
+  
+  The cliprect of the provided painter is set to the rect returned by \ref clipRect before this
+  function is called. The clipRect depends on the clipping settings defined by \ref
+  setClipToAxisRect and \ref setClipAxisRect.
+*/
+
+/* end documentation of pure virtual functions */
+/* start documentation of signals */
+
+/*! \fn void QCPAbstractItem::selectionChanged(bool selected)
+  This signal is emitted when the selection state of this item has changed, either by user interaction
+  or by a direct call to \ref setSelected.
+*/
+
+/* end documentation of signals */
+
+/*!
+  Base class constructor which initializes base class members.
+*/
+QCPAbstractItem::QCPAbstractItem(QCustomPlot *parentPlot) :
+  QCPLayerable(parentPlot),
+  mClipToAxisRect(false),
+  mSelectable(true),
+  mSelected(false)
+{
+  QList<QCPAxisRect*> rects = parentPlot->axisRects();
+  if (rects.size() > 0)
+  {
+    setClipToAxisRect(true);
+    setClipAxisRect(rects.first());
+  }
+}
+
+QCPAbstractItem::~QCPAbstractItem()
+{
+  // don't delete mPositions because every position is also an anchor and thus in mAnchors
+  qDeleteAll(mAnchors);
+}
+
+/* can't make this a header inline function, because QPointer breaks with forward declared types, see QTBUG-29588 */
+QCPAxisRect *QCPAbstractItem::clipAxisRect() const
+{
+  return mClipAxisRect.data();
+}
+
+/*!
+  Sets whether the item shall be clipped to an axis rect or whether it shall be visible on the
+  entire QCustomPlot. The axis rect can be set with \ref setClipAxisRect.
+  
+  \see setClipAxisRect
+*/
+void QCPAbstractItem::setClipToAxisRect(bool clip)
+{
+  mClipToAxisRect = clip;
+  if (mClipToAxisRect)
+    setParentLayerable(mClipAxisRect.data());
+}
+
+/*!
+  Sets the clip axis rect. It defines the rect that will be used to clip the item when \ref
+  setClipToAxisRect is set to true.
+  
+  \see setClipToAxisRect
+*/
+void QCPAbstractItem::setClipAxisRect(QCPAxisRect *rect)
+{
+  mClipAxisRect = rect;
+  if (mClipToAxisRect)
+    setParentLayerable(mClipAxisRect.data());
+}
+
+/*!
+  Sets whether the user can (de-)select this item by clicking on the QCustomPlot surface.
+  (When \ref QCustomPlot::setInteractions contains QCustomPlot::iSelectItems.)
+  
+  However, even when \a selectable was set to false, it is possible to set the selection manually,
+  by calling \ref setSelected.
+  
+  \see QCustomPlot::setInteractions, setSelected
+*/
+void QCPAbstractItem::setSelectable(bool selectable)
+{
+  if (mSelectable != selectable)
+  {
+    mSelectable = selectable;
+    emit selectableChanged(mSelectable);
+  }
+}
+
+/*!
+  Sets whether this item is selected or not. When selected, it might use a different visual
+  appearance (e.g. pen and brush), this depends on the specific item though.
+
+  The entire selection mechanism for items is handled automatically when \ref
+  QCustomPlot::setInteractions contains QCustomPlot::iSelectItems. You only need to call this
+  function when you wish to change the selection state manually.
+  
+  This function can change the selection state even when \ref setSelectable was set to false.
+  
+  emits the \ref selectionChanged signal when \a selected is different from the previous selection state.
+  
+  \see setSelectable, selectTest
+*/
+void QCPAbstractItem::setSelected(bool selected)
+{
+  if (mSelected != selected)
+  {
+    mSelected = selected;
+    emit selectionChanged(mSelected);
+  }
+}
+
+/*!
+  Returns the QCPItemPosition with the specified \a name. If this item doesn't have a position by
+  that name, returns 0.
+  
+  This function provides an alternative way to access item positions. Normally, you access
+  positions direcly by their member pointers (which typically have the same variable name as \a
+  name).
+  
+  \see positions, anchor
+*/
+QCPItemPosition *QCPAbstractItem::position(const QString &name) const
+{
+  for (int i=0; i<mPositions.size(); ++i)
+  {
+    if (mPositions.at(i)->name() == name)
+      return mPositions.at(i);
+  }
+  qDebug() << Q_FUNC_INFO << "position with name not found:" << name;
+  return 0;
+}
+
+/*!
+  Returns the QCPItemAnchor with the specified \a name. If this item doesn't have an anchor by
+  that name, returns 0.
+  
+  This function provides an alternative way to access item anchors. Normally, you access
+  anchors direcly by their member pointers (which typically have the same variable name as \a
+  name).
+  
+  \see anchors, position
+*/
+QCPItemAnchor *QCPAbstractItem::anchor(const QString &name) const
+{
+  for (int i=0; i<mAnchors.size(); ++i)
+  {
+    if (mAnchors.at(i)->name() == name)
+      return mAnchors.at(i);
+  }
+  qDebug() << Q_FUNC_INFO << "anchor with name not found:" << name;
+  return 0;
+}
+
+/*!
+  Returns whether this item has an anchor with the specified \a name.
+  
+  Note that you can check for positions with this function, too. This is because every position is
+  also an anchor (QCPItemPosition inherits from QCPItemAnchor).
+  
+  \see anchor, position
+*/
+bool QCPAbstractItem::hasAnchor(const QString &name) const
+{
+  for (int i=0; i<mAnchors.size(); ++i)
+  {
+    if (mAnchors.at(i)->name() == name)
+      return true;
+  }
+  return false;
+}
+
+/*! \internal
+  
+  Returns the rect the visual representation of this item is clipped to. This depends on the
+  current setting of \ref setClipToAxisRect as well as the axis rect set with \ref setClipAxisRect.
+  
+  If the item is not clipped to an axis rect, the \ref QCustomPlot::viewport rect is returned.
+  
+  \see draw
+*/
+QRect QCPAbstractItem::clipRect() const
+{
+  if (mClipToAxisRect && mClipAxisRect)
+    return mClipAxisRect.data()->rect();
+  else
+    return mParentPlot->viewport();
+}
+
+/*! \internal
+
+  A convenience function to easily set the QPainter::Antialiased hint on the provided \a painter
+  before drawing item lines.
+
+  This is the antialiasing state the painter passed to the \ref draw method is in by default.
+  
+  This function takes into account the local setting of the antialiasing flag as well as the
+  overrides set with \ref QCustomPlot::setAntialiasedElements and \ref
+  QCustomPlot::setNotAntialiasedElements.
+  
+  \see setAntialiased
+*/
+void QCPAbstractItem::applyDefaultAntialiasingHint(QCPPainter *painter) const
+{
+  applyAntialiasingHint(painter, mAntialiased, QCP::aeItems);
+}
+
+/*! \internal
+
+  Finds the shortest squared distance of \a point to the line segment defined by \a start and \a
+  end.
+  
+  This function may be used to help with the implementation of the \ref selectTest function for
+  specific items.
+  
+  \note This function is identical to QCPAbstractPlottable::distSqrToLine
+  
+  \see rectSelectTest
+*/
+double QCPAbstractItem::distSqrToLine(const QPointF &start, const QPointF &end, const QPointF &point) const
+{
+  QVector2D a(start);
+  QVector2D b(end);
+  QVector2D p(point);
+  QVector2D v(b-a);
+  
+  double vLengthSqr = v.lengthSquared();
+  if (!qFuzzyIsNull(vLengthSqr))
+  {
+    double mu = QVector2D::dotProduct(p-a, v)/vLengthSqr;
+    if (mu < 0)
+      return (a-p).lengthSquared();
+    else if (mu > 1)
+      return (b-p).lengthSquared();
+    else
+      return ((a + mu*v)-p).lengthSquared();
+  } else
+    return (a-p).lengthSquared();
+}
+
+/*! \internal
+
+  A convenience function which returns the selectTest value for a specified \a rect and a specified
+  click position \a pos. \a filledRect defines whether a click inside the rect should also be
+  considered a hit or whether only the rect border is sensitive to hits.
+  
+  This function may be used to help with the implementation of the \ref selectTest function for
+  specific items.
+  
+  For example, if your item consists of four rects, call this function four times, once for each
+  rect, in your \ref selectTest reimplementation. Finally, return the minimum of all four returned
+  values which were greater or equal to zero. (Because this function may return -1.0 when \a pos
+  doesn't hit \a rect at all). If all calls returned -1.0, return -1.0, too, because your item
+  wasn't hit.
+  
+  \see distSqrToLine
+*/
+double QCPAbstractItem::rectSelectTest(const QRectF &rect, const QPointF &pos, bool filledRect) const
+{
+  double result = -1;
+
+  // distance to border:
+  QList<QLineF> lines;
+  lines << QLineF(rect.topLeft(), rect.topRight()) << QLineF(rect.bottomLeft(), rect.bottomRight())
+        << QLineF(rect.topLeft(), rect.bottomLeft()) << QLineF(rect.topRight(), rect.bottomRight());
+  double minDistSqr = std::numeric_limits<double>::max();
+  for (int i=0; i<lines.size(); ++i)
+  {
+    double distSqr = distSqrToLine(lines.at(i).p1(), lines.at(i).p2(), pos);
+    if (distSqr < minDistSqr)
+      minDistSqr = distSqr;
+  }
+  result = qSqrt(minDistSqr);
+  
+  // filled rect, allow click inside to count as hit:
+  if (filledRect && result > mParentPlot->selectionTolerance()*0.99)
+  {
+    if (rect.contains(pos))
+      result = mParentPlot->selectionTolerance()*0.99;
+  }
+  return result;
+}
+
+/*! \internal
+
+  Returns the pixel position of the anchor with Id \a anchorId. This function must be reimplemented in
+  item subclasses if they want to provide anchors (QCPItemAnchor).
+  
+  For example, if the item has two anchors with id 0 and 1, this function takes one of these anchor
+  ids and returns the respective pixel points of the specified anchor.
+  
+  \see createAnchor
+*/
+QPointF QCPAbstractItem::anchorPixelPoint(int anchorId) const
+{
+  qDebug() << Q_FUNC_INFO << "called on item which shouldn't have any anchors (this method not reimplemented). anchorId" << anchorId;
+  return QPointF();
+}
+
+/*! \internal
+
+  Creates a QCPItemPosition, registers it with this item and returns a pointer to it. The specified
+  \a name must be a unique string that is usually identical to the variable name of the position
+  member (This is needed to provide the name-based \ref position access to positions).
+  
+  Don't delete positions created by this function manually, as the item will take care of it.
+  
+  Use this function in the constructor (initialization list) of the specific item subclass to
+  create each position member. Don't create QCPItemPositions with \b new yourself, because they
+  won't be registered with the item properly.
+  
+  \see createAnchor
+*/
+QCPItemPosition *QCPAbstractItem::createPosition(const QString &name)
+{
+  if (hasAnchor(name))
+    qDebug() << Q_FUNC_INFO << "anchor/position with name exists already:" << name;
+  QCPItemPosition *newPosition = new QCPItemPosition(mParentPlot, this, name);
+  mPositions.append(newPosition);
+  mAnchors.append(newPosition); // every position is also an anchor
+  newPosition->setAxes(mParentPlot->xAxis, mParentPlot->yAxis);
+  newPosition->setType(QCPItemPosition::ptPlotCoords);
+  if (mParentPlot->axisRect())
+    newPosition->setAxisRect(mParentPlot->axisRect());
+  newPosition->setCoords(0, 0);
+  return newPosition;
+}
+
+/*! \internal
+
+  Creates a QCPItemAnchor, registers it with this item and returns a pointer to it. The specified
+  \a name must be a unique string that is usually identical to the variable name of the anchor
+  member (This is needed to provide the name based \ref anchor access to anchors).
+  
+  The \a anchorId must be a number identifying the created anchor. It is recommended to create an
+  enum (e.g. "AnchorIndex") for this on each item that uses anchors. This id is used by the anchor
+  to identify itself when it calls QCPAbstractItem::anchorPixelPoint. That function then returns
+  the correct pixel coordinates for the passed anchor id.
+  
+  Don't delete anchors created by this function manually, as the item will take care of it.
+  
+  Use this function in the constructor (initialization list) of the specific item subclass to
+  create each anchor member. Don't create QCPItemAnchors with \b new yourself, because then they
+  won't be registered with the item properly.
+  
+  \see createPosition
+*/
+QCPItemAnchor *QCPAbstractItem::createAnchor(const QString &name, int anchorId)
+{
+  if (hasAnchor(name))
+    qDebug() << Q_FUNC_INFO << "anchor/position with name exists already:" << name;
+  QCPItemAnchor *newAnchor = new QCPItemAnchor(mParentPlot, this, name, anchorId);
+  mAnchors.append(newAnchor);
+  return newAnchor;
+}
+
+/* inherits documentation from base class */
+void QCPAbstractItem::selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged)
+{
+  Q_UNUSED(event)
+  Q_UNUSED(details)
+  if (mSelectable)
+  {
+    bool selBefore = mSelected;
+    setSelected(additive ? !mSelected : true);
+    if (selectionStateChanged)
+      *selectionStateChanged = mSelected != selBefore;
+  }
+}
+
+/* inherits documentation from base class */
+void QCPAbstractItem::deselectEvent(bool *selectionStateChanged)
+{
+  if (mSelectable)
+  {
+    bool selBefore = mSelected;
+    setSelected(false);
+    if (selectionStateChanged)
+      *selectionStateChanged = mSelected != selBefore;
+  }
+}
+
+/* inherits documentation from base class */
+QCP::Interaction QCPAbstractItem::selectionCategory() const
+{
+  return QCP::iSelectItems;
+}
+
+
+/*! \file */
+
+
+
+/*! \mainpage %QCustomPlot 1.2.1 Documentation
+
+  \image html qcp-doc-logo.png
+  
+  Below is a brief overview of and guide to the classes and their relations. If you are new to
+  QCustomPlot and just want to start using it, it's recommended to look at the tutorials and
+  examples at
+ 
+  http://www.qcustomplot.com/
+ 
+  This documentation is especially helpful as a reference, when you're familiar with the basic
+  concept of how to use %QCustomPlot and you wish to learn more about specific functionality.
+  See the \ref classoverview "class overview" for diagrams explaining the relationships between
+  the most important classes of the QCustomPlot library.
+  
+  The central widget which displays the plottables and axes on its surface is QCustomPlot. Every
+  QCustomPlot contains four axes by default. They can be accessed via the members \ref
+  QCustomPlot::xAxis "xAxis", \ref QCustomPlot::yAxis "yAxis", \ref QCustomPlot::xAxis2 "xAxis2"
+  and \ref QCustomPlot::yAxis2 "yAxis2", and are of type QCPAxis. QCustomPlot supports an arbitrary
+  number of axes and axis rects, see the documentation of QCPAxisRect for details.
+
+  \section mainpage-plottables Plottables
+  
+  \a Plottables are classes that display any kind of data inside the QCustomPlot. They all derive
+  from QCPAbstractPlottable. For example, the QCPGraph class is a plottable that displays a graph
+  inside the plot with different line styles, scatter styles, filling etc.
+  
+  Since plotting graphs is such a dominant use case, QCustomPlot has a special interface for working
+  with QCPGraph plottables, that makes it very easy to handle them:\n
+  You create a new graph with QCustomPlot::addGraph and access them with QCustomPlot::graph.
+  
+  For all other plottables, you need to use the normal plottable interface:\n
+  First, you create an instance of the plottable you want, e.g.
+  \code
+  QCPCurve *newCurve = new QCPCurve(customPlot->xAxis, customPlot->yAxis);\endcode
+  add it to the customPlot:
+  \code
+  customPlot->addPlottable(newCurve);\endcode
+  and then modify the properties of the newly created plottable via the <tt>newCurve</tt> pointer.
+  
+  Plottables (including graphs) can be retrieved via QCustomPlot::plottable. Since the return type
+  of that function is the abstract base class of all plottables, QCPAbstractPlottable, you will
+  probably want to qobject_cast the returned pointer to the respective plottable subclass. (As
+  usual, if the cast returns zero, the plottable wasn't of that specific subclass.)
+  
+  All further interfacing with plottables (e.g how to set data) is specific to the plottable type.
+  See the documentations of the subclasses: QCPGraph, QCPCurve, QCPBars, QCPStatisticalBox,
+  QCPColorMap.
+
+  \section mainpage-axes Controlling the Axes
+  
+  As mentioned, QCustomPlot has four axes by default: \a xAxis (bottom), \a yAxis (left), \a xAxis2
+  (top), \a yAxis2 (right).
+  
+  Their range is handled by the simple QCPRange class. You can set the range with the
+  QCPAxis::setRange function. By default, the axes represent a linear scale. To set a logarithmic
+  scale, set \ref QCPAxis::setScaleType to \ref QCPAxis::stLogarithmic. The logarithm base can be set freely
+  with \ref QCPAxis::setScaleLogBase.
+  
+  By default, an axis automatically creates and labels ticks in a sensible manner. See the
+  following functions for tick manipulation:\n QCPAxis::setTicks, QCPAxis::setAutoTicks,
+  QCPAxis::setAutoTickCount, QCPAxis::setAutoTickStep, QCPAxis::setTickLabels,
+  QCPAxis::setTickLabelType, QCPAxis::setTickLabelRotation, QCPAxis::setTickStep,
+  QCPAxis::setTickLength,...
+  
+  Each axis can be given an axis label (e.g. "Voltage (mV)") with QCPAxis::setLabel.
+  
+  The distance of an axis backbone to the respective viewport border is called its margin.
+  Normally, the margins are calculated automatically. To change this, set
+  \ref QCPAxisRect::setAutoMargins to exclude the respective margin sides, set the margins manually with
+  \ref QCPAxisRect::setMargins. The main axis rect can be reached with \ref QCustomPlot::axisRect().
+  
+  \section mainpage-legend Plot Legend
+  
+  Every QCustomPlot has one QCPLegend (as \ref QCustomPlot::legend) by default. A legend is a small
+  layout element inside the plot which lists the plottables with an icon of the plottable
+  line/symbol and a name (QCPAbstractPlottable::setName). Plottables can be added and removed from
+  the main legend via \ref QCPAbstractPlottable::addToLegend and \ref
+  QCPAbstractPlottable::removeFromLegend. By default, adding a plottable to QCustomPlot
+  automatically adds it to the legend, too. This behaviour can be modified with the
+  QCustomPlot::setAutoAddPlottableToLegend property.
+  
+  The QCPLegend provides an interface to access, add and remove legend items directly, too. See
+  QCPLegend::item, QCPLegend::itemWithPlottable, QCPLegend::addItem, QCPLegend::removeItem for
+  example.
+  
+  Multiple legends are supported via the \link thelayoutsystem layout system\endlink (as a
+  QCPLegend simply is a normal layout element).
+  
+  \section mainpage-userinteraction User Interactions
+  
+  QCustomPlot supports dragging axis ranges with the mouse (\ref
+  QCPAxisRect::setRangeDrag), zooming axis ranges with the mouse wheel (\ref
+  QCPAxisRect::setRangeZoom) and a complete selection mechanism.
+  
+  The availability of these interactions is controlled with \ref QCustomPlot::setInteractions. For
+  details about the interaction system, see the documentation there.
+  
+  Further, QCustomPlot always emits corresponding signals, when objects are clicked or
+  doubleClicked. See \ref QCustomPlot::plottableClick, \ref QCustomPlot::plottableDoubleClick
+  and \ref QCustomPlot::axisClick for example.
+  
+  \section mainpage-items Items
+  
+  Apart from plottables there is another category of plot objects that are important: Items. The
+  base class of all items is QCPAbstractItem. An item sets itself apart from plottables in that
+  it's not necessarily bound to any axes. This means it may also be positioned in absolute pixel
+  coordinates or placed at a relative position on an axis rect. Further, it usually doesn't
+  represent data directly, but acts as decoration, emphasis, description etc.
+  
+  Multiple items can be arranged in a parent-child-hierarchy allowing for dynamical behaviour. For
+  example, you could place the head of an arrow at a fixed plot coordinate, so it always points to
+  some important area in the plot. The tail of the arrow can be anchored to a text item which
+  always resides in the top center of the axis rect, independent of where the user drags the axis
+  ranges. This way the arrow stretches and turns so it always points from the label to the
+  specified plot coordinate, without any further code necessary.
+  
+  For a more detailed introduction, see the QCPAbstractItem documentation, and from there the
+  documentations of the individual built-in items, to find out how to use them.
+  
+  \section mainpage-layoutelements Layout elements and layouts
+  
+  QCustomPlot uses an internal layout system to provide dynamic sizing and positioning of objects like
+  the axis rect(s), legends and the plot title. They are all based on \ref QCPLayoutElement and are arranged by
+  placing them inside a \ref QCPLayout.
+  
+  Details on this topic are given on the dedicated page about \link thelayoutsystem the layout system\endlink.
+  
+  \section mainpage-performancetweaks Performance Tweaks
+  
+  Although QCustomPlot is quite fast, some features like translucent fills, antialiasing and thick
+  lines can cause a significant slow down. If you notice this in your application, here are some
+  thoughts on how to increase performance. By far the most time is spent in the drawing functions,
+  specifically the drawing of graphs. For maximum performance, consider the following (most
+  recommended/effective measures first):
+  
+  \li use Qt 4.8.0 and up. Performance has doubled or tripled with respect to Qt 4.7.4. However
+  QPainter was broken and drawing pixel precise things, e.g. scatters, isn't possible with Qt >=
+  4.8.0. So it's a performance vs. plot quality tradeoff when switching to Qt 4.8.
+  \li To increase responsiveness during dragging, consider setting \ref QCustomPlot::setNoAntialiasingOnDrag to true.
+  \li On X11 (GNU/Linux), avoid the slow native drawing system, use raster by supplying
+  "-graphicssystem raster" as command line argument or calling QApplication::setGraphicsSystem("raster")
+  before creating the QApplication object. (Only available for Qt versions before 5.0)
+  \li On all operating systems, use OpenGL hardware acceleration by supplying "-graphicssystem
+  opengl" as command line argument or calling QApplication::setGraphicsSystem("opengl") (Only
+  available for Qt versions before 5.0). If OpenGL is available, this will slightly decrease the
+  quality of antialiasing, but extremely increase performance especially with alpha
+  (semi-transparent) fills, much antialiasing and a large QCustomPlot drawing surface. Note
+  however, that the maximum frame rate might be constrained by the vertical sync frequency of your
+  monitor (VSync can be disabled in the graphics card driver configuration). So for simple plots
+  (where the potential framerate is far above 60 frames per second), OpenGL acceleration might
+  achieve numerically lower frame rates than the other graphics systems, because they are not
+  capped at the VSync frequency.
+  \li Avoid any kind of alpha (transparency), especially in fills
+  \li Avoid lines with a pen width greater than one
+  \li Avoid any kind of antialiasing, especially in graph lines (see \ref QCustomPlot::setNotAntialiasedElements)
+  \li Avoid repeatedly setting the complete data set with \ref QCPGraph::setData. Use \ref QCPGraph::addData instead, if most
+  data points stay unchanged, e.g. in a running measurement.
+  \li Set the \a copy parameter of the setData functions to false, so only pointers get
+  transferred. (Relevant only if preparing data maps with a large number of points, i.e. over 10000)
+  
+  \section mainpage-flags Preprocessor Define Flags
+  
+  QCustomPlot understands some preprocessor defines that are useful for debugging and compilation:
+  <dl>
+  <dt>\c QCUSTOMPLOT_COMPILE_LIBRARY
+  <dd>Define this flag when you compile QCustomPlot as a shared library (.so/.dll)
+  <dt>\c QCUSTOMPLOT_USE_LIBRARY
+  <dd>Define this flag before including the header, when using QCustomPlot as a shared library
+  <dt>\c QCUSTOMPLOT_CHECK_DATA
+  <dd>If this flag is defined, the QCustomPlot plottables will perform data validity checks on every redraw.
+      This means they will give qDebug output when you plot \e inf or \e nan values, they will not
+      fix your data.
+  </dl>
+
+*/
+
+/*! \page classoverview Class Overview
+  
+  The following diagrams may help to gain a deeper understanding of the relationships between classes that make up
+  the QCustomPlot library. The diagrams are not exhaustive, so only the classes deemed most relevant are shown.
+  
+  \section classoverview-relations Class Relationship Diagram
+  \image html RelationOverview.png "Overview of most important classes and their relations"
+  \section classoverview-inheritance Class Inheritance Tree
+  \image html InheritanceOverview.png "Inheritance tree of most important classes"
+  
+*/
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////// QCustomPlot
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*! \class QCustomPlot
+  
+  \brief The central class of the library. This is the QWidget which displays the plot and
+  interacts with the user.
+  
+  For tutorials on how to use QCustomPlot, see the website\n
+  http://www.qcustomplot.com/
+*/
+
+/* start of documentation of inline functions */
+
+/*! \fn QRect QCustomPlot::viewport() const
+  
+  Returns the viewport rect of this QCustomPlot instance. The viewport is the area the plot is
+  drawn in, all mechanisms, e.g. margin caluclation take the viewport to be the outer border of the
+  plot. The viewport normally is the rect() of the QCustomPlot widget, i.e. a rect with top left
+  (0, 0) and size of the QCustomPlot widget.
+  
+  Don't confuse the viewport with the axis rect (QCustomPlot::axisRect). An axis rect is typically
+  an area enclosed by four axes, where the graphs/plottables are drawn in. The viewport is larger
+  and contains also the axes themselves, their tick numbers, their labels, the plot title etc.
+  
+  Only when saving to a file (see \ref savePng, savePdf etc.) the viewport is temporarily modified
+  to allow saving plots with sizes independent of the current widget size.
+*/
+
+/*! \fn QCPLayoutGrid *QCustomPlot::plotLayout() const
+  
+  Returns the top level layout of this QCustomPlot instance. It is a \ref QCPLayoutGrid, initially containing just
+  one cell with the main QCPAxisRect inside.
+*/
+
+/* end of documentation of inline functions */
+/* start of documentation of signals */
+
+/*! \fn void QCustomPlot::mouseDoubleClick(QMouseEvent *event)
+
+  This signal is emitted when the QCustomPlot receives a mouse double click event.
+*/
+
+/*! \fn void QCustomPlot::mousePress(QMouseEvent *event)
+
+  This signal is emitted when the QCustomPlot receives a mouse press event.
+  
+  It is emitted before QCustomPlot handles any other mechanism like range dragging. So a slot
+  connected to this signal can still influence the behaviour e.g. with \ref QCPAxisRect::setRangeDrag or \ref
+  QCPAxisRect::setRangeDragAxes.
+*/
+
+/*! \fn void QCustomPlot::mouseMove(QMouseEvent *event)
+
+  This signal is emitted when the QCustomPlot receives a mouse move event.
+  
+  It is emitted before QCustomPlot handles any other mechanism like range dragging. So a slot
+  connected to this signal can still influence the behaviour e.g. with \ref QCPAxisRect::setRangeDrag or \ref
+  QCPAxisRect::setRangeDragAxes.
+  
+  \warning It is discouraged to change the drag-axes with \ref QCPAxisRect::setRangeDragAxes here,
+  because the dragging starting point was saved the moment the mouse was pressed. Thus it only has
+  a meaning for the range drag axes that were set at that moment. If you want to change the drag
+  axes, consider doing this in the \ref mousePress signal instead.
+*/
+
+/*! \fn void QCustomPlot::mouseRelease(QMouseEvent *event)
+
+  This signal is emitted when the QCustomPlot receives a mouse release event.
+  
+  It is emitted before QCustomPlot handles any other mechanisms like object selection. So a
+  slot connected to this signal can still influence the behaviour e.g. with \ref setInteractions or
+  \ref QCPAbstractPlottable::setSelectable.
+*/
+
+/*! \fn void QCustomPlot::mouseWheel(QMouseEvent *event)
+
+  This signal is emitted when the QCustomPlot receives a mouse wheel event.
+  
+  It is emitted before QCustomPlot handles any other mechanisms like range zooming. So a slot
+  connected to this signal can still influence the behaviour e.g. with \ref QCPAxisRect::setRangeZoom, \ref
+  QCPAxisRect::setRangeZoomAxes or \ref QCPAxisRect::setRangeZoomFactor.
+*/
+
+/*! \fn void QCustomPlot::plottableClick(QCPAbstractPlottable *plottable, QMouseEvent *event)
+  
+  This signal is emitted when a plottable is clicked.
+
+  \a event is the mouse event that caused the click and \a plottable is the plottable that received
+  the click.
+  
+  \see plottableDoubleClick
+*/
+
+/*! \fn void QCustomPlot::plottableDoubleClick(QCPAbstractPlottable *plottable, QMouseEvent *event)
+  
+  This signal is emitted when a plottable is double clicked.
+  
+  \a event is the mouse event that caused the click and \a plottable is the plottable that received
+  the click.
+  
+  \see plottableClick
+*/
+
+/*! \fn void QCustomPlot::itemClick(QCPAbstractItem *item, QMouseEvent *event)
+  
+  This signal is emitted when an item is clicked.
+
+  \a event is the mouse event that caused the click and \a item is the item that received the
+  click.
+  
+  \see itemDoubleClick
+*/
+
+/*! \fn void QCustomPlot::itemDoubleClick(QCPAbstractItem *item, QMouseEvent *event)
+  
+  This signal is emitted when an item is double clicked.
+  
+  \a event is the mouse event that caused the click and \a item is the item that received the
+  click.
+  
+  \see itemClick
+*/
+
+/*! \fn void QCustomPlot::axisClick(QCPAxis *axis, QCPAxis::SelectablePart part, QMouseEvent *event)
+  
+  This signal is emitted when an axis is clicked.
+  
+  \a event is the mouse event that caused the click, \a axis is the axis that received the click and
+  \a part indicates the part of the axis that was clicked.
+  
+  \see axisDoubleClick
+*/
+
+/*! \fn void QCustomPlot::axisDoubleClick(QCPAxis *axis, QCPAxis::SelectablePart part, QMouseEvent *event)
+
+  This signal is emitted when an axis is double clicked.
+  
+  \a event is the mouse event that caused the click, \a axis is the axis that received the click and
+  \a part indicates the part of the axis that was clicked.
+  
+  \see axisClick
+*/
+
+/*! \fn void QCustomPlot::legendClick(QCPLegend *legend, QCPAbstractLegendItem *item, QMouseEvent *event)
+
+  This signal is emitted when a legend (item) is clicked.
+  
+  \a event is the mouse event that caused the click, \a legend is the legend that received the
+  click and \a item is the legend item that received the click. If only the legend and no item is
+  clicked, \a item is 0. This happens for a click inside the legend padding or the space between
+  two items.
+  
+  \see legendDoubleClick
+*/
+
+/*! \fn void QCustomPlot::legendDoubleClick(QCPLegend *legend,  QCPAbstractLegendItem *item, QMouseEvent *event)
+
+  This signal is emitted when a legend (item) is double clicked.
+  
+  \a event is the mouse event that caused the click, \a legend is the legend that received the
+  click and \a item is the legend item that received the click. If only the legend and no item is
+  clicked, \a item is 0. This happens for a click inside the legend padding or the space between
+  two items.
+  
+  \see legendClick
+*/
+
+/*! \fn void QCustomPlot:: titleClick(QMouseEvent *event, QCPPlotTitle *title)
+
+  This signal is emitted when a plot title is clicked.
+  
+  \a event is the mouse event that caused the click and \a title is the plot title that received
+  the click.
+  
+  \see titleDoubleClick
+*/
+
+/*! \fn void QCustomPlot::titleDoubleClick(QMouseEvent *event, QCPPlotTitle *title)
+
+  This signal is emitted when a plot title is double clicked.
+  
+  \a event is the mouse event that caused the click and \a title is the plot title that received
+  the click.
+  
+  \see titleClick
+*/
+
+/*! \fn void QCustomPlot::selectionChangedByUser()
+  
+  This signal is emitted after the user has changed the selection in the QCustomPlot, e.g. by
+  clicking. It is not emitted when the selection state of an object has changed programmatically by
+  a direct call to setSelected() on an object or by calling \ref deselectAll.
+  
+  In addition to this signal, selectable objects also provide individual signals, for example
+  QCPAxis::selectionChanged or QCPAbstractPlottable::selectionChanged. Note that those signals are
+  emitted even if the selection state is changed programmatically.
+  
+  See the documentation of \ref setInteractions for details about the selection mechanism.
+  
+  \see selectedPlottables, selectedGraphs, selectedItems, selectedAxes, selectedLegends
+*/
+
+/*! \fn void QCustomPlot::beforeReplot()
+  
+  This signal is emitted immediately before a replot takes place (caused by a call to the slot \ref
+  replot).
+  
+  It is safe to mutually connect the replot slot with this signal on two QCustomPlots to make them
+  replot synchronously, it won't cause an infinite recursion.
+  
+  \see replot, afterReplot
+*/
+
+/*! \fn void QCustomPlot::afterReplot()
+  
+  This signal is emitted immediately after a replot has taken place (caused by a call to the slot \ref
+  replot).
+  
+  It is safe to mutually connect the replot slot with this signal on two QCustomPlots to make them
+  replot synchronously, it won't cause an infinite recursion.
+  
+  \see replot, beforeReplot
+*/
+
+/* end of documentation of signals */
+/* start of documentation of public members */
+
+/*! \var QCPAxis *QCustomPlot::xAxis
+
+  A pointer to the primary x Axis (bottom) of the main axis rect of the plot.
+  
+  QCustomPlot offers convenient pointers to the axes (\ref xAxis, \ref yAxis, \ref xAxis2, \ref
+  yAxis2) and the \ref legend. They make it very easy working with plots that only have a single
+  axis rect and at most one axis at each axis rect side. If you use \link thelayoutsystem the
+  layout system\endlink to add multiple axis rects or multiple axes to one side, use the \ref
+  QCPAxisRect::axis interface to access the new axes. If one of the four default axes or the
+  default legend is removed due to manipulation of the layout system (e.g. by removing the main
+  axis rect), the corresponding pointers become 0.
+*/
+
+/*! \var QCPAxis *QCustomPlot::yAxis
+
+  A pointer to the primary y Axis (left) of the main axis rect of the plot.
+  
+  QCustomPlot offers convenient pointers to the axes (\ref xAxis, \ref yAxis, \ref xAxis2, \ref
+  yAxis2) and the \ref legend. They make it very easy working with plots that only have a single
+  axis rect and at most one axis at each axis rect side. If you use \link thelayoutsystem the
+  layout system\endlink to add multiple axis rects or multiple axes to one side, use the \ref
+  QCPAxisRect::axis interface to access the new axes. If one of the four default axes or the
+  default legend is removed due to manipulation of the layout system (e.g. by removing the main
+  axis rect), the corresponding pointers become 0.
+*/
+
+/*! \var QCPAxis *QCustomPlot::xAxis2
+
+  A pointer to the secondary x Axis (top) of the main axis rect of the plot. Secondary axes are
+  invisible by default. Use QCPAxis::setVisible to change this (or use \ref
+  QCPAxisRect::setupFullAxesBox).
+  
+  QCustomPlot offers convenient pointers to the axes (\ref xAxis, \ref yAxis, \ref xAxis2, \ref
+  yAxis2) and the \ref legend. They make it very easy working with plots that only have a single
+  axis rect and at most one axis at each axis rect side. If you use \link thelayoutsystem the
+  layout system\endlink to add multiple axis rects or multiple axes to one side, use the \ref
+  QCPAxisRect::axis interface to access the new axes. If one of the four default axes or the
+  default legend is removed due to manipulation of the layout system (e.g. by removing the main
+  axis rect), the corresponding pointers become 0.
+*/
+
+/*! \var QCPAxis *QCustomPlot::yAxis2
+
+  A pointer to the secondary y Axis (right) of the main axis rect of the plot. Secondary axes are
+  invisible by default. Use QCPAxis::setVisible to change this (or use \ref
+  QCPAxisRect::setupFullAxesBox).
+  
+  QCustomPlot offers convenient pointers to the axes (\ref xAxis, \ref yAxis, \ref xAxis2, \ref
+  yAxis2) and the \ref legend. They make it very easy working with plots that only have a single
+  axis rect and at most one axis at each axis rect side. If you use \link thelayoutsystem the
+  layout system\endlink to add multiple axis rects or multiple axes to one side, use the \ref
+  QCPAxisRect::axis interface to access the new axes. If one of the four default axes or the
+  default legend is removed due to manipulation of the layout system (e.g. by removing the main
+  axis rect), the corresponding pointers become 0.
+*/
+
+/*! \var QCPLegend *QCustomPlot::legend
+
+  A pointer to the default legend of the main axis rect. The legend is invisible by default. Use
+  QCPLegend::setVisible to change this.
+  
+  QCustomPlot offers convenient pointers to the axes (\ref xAxis, \ref yAxis, \ref xAxis2, \ref
+  yAxis2) and the \ref legend. They make it very easy working with plots that only have a single
+  axis rect and at most one axis at each axis rect side. If you use \link thelayoutsystem the
+  layout system\endlink to add multiple legends to the plot, use the layout system interface to
+  access the new legend. For example, legends can be placed inside an axis rect's \ref
+  QCPAxisRect::insetLayout "inset layout", and must then also be accessed via the inset layout. If
+  the default legend is removed due to manipulation of the layout system (e.g. by removing the main
+  axis rect), the corresponding pointer becomes 0.
+*/
+
+/* end of documentation of public members */
+
+/*!
+  Constructs a QCustomPlot and sets reasonable default values.
+*/
+QCustomPlot::QCustomPlot(QWidget *parent) :
+  QWidget(parent),
+  xAxis(0),
+  yAxis(0),
+  xAxis2(0),
+  yAxis2(0),
+  legend(0),
+  mPlotLayout(0),
+  mAutoAddPlottableToLegend(true),
+  mAntialiasedElements(QCP::aeNone),
+  mNotAntialiasedElements(QCP::aeNone),
+  mInteractions(0),
+  mSelectionTolerance(8),
+  mNoAntialiasingOnDrag(false),
+  mBackgroundBrush(Qt::white, Qt::SolidPattern),
+  mBackgroundScaled(true),
+  mBackgroundScaledMode(Qt::KeepAspectRatioByExpanding),
+  mCurrentLayer(0),
+  mPlottingHints(QCP::phCacheLabels|QCP::phForceRepaint),
+  mMultiSelectModifier(Qt::ControlModifier),
+  mPaintBuffer(size()),
+  mMouseEventElement(0),
+  mReplotting(false)
+{
+  setAttribute(Qt::WA_NoMousePropagation);
+  setAttribute(Qt::WA_OpaquePaintEvent);
+  setMouseTracking(true);
+  QLocale currentLocale = locale();
+  currentLocale.setNumberOptions(QLocale::OmitGroupSeparator);
+  setLocale(currentLocale);
+  
+  // create initial layers:
+  mLayers.append(new QCPLayer(this, "background"));
+  mLayers.append(new QCPLayer(this, "grid"));
+  mLayers.append(new QCPLayer(this, "main"));
+  mLayers.append(new QCPLayer(this, "axes"));
+  mLayers.append(new QCPLayer(this, "legend"));
+  updateLayerIndices();
+  setCurrentLayer("main");
+  
+  // create initial layout, axis rect and legend:
+  mPlotLayout = new QCPLayoutGrid;
+  mPlotLayout->initializeParentPlot(this);
+  mPlotLayout->setParent(this); // important because if parent is QWidget, QCPLayout::sizeConstraintsChanged will call QWidget::updateGeometry
+  mPlotLayout->setLayer("main");
+  QCPAxisRect *defaultAxisRect = new QCPAxisRect(this, true);
+  mPlotLayout->addElement(0, 0, defaultAxisRect);
+  xAxis = defaultAxisRect->axis(QCPAxis::atBottom);
+  yAxis = defaultAxisRect->axis(QCPAxis::atLeft);
+  xAxis2 = defaultAxisRect->axis(QCPAxis::atTop);
+  yAxis2 = defaultAxisRect->axis(QCPAxis::atRight);
+  legend = new QCPLegend;
+  legend->setVisible(false);
+  defaultAxisRect->insetLayout()->addElement(legend, Qt::AlignRight|Qt::AlignTop);
+  defaultAxisRect->insetLayout()->setMargins(QMargins(12, 12, 12, 12));
+  
+  defaultAxisRect->setLayer("background");
+  xAxis->setLayer("axes");
+  yAxis->setLayer("axes");
+  xAxis2->setLayer("axes");
+  yAxis2->setLayer("axes");
+  xAxis->grid()->setLayer("grid");
+  yAxis->grid()->setLayer("grid");
+  xAxis2->grid()->setLayer("grid");
+  yAxis2->grid()->setLayer("grid");
+  legend->setLayer("legend");
+  
+  setViewport(rect()); // needs to be called after mPlotLayout has been created
+  
+  replot();
+}
+
+QCustomPlot::~QCustomPlot()
+{
+  clearPlottables();
+  clearItems();
+
+  if (mPlotLayout)
+  {
+    delete mPlotLayout;
+    mPlotLayout = 0;
+  }
+  
+  mCurrentLayer = 0;
+  qDeleteAll(mLayers); // don't use removeLayer, because it would prevent the last layer to be removed
+  mLayers.clear();
+}
+
+/*!
+  Sets which elements are forcibly drawn antialiased as an \a or combination of QCP::AntialiasedElement.
+  
+  This overrides the antialiasing settings for whole element groups, normally controlled with the
+  \a setAntialiasing function on the individual elements. If an element is neither specified in
+  \ref setAntialiasedElements nor in \ref setNotAntialiasedElements, the antialiasing setting on
+  each individual element instance is used.
+  
+  For example, if \a antialiasedElements contains \ref QCP::aePlottables, all plottables will be
+  drawn antialiased, no matter what the specific QCPAbstractPlottable::setAntialiased value was set
+  to.
+  
+  if an element in \a antialiasedElements is already set in \ref setNotAntialiasedElements, it is
+  removed from there.
+  
+  \see setNotAntialiasedElements
+*/
+void QCustomPlot::setAntialiasedElements(const QCP::AntialiasedElements &antialiasedElements)
+{
+  mAntialiasedElements = antialiasedElements;
+  
+  // make sure elements aren't in mNotAntialiasedElements and mAntialiasedElements simultaneously:
+  if ((mNotAntialiasedElements & mAntialiasedElements) != 0)
+    mNotAntialiasedElements |= ~mAntialiasedElements;
+}
+
+/*!
+  Sets whether the specified \a antialiasedElement is forcibly drawn antialiased.
+  
+  See \ref setAntialiasedElements for details.
+  
+  \see setNotAntialiasedElement
+*/
+void QCustomPlot::setAntialiasedElement(QCP::AntialiasedElement antialiasedElement, bool enabled)
+{
+  if (!enabled && mAntialiasedElements.testFlag(antialiasedElement))
+    mAntialiasedElements &= ~antialiasedElement;
+  else if (enabled && !mAntialiasedElements.testFlag(antialiasedElement))
+    mAntialiasedElements |= antialiasedElement;
+  
+  // make sure elements aren't in mNotAntialiasedElements and mAntialiasedElements simultaneously:
+  if ((mNotAntialiasedElements & mAntialiasedElements) != 0)
+    mNotAntialiasedElements |= ~mAntialiasedElements;
+}
+
+/*!
+  Sets which elements are forcibly drawn not antialiased as an \a or combination of
+  QCP::AntialiasedElement.
+  
+  This overrides the antialiasing settings for whole element groups, normally controlled with the
+  \a setAntialiasing function on the individual elements. If an element is neither specified in
+  \ref setAntialiasedElements nor in \ref setNotAntialiasedElements, the antialiasing setting on
+  each individual element instance is used.
+  
+  For example, if \a notAntialiasedElements contains \ref QCP::aePlottables, no plottables will be
+  drawn antialiased, no matter what the specific QCPAbstractPlottable::setAntialiased value was set
+  to.
+  
+  if an element in \a notAntialiasedElements is already set in \ref setAntialiasedElements, it is
+  removed from there.
+  
+  \see setAntialiasedElements
+*/
+void QCustomPlot::setNotAntialiasedElements(const QCP::AntialiasedElements &notAntialiasedElements)
+{
+  mNotAntialiasedElements = notAntialiasedElements;
+  
+  // make sure elements aren't in mNotAntialiasedElements and mAntialiasedElements simultaneously:
+  if ((mNotAntialiasedElements & mAntialiasedElements) != 0)
+    mAntialiasedElements |= ~mNotAntialiasedElements;
+}
+
+/*!
+  Sets whether the specified \a notAntialiasedElement is forcibly drawn not antialiased.
+  
+  See \ref setNotAntialiasedElements for details.
+  
+  \see setAntialiasedElement
+*/
+void QCustomPlot::setNotAntialiasedElement(QCP::AntialiasedElement notAntialiasedElement, bool enabled)
+{
+  if (!enabled && mNotAntialiasedElements.testFlag(notAntialiasedElement))
+    mNotAntialiasedElements &= ~notAntialiasedElement;
+  else if (enabled && !mNotAntialiasedElements.testFlag(notAntialiasedElement))
+    mNotAntialiasedElements |= notAntialiasedElement;
+  
+  // make sure elements aren't in mNotAntialiasedElements and mAntialiasedElements simultaneously:
+  if ((mNotAntialiasedElements & mAntialiasedElements) != 0)
+    mAntialiasedElements |= ~mNotAntialiasedElements;
+}
+
+/*!
+  If set to true, adding a plottable (e.g. a graph) to the QCustomPlot automatically also adds the
+  plottable to the legend (QCustomPlot::legend).
+  
+  \see addPlottable, addGraph, QCPLegend::addItem
+*/
+void QCustomPlot::setAutoAddPlottableToLegend(bool on)
+{
+  mAutoAddPlottableToLegend = on;
+}
+
+/*!
+  Sets the possible interactions of this QCustomPlot as an or-combination of \ref QCP::Interaction
+  enums. There are the following types of interactions:
+  
+  <b>Axis range manipulation</b> is controlled via \ref QCP::iRangeDrag and \ref QCP::iRangeZoom. When the
+  respective interaction is enabled, the user may drag axes ranges and zoom with the mouse wheel.
+  For details how to control which axes the user may drag/zoom and in what orientations, see \ref
+  QCPAxisRect::setRangeDrag, \ref QCPAxisRect::setRangeZoom, \ref QCPAxisRect::setRangeDragAxes,
+  \ref QCPAxisRect::setRangeZoomAxes.
+  
+  <b>Plottable selection</b> is controlled by \ref QCP::iSelectPlottables. If \ref QCP::iSelectPlottables is
+  set, the user may select plottables (graphs, curves, bars,...) by clicking on them or in their
+  vicinity (\ref setSelectionTolerance). Whether the user can actually select a plottable can
+  further be restricted with the \ref QCPAbstractPlottable::setSelectable function on the specific
+  plottable. To find out whether a specific plottable is selected, call
+  QCPAbstractPlottable::selected(). To retrieve a list of all currently selected plottables, call
+  \ref selectedPlottables. If you're only interested in QCPGraphs, you may use the convenience
+  function \ref selectedGraphs.
+  
+  <b>Item selection</b> is controlled by \ref QCP::iSelectItems. If \ref QCP::iSelectItems is set, the user
+  may select items (QCPItemLine, QCPItemText,...) by clicking on them or in their vicinity. To find
+  out whether a specific item is selected, call QCPAbstractItem::selected(). To retrieve a list of
+  all currently selected items, call \ref selectedItems.
+  
+  <b>Axis selection</b> is controlled with \ref QCP::iSelectAxes. If \ref QCP::iSelectAxes is set, the user
+  may select parts of the axes by clicking on them. What parts exactly (e.g. Axis base line, tick
+  labels, axis label) are selectable can be controlled via \ref QCPAxis::setSelectableParts for
+  each axis. To retrieve a list of all axes that currently contain selected parts, call \ref
+  selectedAxes. Which parts of an axis are selected, can be retrieved with QCPAxis::selectedParts().
+  
+  <b>Legend selection</b> is controlled with \ref QCP::iSelectLegend. If this is set, the user may
+  select the legend itself or individual items by clicking on them. What parts exactly are
+  selectable can be controlled via \ref QCPLegend::setSelectableParts. To find out whether the
+  legend or any of its child items are selected, check the value of QCPLegend::selectedParts. To
+  find out which child items are selected, call \ref QCPLegend::selectedItems.
+  
+  <b>All other selectable elements</b> The selection of all other selectable objects (e.g.
+  QCPPlotTitle, or your own layerable subclasses) is controlled with \ref QCP::iSelectOther. If set, the
+  user may select those objects by clicking on them. To find out which are currently selected, you
+  need to check their selected state explicitly.
+  
+  If the selection state has changed by user interaction, the \ref selectionChangedByUser signal is
+  emitted. Each selectable object additionally emits an individual selectionChanged signal whenever
+  their selection state has changed, i.e. not only by user interaction.
+  
+  To allow multiple objects to be selected by holding the selection modifier (\ref
+  setMultiSelectModifier), set the flag \ref QCP::iMultiSelect.
+  
+  \note In addition to the selection mechanism presented here, QCustomPlot always emits
+  corresponding signals, when an object is clicked or double clicked. see \ref plottableClick and
+  \ref plottableDoubleClick for example.
+  
+  \see setInteraction, setSelectionTolerance
+*/
+void QCustomPlot::setInteractions(const QCP::Interactions &interactions)
+{
+  mInteractions = interactions;
+}
+
+/*!
+  Sets the single \a interaction of this QCustomPlot to \a enabled.
+  
+  For details about the interaction system, see \ref setInteractions.
+  
+  \see setInteractions
+*/
+void QCustomPlot::setInteraction(const QCP::Interaction &interaction, bool enabled)
+{
+  if (!enabled && mInteractions.testFlag(interaction))
+    mInteractions &= ~interaction;
+  else if (enabled && !mInteractions.testFlag(interaction))
+    mInteractions |= interaction;
+}
+
+/*!
+  Sets the tolerance that is used to decide whether a click selects an object (e.g. a plottable) or
+  not.
+  
+  If the user clicks in the vicinity of the line of e.g. a QCPGraph, it's only regarded as a
+  potential selection when the minimum distance between the click position and the graph line is
+  smaller than \a pixels. Objects that are defined by an area (e.g. QCPBars) only react to clicks
+  directly inside the area and ignore this selection tolerance. In other words, it only has meaning
+  for parts of objects that are too thin to exactly hit with a click and thus need such a
+  tolerance.
+  
+  \see setInteractions, QCPLayerable::selectTest
+*/
+void QCustomPlot::setSelectionTolerance(int pixels)
+{
+  mSelectionTolerance = pixels;
+}
+
+/*!
+  Sets whether antialiasing is disabled for this QCustomPlot while the user is dragging axes
+  ranges. If many objects, especially plottables, are drawn antialiased, this greatly improves
+  performance during dragging. Thus it creates a more responsive user experience. As soon as the
+  user stops dragging, the last replot is done with normal antialiasing, to restore high image
+  quality.
+  
+  \see setAntialiasedElements, setNotAntialiasedElements
+*/
+void QCustomPlot::setNoAntialiasingOnDrag(bool enabled)
+{
+  mNoAntialiasingOnDrag = enabled;
+}
+
+/*!
+  Sets the plotting hints for this QCustomPlot instance as an \a or combination of QCP::PlottingHint.
+  
+  \see setPlottingHint
+*/
+void QCustomPlot::setPlottingHints(const QCP::PlottingHints &hints)
+{
+  mPlottingHints = hints;
+}
+
+/*!
+  Sets the specified plotting \a hint to \a enabled.
+  
+  \see setPlottingHints
+*/
+void QCustomPlot::setPlottingHint(QCP::PlottingHint hint, bool enabled)
+{
+  QCP::PlottingHints newHints = mPlottingHints;
+  if (!enabled)
+    newHints &= ~hint;
+  else
+    newHints |= hint;
+  
+  if (newHints != mPlottingHints)
+    setPlottingHints(newHints);
+}
+
+/*!
+  Sets the keyboard modifier that will be recognized as multi-select-modifier.
+  
+  If \ref QCP::iMultiSelect is specified in \ref setInteractions, the user may select multiple objects
+  by clicking on them one after the other while holding down \a modifier.
+  
+  By default the multi-select-modifier is set to Qt::ControlModifier.
+  
+  \see setInteractions
+*/
+void QCustomPlot::setMultiSelectModifier(Qt::KeyboardModifier modifier)
+{
+  mMultiSelectModifier = modifier;
+}
+
+/*!
+  Sets the viewport of this QCustomPlot. The Viewport is the area that the top level layout
+  (QCustomPlot::plotLayout()) uses as its rect. Normally, the viewport is the entire widget rect.
+  
+  This function is used to allow arbitrary size exports with \ref toPixmap, \ref savePng, \ref
+  savePdf, etc. by temporarily changing the viewport size.
+*/
+void QCustomPlot::setViewport(const QRect &rect)
+{
+  mViewport = rect;
+  if (mPlotLayout)
+    mPlotLayout->setOuterRect(mViewport);
+}
+
+/*!
+  Sets \a pm as the viewport background pixmap (see \ref setViewport). The pixmap is always drawn
+  below all other objects in the plot.
+
+  For cases where the provided pixmap doesn't have the same size as the viewport, scaling can be
+  enabled with \ref setBackgroundScaled and the scaling mode (whether and how the aspect ratio is
+  preserved) can be set with \ref setBackgroundScaledMode. To set all these options in one call,
+  consider using the overloaded version of this function.
+  
+  If a background brush was set with \ref setBackground(const QBrush &brush), the viewport will
+  first be filled with that brush, before drawing the background pixmap. This can be useful for
+  background pixmaps with translucent areas.
+
+  \see setBackgroundScaled, setBackgroundScaledMode
+*/
+void QCustomPlot::setBackground(const QPixmap &pm)
+{
+  mBackgroundPixmap = pm;
+  mScaledBackgroundPixmap = QPixmap();
+}
+
+/*!
+  Sets the background brush of the viewport (see \ref setViewport).
+
+  Before drawing everything else, the background is filled with \a brush. If a background pixmap
+  was set with \ref setBackground(const QPixmap &pm), this brush will be used to fill the viewport
+  before the background pixmap is drawn. This can be useful for background pixmaps with translucent
+  areas.
+  
+  Set \a brush to Qt::NoBrush or Qt::Transparent to leave background transparent. This can be
+  useful for exporting to image formats which support transparency, e.g. \ref savePng.
+
+  \see setBackgroundScaled, setBackgroundScaledMode
+*/
+void QCustomPlot::setBackground(const QBrush &brush)
+{
+  mBackgroundBrush = brush;
+}
+
+/*! \overload
+  
+  Allows setting the background pixmap of the viewport, whether it shall be scaled and how it
+  shall be scaled in one call.
+
+  \see setBackground(const QPixmap &pm), setBackgroundScaled, setBackgroundScaledMode
+*/
+void QCustomPlot::setBackground(const QPixmap &pm, bool scaled, Qt::AspectRatioMode mode)
+{
+  mBackgroundPixmap = pm;
+  mScaledBackgroundPixmap = QPixmap();
+  mBackgroundScaled = scaled;
+  mBackgroundScaledMode = mode;
+}
+
+/*!
+  Sets whether the viewport background pixmap shall be scaled to fit the viewport. If \a scaled is
+  set to true, control whether and how the aspect ratio of the original pixmap is preserved with
+  \ref setBackgroundScaledMode.
+  
+  Note that the scaled version of the original pixmap is buffered, so there is no performance
+  penalty on replots. (Except when the viewport dimensions are changed continuously.)
+  
+  \see setBackground, setBackgroundScaledMode
+*/
+void QCustomPlot::setBackgroundScaled(bool scaled)
+{
+  mBackgroundScaled = scaled;
+}
+
+/*!
+  If scaling of the viewport background pixmap is enabled (\ref setBackgroundScaled), use this
+  function to define whether and how the aspect ratio of the original pixmap is preserved.
+  
+  \see setBackground, setBackgroundScaled
+*/
+void QCustomPlot::setBackgroundScaledMode(Qt::AspectRatioMode mode)
+{
+  mBackgroundScaledMode = mode;
+}
+
+/*!
+  Returns the plottable with \a index. If the index is invalid, returns 0.
+  
+  There is an overloaded version of this function with no parameter which returns the last added
+  plottable, see QCustomPlot::plottable()
+  
+  \see plottableCount, addPlottable
+*/
+QCPAbstractPlottable *QCustomPlot::plottable(int index)
+{
+  if (index >= 0 && index < mPlottables.size())
+  {
+    return mPlottables.at(index);
+  } else
+  {
+    qDebug() << Q_FUNC_INFO << "index out of bounds:" << index;
+    return 0;
+  }
+}
+
+/*! \overload
+  
+  Returns the last plottable that was added with \ref addPlottable. If there are no plottables in
+  the plot, returns 0.
+  
+  \see plottableCount, addPlottable
+*/
+QCPAbstractPlottable *QCustomPlot::plottable()
+{
+  if (!mPlottables.isEmpty())
+  {
+    return mPlottables.last();
+  } else
+    return 0;
+}
+
+/*!
+  Adds the specified plottable to the plot and, if \ref setAutoAddPlottableToLegend is enabled, to
+  the legend (QCustomPlot::legend). QCustomPlot takes ownership of the plottable.
+  
+  Returns true on success, i.e. when \a plottable isn't already in the plot and the parent plot of
+  \a plottable is this QCustomPlot (the latter is controlled by what axes were passed in the
+  plottable's constructor).
+  
+  \see plottable, plottableCount, removePlottable, clearPlottables
+*/
+bool QCustomPlot::addPlottable(QCPAbstractPlottable *plottable)
+{
+  if (mPlottables.contains(plottable))
+  {
+    qDebug() << Q_FUNC_INFO << "plottable already added to this QCustomPlot:" << reinterpret_cast<quintptr>(plottable);
+    return false;
+  }
+  if (plottable->parentPlot() != this)
+  {
+    qDebug() << Q_FUNC_INFO << "plottable not created with this QCustomPlot as parent:" << reinterpret_cast<quintptr>(plottable);
+    return false;
+  }
+  
+  mPlottables.append(plottable);
+  // possibly add plottable to legend:
+  if (mAutoAddPlottableToLegend)
+    plottable->addToLegend();
+  // special handling for QCPGraphs to maintain the simple graph interface:
+  if (QCPGraph *graph = qobject_cast<QCPGraph*>(plottable))
+    mGraphs.append(graph);
+  if (!plottable->layer()) // usually the layer is already set in the constructor of the plottable (via QCPLayerable constructor)
+    plottable->setLayer(currentLayer());
+  return true;
+}
+
+/*!
+  Removes the specified plottable from the plot and, if necessary, from the legend (QCustomPlot::legend).
+  
+  Returns true on success.
+  
+  \see addPlottable, clearPlottables
+*/
+bool QCustomPlot::removePlottable(QCPAbstractPlottable *plottable)
+{
+  if (!mPlottables.contains(plottable))
+  {
+    qDebug() << Q_FUNC_INFO << "plottable not in list:" << reinterpret_cast<quintptr>(plottable);
+    return false;
+  }
+  
+  // remove plottable from legend:
+  plottable->removeFromLegend();
+  // special handling for QCPGraphs to maintain the simple graph interface:
+  if (QCPGraph *graph = qobject_cast<QCPGraph*>(plottable))
+    mGraphs.removeOne(graph);
+  // remove plottable:
+  delete plottable;
+  mPlottables.removeOne(plottable);
+  return true;
+}
+
+/*! \overload
+  
+  Removes the plottable by its \a index.
+*/
+bool QCustomPlot::removePlottable(int index)
+{
+  if (index >= 0 && index < mPlottables.size())
+    return removePlottable(mPlottables[index]);
+  else
+  {
+    qDebug() << Q_FUNC_INFO << "index out of bounds:" << index;
+    return false;
+  }
+}
+
+/*!
+  Removes all plottables from the plot (and the QCustomPlot::legend, if necessary).
+  
+  Returns the number of plottables removed.
+  
+  \see removePlottable
+*/
+int QCustomPlot::clearPlottables()
+{
+  int c = mPlottables.size();
+  for (int i=c-1; i >= 0; --i)
+    removePlottable(mPlottables[i]);
+  return c;
+}
+
+/*!
+  Returns the number of currently existing plottables in the plot
+  
+  \see plottable, addPlottable
+*/
+int QCustomPlot::plottableCount() const
+{
+  return mPlottables.size();
+}
+
+/*!
+  Returns a list of the selected plottables. If no plottables are currently selected, the list is empty.
+  
+  There is a convenience function if you're only interested in selected graphs, see \ref selectedGraphs.
+  
+  \see setInteractions, QCPAbstractPlottable::setSelectable, QCPAbstractPlottable::setSelected
+*/
+QList<QCPAbstractPlottable*> QCustomPlot::selectedPlottables() const
+{
+  QList<QCPAbstractPlottable*> result;
+  foreach (QCPAbstractPlottable *plottable, mPlottables)
+  {
+    if (plottable->selected())
+      result.append(plottable);
+  }
+  return result;
+}
+
+/*!
+  Returns the plottable at the pixel position \a pos. Plottables that only consist of single lines
+  (like graphs) have a tolerance band around them, see \ref setSelectionTolerance. If multiple
+  plottables come into consideration, the one closest to \a pos is returned.
+  
+  If \a onlySelectable is true, only plottables that are selectable
+  (QCPAbstractPlottable::setSelectable) are considered.
+  
+  If there is no plottable at \a pos, the return value is 0.
+  
+  \see itemAt, layoutElementAt
+*/
+QCPAbstractPlottable *QCustomPlot::plottableAt(const QPointF &pos, bool onlySelectable) const
+{
+  QCPAbstractPlottable *resultPlottable = 0;
+  double resultDistance = mSelectionTolerance; // only regard clicks with distances smaller than mSelectionTolerance as selections, so initialize with that value
+  
+  foreach (QCPAbstractPlottable *plottable, mPlottables)
+  {
+    if (onlySelectable && !plottable->selectable()) // we could have also passed onlySelectable to the selectTest function, but checking here is faster, because we have access to QCPabstractPlottable::selectable
+      continue;
+    if ((plottable->keyAxis()->axisRect()->rect() & plottable->valueAxis()->axisRect()->rect()).contains(pos.toPoint())) // only consider clicks inside the rect that is spanned by the plottable's key/value axes
+    {
+      double currentDistance = plottable->selectTest(pos, false);
+      if (currentDistance >= 0 && currentDistance < resultDistance)
+      {
+        resultPlottable = plottable;
+        resultDistance = currentDistance;
+      }
+    }
+  }
+  
+  return resultPlottable;
+}
+
+/*!
+  Returns whether this QCustomPlot instance contains the \a plottable.
+  
+  \see addPlottable
+*/
+bool QCustomPlot::hasPlottable(QCPAbstractPlottable *plottable) const
+{
+  return mPlottables.contains(plottable);
+}
+
+/*!
+  Returns the graph with \a index. If the index is invalid, returns 0.
+  
+  There is an overloaded version of this function with no parameter which returns the last created
+  graph, see QCustomPlot::graph()
+  
+  \see graphCount, addGraph
+*/
+QCPGraph *QCustomPlot::graph(int index) const
+{
+  if (index >= 0 && index < mGraphs.size())
+  {
+    return mGraphs.at(index);
+  } else
+  {
+    qDebug() << Q_FUNC_INFO << "index out of bounds:" << index;
+    return 0;
+  }
+}
+
+/*! \overload
+  
+  Returns the last graph, that was created with \ref addGraph. If there are no graphs in the plot,
+  returns 0.
+  
+  \see graphCount, addGraph
+*/
+QCPGraph *QCustomPlot::graph() const
+{
+  if (!mGraphs.isEmpty())
+  {
+    return mGraphs.last();
+  } else
+    return 0;
+}
+
+/*!
+  Creates a new graph inside the plot. If \a keyAxis and \a valueAxis are left unspecified (0), the
+  bottom (xAxis) is used as key and the left (yAxis) is used as value axis. If specified, \a
+  keyAxis and \a valueAxis must reside in this QCustomPlot.
+  
+  \a keyAxis will be used as key axis (typically "x") and \a valueAxis as value axis (typically
+  "y") for the graph.
+  
+  Returns a pointer to the newly created graph, or 0 if adding the graph failed.
+  
+  \see graph, graphCount, removeGraph, clearGraphs
+*/
+QCPGraph *QCustomPlot::addGraph(QCPAxis *keyAxis, QCPAxis *valueAxis)
+{
+  if (!keyAxis) keyAxis = xAxis;
+  if (!valueAxis) valueAxis = yAxis;
+  if (!keyAxis || !valueAxis)
+  {
+    qDebug() << Q_FUNC_INFO << "can't use default QCustomPlot xAxis or yAxis, because at least one is invalid (has been deleted)";
+    return 0;
+  }
+  if (keyAxis->parentPlot() != this || valueAxis->parentPlot() != this)
+  {
+    qDebug() << Q_FUNC_INFO << "passed keyAxis or valueAxis doesn't have this QCustomPlot as parent";
+    return 0;
+  }
+  
+  QCPGraph *newGraph = new QCPGraph(keyAxis, valueAxis);
+  if (addPlottable(newGraph))
+  {
+    newGraph->setName("Graph "+QString::number(mGraphs.size()));
+    return newGraph;
+  } else
+  {
+    delete newGraph;
+    return 0;
+  }
+}
+
+/*!
+  Removes the specified \a graph from the plot and, if necessary, from the QCustomPlot::legend. If
+  any other graphs in the plot have a channel fill set towards the removed graph, the channel fill
+  property of those graphs is reset to zero (no channel fill).
+  
+  Returns true on success.
+  
+  \see clearGraphs
+*/
+bool QCustomPlot::removeGraph(QCPGraph *graph)
+{
+  return removePlottable(graph);
+}
+
+/*! \overload
+  
+  Removes the graph by its \a index.
+*/
+bool QCustomPlot::removeGraph(int index)
+{
+  if (index >= 0 && index < mGraphs.size())
+    return removeGraph(mGraphs[index]);
+  else
+    return false;
+}
+
+/*!
+  Removes all graphs from the plot (and the QCustomPlot::legend, if necessary).
+
+  Returns the number of graphs removed.
+  
+  \see removeGraph
+*/
+int QCustomPlot::clearGraphs()
+{
+  int c = mGraphs.size();
+  for (int i=c-1; i >= 0; --i)
+    removeGraph(mGraphs[i]);
+  return c;
+}
+
+/*!
+  Returns the number of currently existing graphs in the plot
+  
+  \see graph, addGraph
+*/
+int QCustomPlot::graphCount() const
+{
+  return mGraphs.size();
+}
+
+/*!
+  Returns a list of the selected graphs. If no graphs are currently selected, the list is empty.
+  
+  If you are not only interested in selected graphs but other plottables like QCPCurve, QCPBars,
+  etc., use \ref selectedPlottables.
+  
+  \see setInteractions, selectedPlottables, QCPAbstractPlottable::setSelectable, QCPAbstractPlottable::setSelected
+*/
+QList<QCPGraph*> QCustomPlot::selectedGraphs() const
+{
+  QList<QCPGraph*> result;
+  foreach (QCPGraph *graph, mGraphs)
+  {
+    if (graph->selected())
+      result.append(graph);
+  }
+  return result;
+}
+
+/*!
+  Returns the item with \a index. If the index is invalid, returns 0.
+  
+  There is an overloaded version of this function with no parameter which returns the last added
+  item, see QCustomPlot::item()
+  
+  \see itemCount, addItem
+*/
+QCPAbstractItem *QCustomPlot::item(int index) const
+{
+  if (index >= 0 && index < mItems.size())
+  {
+    return mItems.at(index);
+  } else
+  {
+    qDebug() << Q_FUNC_INFO << "index out of bounds:" << index;
+    return 0;
+  }
+}
+
+/*! \overload
