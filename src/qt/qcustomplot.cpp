@@ -20935,3 +20935,436 @@ void QCPItemTracer::setGraph(QCPGraph *graph)
   } else
   {
     mGraph = 0;
+  }
+}
+
+/*!
+  Sets the key of the graph's data point the tracer will be positioned at. This is the only free
+  coordinate of a tracer when attached to a graph.
+  
+  Depending on \ref setInterpolating, the tracer will be either positioned on the data point
+  closest to \a key, or will stay exactly at \a key and interpolate the value linearly.
+  
+  \see setGraph, setInterpolating
+*/
+void QCPItemTracer::setGraphKey(double key)
+{
+  mGraphKey = key;
+}
+
+/*!
+  Sets whether the value of the graph's data points shall be interpolated, when positioning the
+  tracer.
+  
+  If \a enabled is set to false and a key is given with \ref setGraphKey, the tracer is placed on
+  the data point of the graph which is closest to the key, but which is not necessarily exactly
+  there. If \a enabled is true, the tracer will be positioned exactly at the specified key, and
+  the appropriate value will be interpolated from the graph's data points linearly.
+  
+  \see setGraph, setGraphKey
+*/
+void QCPItemTracer::setInterpolating(bool enabled)
+{
+  mInterpolating = enabled;
+}
+
+/* inherits documentation from base class */
+double QCPItemTracer::selectTest(const QPointF &pos, bool onlySelectable, QVariant *details) const
+{
+  Q_UNUSED(details)
+  if (onlySelectable && !mSelectable)
+    return -1;
+
+  QPointF center(position->pixelPoint());
+  double w = mSize/2.0;
+  QRect clip = clipRect();
+  switch (mStyle)
+  {
+    case tsNone: return -1;
+    case tsPlus:
+    {
+      if (clipRect().intersects(QRectF(center-QPointF(w, w), center+QPointF(w, w)).toRect()))
+        return qSqrt(qMin(distSqrToLine(center+QPointF(-w, 0), center+QPointF(w, 0), pos),
+                          distSqrToLine(center+QPointF(0, -w), center+QPointF(0, w), pos)));
+      break;
+    }
+    case tsCrosshair:
+    {
+      return qSqrt(qMin(distSqrToLine(QPointF(clip.left(), center.y()), QPointF(clip.right(), center.y()), pos),
+                        distSqrToLine(QPointF(center.x(), clip.top()), QPointF(center.x(), clip.bottom()), pos)));
+    }
+    case tsCircle:
+    {
+      if (clip.intersects(QRectF(center-QPointF(w, w), center+QPointF(w, w)).toRect()))
+      {
+        // distance to border:
+        double centerDist = QVector2D(center-pos).length();
+        double circleLine = w;
+        double result = qAbs(centerDist-circleLine);
+        // filled ellipse, allow click inside to count as hit:
+        if (result > mParentPlot->selectionTolerance()*0.99 && mBrush.style() != Qt::NoBrush && mBrush.color().alpha() != 0)
+        {
+          if (centerDist <= circleLine)
+            result = mParentPlot->selectionTolerance()*0.99;
+        }
+        return result;
+      }
+      break;
+    }
+    case tsSquare:
+    {
+      if (clip.intersects(QRectF(center-QPointF(w, w), center+QPointF(w, w)).toRect()))
+      {
+        QRectF rect = QRectF(center-QPointF(w, w), center+QPointF(w, w));
+        bool filledRect = mBrush.style() != Qt::NoBrush && mBrush.color().alpha() != 0;
+        return rectSelectTest(rect, pos, filledRect);
+      }
+      break;
+    }
+  }
+  return -1;
+}
+
+/* inherits documentation from base class */
+void QCPItemTracer::draw(QCPPainter *painter)
+{
+  updatePosition();
+  if (mStyle == tsNone)
+    return;
+
+  painter->setPen(mainPen());
+  painter->setBrush(mainBrush());
+  QPointF center(position->pixelPoint());
+  double w = mSize/2.0;
+  QRect clip = clipRect();
+  switch (mStyle)
+  {
+    case tsNone: return;
+    case tsPlus:
+    {
+      if (clip.intersects(QRectF(center-QPointF(w, w), center+QPointF(w, w)).toRect()))
+      {
+        painter->drawLine(QLineF(center+QPointF(-w, 0), center+QPointF(w, 0)));
+        painter->drawLine(QLineF(center+QPointF(0, -w), center+QPointF(0, w)));
+      }
+      break;
+    }
+    case tsCrosshair:
+    {
+      if (center.y() > clip.top() && center.y() < clip.bottom())
+        painter->drawLine(QLineF(clip.left(), center.y(), clip.right(), center.y()));
+      if (center.x() > clip.left() && center.x() < clip.right())
+        painter->drawLine(QLineF(center.x(), clip.top(), center.x(), clip.bottom()));
+      break;
+    }
+    case tsCircle:
+    {
+      if (clip.intersects(QRectF(center-QPointF(w, w), center+QPointF(w, w)).toRect()))
+        painter->drawEllipse(center, w, w);
+      break;
+    }
+    case tsSquare:
+    {
+      if (clip.intersects(QRectF(center-QPointF(w, w), center+QPointF(w, w)).toRect()))
+        painter->drawRect(QRectF(center-QPointF(w, w), center+QPointF(w, w)));
+      break;
+    }
+  }
+}
+
+/*!
+  If the tracer is connected with a graph (\ref setGraph), this function updates the tracer's \a
+  position to reside on the graph data, depending on the configured key (\ref setGraphKey).
+  
+  It is called automatically on every redraw and normally doesn't need to be called manually. One
+  exception is when you want to read the tracer coordinates via \a position and are not sure that
+  the graph's data (or the tracer key with \ref setGraphKey) hasn't changed since the last redraw.
+  In that situation, call this function before accessing \a position, to make sure you don't get
+  out-of-date coordinates.
+  
+  If there is no graph set on this tracer, this function does nothing.
+*/
+void QCPItemTracer::updatePosition()
+{
+  if (mGraph)
+  {
+    if (mParentPlot->hasPlottable(mGraph))
+    {
+      if (mGraph->data()->size() > 1)
+      {
+        QCPDataMap::const_iterator first = mGraph->data()->constBegin();
+        QCPDataMap::const_iterator last = mGraph->data()->constEnd()-1;
+        if (mGraphKey < first.key())
+          position->setCoords(first.key(), first.value().value);
+        else if (mGraphKey > last.key())
+          position->setCoords(last.key(), last.value().value);
+        else
+        {
+          QCPDataMap::const_iterator it = mGraph->data()->lowerBound(mGraphKey);
+          if (it != first) // mGraphKey is somewhere between iterators
+          {
+            QCPDataMap::const_iterator prevIt = it-1;
+            if (mInterpolating)
+            {
+              // interpolate between iterators around mGraphKey:
+              double slope = 0;
+              if (!qFuzzyCompare((double)it.key(), (double)prevIt.key()))
+                slope = (it.value().value-prevIt.value().value)/(it.key()-prevIt.key());
+              position->setCoords(mGraphKey, (mGraphKey-prevIt.key())*slope+prevIt.value().value);
+            } else
+            {
+              // find iterator with key closest to mGraphKey:
+              if (mGraphKey < (prevIt.key()+it.key())*0.5)
+                it = prevIt;
+              position->setCoords(it.key(), it.value().value);
+            }
+          } else // mGraphKey is exactly on first iterator
+            position->setCoords(it.key(), it.value().value);
+        }
+      } else if (mGraph->data()->size() == 1)
+      {
+        QCPDataMap::const_iterator it = mGraph->data()->constBegin();
+        position->setCoords(it.key(), it.value().value);
+      } else
+        qDebug() << Q_FUNC_INFO << "graph has no data";
+    } else
+      qDebug() << Q_FUNC_INFO << "graph not contained in QCustomPlot instance (anymore)";
+  }
+}
+
+/*! \internal
+
+  Returns the pen that should be used for drawing lines. Returns mPen when the item is not selected
+  and mSelectedPen when it is.
+*/
+QPen QCPItemTracer::mainPen() const
+{
+  return mSelected ? mSelectedPen : mPen;
+}
+
+/*! \internal
+
+  Returns the brush that should be used for drawing fills of the item. Returns mBrush when the item
+  is not selected and mSelectedBrush when it is.
+*/
+QBrush QCPItemTracer::mainBrush() const
+{
+  return mSelected ? mSelectedBrush : mBrush;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////// QCPItemBracket
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*! \class QCPItemBracket
+  \brief A bracket for referencing/highlighting certain parts in the plot.
+
+  \image html QCPItemBracket.png "Bracket example. Blue dotted circles are anchors, solid blue discs are positions."
+
+  It has two positions, \a left and \a right, which define the span of the bracket. If \a left is
+  actually farther to the left than \a right, the bracket is opened to the bottom, as shown in the
+  example image.
+  
+  The bracket supports multiple styles via \ref setStyle. The length, i.e. how far the bracket
+  stretches away from the embraced span, can be controlled with \ref setLength.
+  
+  \image html QCPItemBracket-length.png
+  <center>Demonstrating the effect of different values for \ref setLength, for styles \ref
+  bsCalligraphic and \ref bsSquare. Anchors and positions are displayed for reference.</center>
+  
+  It provides an anchor \a center, to allow connection of other items, e.g. an arrow (QCPItemLine
+  or QCPItemCurve) or a text label (QCPItemText), to the bracket.
+*/
+
+/*!
+  Creates a bracket item and sets default values.
+  
+  The constructed item can be added to the plot with QCustomPlot::addItem.
+*/
+QCPItemBracket::QCPItemBracket(QCustomPlot *parentPlot) :
+  QCPAbstractItem(parentPlot),
+  left(createPosition("left")),
+  right(createPosition("right")),
+  center(createAnchor("center", aiCenter))
+{
+  left->setCoords(0, 0);
+  right->setCoords(1, 1);
+  
+  setPen(QPen(Qt::black));
+  setSelectedPen(QPen(Qt::blue, 2));
+  setLength(8);
+  setStyle(bsCalligraphic);
+}
+
+QCPItemBracket::~QCPItemBracket()
+{
+}
+
+/*!
+  Sets the pen that will be used to draw the bracket.
+  
+  Note that when the style is \ref bsCalligraphic, only the color will be taken from the pen, the
+  stroke and width are ignored. To change the apparent stroke width of a calligraphic bracket, use
+  \ref setLength, which has a similar effect.
+  
+  \see setSelectedPen
+*/
+void QCPItemBracket::setPen(const QPen &pen)
+{
+  mPen = pen;
+}
+
+/*!
+  Sets the pen that will be used to draw the bracket when selected
+  
+  \see setPen, setSelected
+*/
+void QCPItemBracket::setSelectedPen(const QPen &pen)
+{
+  mSelectedPen = pen;
+}
+
+/*!
+  Sets the \a length in pixels how far the bracket extends in the direction towards the embraced
+  span of the bracket (i.e. perpendicular to the <i>left</i>-<i>right</i>-direction)
+  
+  \image html QCPItemBracket-length.png
+  <center>Demonstrating the effect of different values for \ref setLength, for styles \ref
+  bsCalligraphic and \ref bsSquare. Anchors and positions are displayed for reference.</center>
+*/
+void QCPItemBracket::setLength(double length)
+{
+  mLength = length;
+}
+
+/*!
+  Sets the style of the bracket, i.e. the shape/visual appearance.
+  
+  \see setPen
+*/
+void QCPItemBracket::setStyle(QCPItemBracket::BracketStyle style)
+{
+  mStyle = style;
+}
+
+/* inherits documentation from base class */
+double QCPItemBracket::selectTest(const QPointF &pos, bool onlySelectable, QVariant *details) const
+{
+  Q_UNUSED(details)
+  if (onlySelectable && !mSelectable)
+    return -1;
+  
+  QVector2D leftVec(left->pixelPoint());
+  QVector2D rightVec(right->pixelPoint());
+  if (leftVec.toPoint() == rightVec.toPoint())
+    return -1;
+  
+  QVector2D widthVec = (rightVec-leftVec)*0.5f;
+  QVector2D lengthVec(-widthVec.y(), widthVec.x());
+  lengthVec = lengthVec.normalized()*mLength;
+  QVector2D centerVec = (rightVec+leftVec)*0.5f-lengthVec;
+  
+  return qSqrt(distSqrToLine((centerVec-widthVec).toPointF(), (centerVec+widthVec).toPointF(), pos));
+}
+
+/* inherits documentation from base class */
+void QCPItemBracket::draw(QCPPainter *painter)
+{
+  QVector2D leftVec(left->pixelPoint());
+  QVector2D rightVec(right->pixelPoint());
+  if (leftVec.toPoint() == rightVec.toPoint())
+    return;
+  
+  QVector2D widthVec = (rightVec-leftVec)*0.5f;
+  QVector2D lengthVec(-widthVec.y(), widthVec.x());
+  lengthVec = lengthVec.normalized()*mLength;
+  QVector2D centerVec = (rightVec+leftVec)*0.5f-lengthVec;
+
+  QPolygon boundingPoly;
+  boundingPoly << leftVec.toPoint() << rightVec.toPoint()
+               << (rightVec-lengthVec).toPoint() << (leftVec-lengthVec).toPoint();
+  QRect clip = clipRect().adjusted(-mainPen().widthF(), -mainPen().widthF(), mainPen().widthF(), mainPen().widthF());
+  if (clip.intersects(boundingPoly.boundingRect()))
+  {
+    painter->setPen(mainPen());
+    switch (mStyle)
+    {
+      case bsSquare:
+      {
+        painter->drawLine((centerVec+widthVec).toPointF(), (centerVec-widthVec).toPointF());
+        painter->drawLine((centerVec+widthVec).toPointF(), (centerVec+widthVec+lengthVec).toPointF());
+        painter->drawLine((centerVec-widthVec).toPointF(), (centerVec-widthVec+lengthVec).toPointF());
+        break;
+      }
+      case bsRound:
+      {
+        painter->setBrush(Qt::NoBrush);
+        QPainterPath path;
+        path.moveTo((centerVec+widthVec+lengthVec).toPointF());
+        path.cubicTo((centerVec+widthVec).toPointF(), (centerVec+widthVec).toPointF(), centerVec.toPointF());
+        path.cubicTo((centerVec-widthVec).toPointF(), (centerVec-widthVec).toPointF(), (centerVec-widthVec+lengthVec).toPointF());
+        painter->drawPath(path);
+        break;
+      }
+      case bsCurly:
+      {
+        painter->setBrush(Qt::NoBrush);
+        QPainterPath path;
+        path.moveTo((centerVec+widthVec+lengthVec).toPointF());
+        path.cubicTo((centerVec+widthVec-lengthVec*0.8f).toPointF(), (centerVec+0.4f*widthVec+lengthVec).toPointF(), centerVec.toPointF());
+        path.cubicTo((centerVec-0.4f*widthVec+lengthVec).toPointF(), (centerVec-widthVec-lengthVec*0.8f).toPointF(), (centerVec-widthVec+lengthVec).toPointF());
+        painter->drawPath(path);
+        break;
+      }
+      case bsCalligraphic:
+      {
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QBrush(mainPen().color()));
+        QPainterPath path;
+        path.moveTo((centerVec+widthVec+lengthVec).toPointF());
+        
+        path.cubicTo((centerVec+widthVec-lengthVec*0.8f).toPointF(), (centerVec+0.4f*widthVec+0.8f*lengthVec).toPointF(), centerVec.toPointF());
+        path.cubicTo((centerVec-0.4f*widthVec+0.8f*lengthVec).toPointF(), (centerVec-widthVec-lengthVec*0.8f).toPointF(), (centerVec-widthVec+lengthVec).toPointF());
+        
+        path.cubicTo((centerVec-widthVec-lengthVec*0.5f).toPointF(), (centerVec-0.2f*widthVec+1.2f*lengthVec).toPointF(), (centerVec+lengthVec*0.2f).toPointF());
+        path.cubicTo((centerVec+0.2f*widthVec+1.2f*lengthVec).toPointF(), (centerVec+widthVec-lengthVec*0.5f).toPointF(), (centerVec+widthVec+lengthVec).toPointF());
+        
+        painter->drawPath(path);
+        break;
+      }
+    }
+  }
+}
+
+/* inherits documentation from base class */
+QPointF QCPItemBracket::anchorPixelPoint(int anchorId) const
+{
+  QVector2D leftVec(left->pixelPoint());
+  QVector2D rightVec(right->pixelPoint());
+  if (leftVec.toPoint() == rightVec.toPoint())
+    return leftVec.toPointF();
+  
+  QVector2D widthVec = (rightVec-leftVec)*0.5f;
+  QVector2D lengthVec(-widthVec.y(), widthVec.x());
+  lengthVec = lengthVec.normalized()*mLength;
+  QVector2D centerVec = (rightVec+leftVec)*0.5f-lengthVec;
+  
+  switch (anchorId)
+  {
+    case aiCenter:
+      return centerVec.toPointF();
+  }
+  qDebug() << Q_FUNC_INFO << "invalid anchorId" << anchorId;
+  return QPointF();
+}
+
+/*! \internal
+
+  Returns the pen that should be used for drawing lines. Returns mPen when the
+  item is not selected and mSelectedPen when it is.
+*/
+QPen QCPItemBracket::mainPen() const
+{
+    return mSelected ? mSelectedPen : mPen;
+}
