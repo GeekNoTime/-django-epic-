@@ -157,4 +157,91 @@ enum Interaction { iRangeDrag         = 0x001 ///< <tt>0x001</tt> Axis ranges ar
                    ,iSelectPlottables = 0x008 ///< <tt>0x008</tt> Plottables are selectable (e.g. graphs, curves, bars,... see QCPAbstractPlottable)
                    ,iSelectAxes       = 0x010 ///< <tt>0x010</tt> Axes are selectable (or parts of them, see QCPAxis::setSelectableParts)
                    ,iSelectLegend     = 0x020 ///< <tt>0x020</tt> Legends are selectable (or their child items, see QCPLegend::setSelectableParts)
-                   ,iSelectItems      = 0x040 ///< <tt>0x040</tt> Items are
+                   ,iSelectItems      = 0x040 ///< <tt>0x040</tt> Items are selectable (Rectangles, Arrows, Textitems, etc. see \ref QCPAbstractItem)
+                   ,iSelectOther      = 0x080 ///< <tt>0x080</tt> All other objects are selectable (e.g. your own derived layerables, the plot title,...)
+                 };
+Q_DECLARE_FLAGS(Interactions, Interaction)
+
+/*! \internal
+  
+  Returns whether the specified \a value is considered an invalid data value for plottables (i.e.
+  is \e nan or \e +/-inf). This function is used to check data validity upon replots, when the
+  compiler flag \c QCUSTOMPLOT_CHECK_DATA is set.
+*/
+inline bool isInvalidData(double value)
+{
+  return qIsNaN(value) || qIsInf(value);
+}
+
+/*! \internal
+  \overload
+  
+  Checks two arguments instead of one.
+*/
+inline bool isInvalidData(double value1, double value2)
+{
+  return isInvalidData(value1) || isInvalidData(value2);
+}
+
+/*! \internal
+  
+  Sets the specified \a side of \a margins to \a value
+  
+  \see getMarginValue
+*/
+inline void setMarginValue(QMargins &margins, QCP::MarginSide side, int value)
+{
+  switch (side)
+  {
+    case QCP::msLeft: margins.setLeft(value); break;
+    case QCP::msRight: margins.setRight(value); break;
+    case QCP::msTop: margins.setTop(value); break;
+    case QCP::msBottom: margins.setBottom(value); break;
+    case QCP::msAll: margins = QMargins(value, value, value, value); break;
+    default: break;
+  }
+}
+
+/*! \internal
+  
+  Returns the value of the specified \a side of \a margins. If \a side is \ref QCP::msNone or
+  \ref QCP::msAll, returns 0.
+  
+  \see setMarginValue
+*/
+inline int getMarginValue(const QMargins &margins, QCP::MarginSide side)
+{
+  switch (side)
+  {
+    case QCP::msLeft: return margins.left();
+    case QCP::msRight: return margins.right();
+    case QCP::msTop: return margins.top();
+    case QCP::msBottom: return margins.bottom();
+    default: break;
+  }
+  return 0;
+}
+
+} // end of namespace QCP
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QCP::AntialiasedElements)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QCP::PlottingHints)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QCP::MarginSides)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QCP::Interactions)
+
+
+class QCP_LIB_DECL QCPScatterStyle
+{
+  Q_GADGET
+public:
+  /*!
+    Defines the shape used for scatter points.
+
+    On plottables/items that draw scatters, the sizes of these visualizations (with exception of
+    \ref ssDot and \ref ssPixmap) can be controlled with the \ref setSize function. Scatters are
+    drawn with the pen and brush specified with \ref setPen and \ref setBrush.
+  */
+  Q_ENUMS(ScatterShape)
+  enum ScatterShape { ssNone       ///< no scatter symbols are drawn (e.g. in QCPGraph, data only represented with lines)
+                      ,ssDot       ///< \enumimage{ssDot.png} a single pixel (use \ref ssDisc or \ref ssCircle if you want a round shape with a certain radius)
+                      ,ssCross     ///< \enum
