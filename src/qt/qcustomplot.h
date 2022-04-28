@@ -122,4 +122,39 @@ enum AntialiasedElement { aeAxes           = 0x0001 ///< <tt>0x0001</tt> Axis ba
                           ,aePlottables    = 0x0020 ///< <tt>0x0020</tt> Main lines of plottables (excluding error bars, see element \ref aeErrorBars)
                           ,aeItems         = 0x0040 ///< <tt>0x0040</tt> Main lines of items
                           ,aeScatters      = 0x0080 ///< <tt>0x0080</tt> Scatter symbols of plottables (excluding scatter symbols of type ssPixmap)
-                          ,aeErrorBars     = 0x0100 ///< <tt>0x
+                          ,aeErrorBars     = 0x0100 ///< <tt>0x0100</tt> Error bars
+                          ,aeFills         = 0x0200 ///< <tt>0x0200</tt> Borders of fills (e.g. under or between graphs)
+                          ,aeZeroLine      = 0x0400 ///< <tt>0x0400</tt> Zero-lines, see \ref QCPGrid::setZeroLinePen
+                          ,aeAll           = 0xFFFF ///< <tt>0xFFFF</tt> All elements
+                          ,aeNone          = 0x0000 ///< <tt>0x0000</tt> No elements
+                        };
+Q_DECLARE_FLAGS(AntialiasedElements, AntialiasedElement)
+
+/*!
+  Defines plotting hints that control various aspects of the quality and speed of plotting.
+  
+  \see QCustomPlot::setPlottingHints
+*/
+enum PlottingHint { phNone            = 0x000 ///< <tt>0x000</tt> No hints are set
+                    ,phFastPolylines  = 0x001 ///< <tt>0x001</tt> Graph/Curve lines are drawn with a faster method. This reduces the quality
+                                              ///<                especially of the line segment joins. (Only relevant for solid line pens.)
+                    ,phForceRepaint   = 0x002 ///< <tt>0x002</tt> causes an immediate repaint() instead of a soft update() when QCustomPlot::replot() is called with parameter \ref QCustomPlot::rpHint.
+                                              ///<                This is set by default to prevent the plot from freezing on fast consecutive replots (e.g. user drags ranges with mouse).
+                    ,phCacheLabels    = 0x004 ///< <tt>0x004</tt> axis (tick) labels will be cached as pixmaps, increasing replot performance.
+                  };
+Q_DECLARE_FLAGS(PlottingHints, PlottingHint)
+
+/*!
+  Defines the mouse interactions possible with QCustomPlot.
+  
+  \c Interactions is a flag of or-combined elements of this enum type.
+  
+  \see QCustomPlot::setInteractions
+*/
+enum Interaction { iRangeDrag         = 0x001 ///< <tt>0x001</tt> Axis ranges are draggable (see \ref QCPAxisRect::setRangeDrag, \ref QCPAxisRect::setRangeDragAxes)
+                   ,iRangeZoom        = 0x002 ///< <tt>0x002</tt> Axis ranges are zoomable with the mouse wheel (see \ref QCPAxisRect::setRangeZoom, \ref QCPAxisRect::setRangeZoomAxes)
+                   ,iMultiSelect      = 0x004 ///< <tt>0x004</tt> The user can select multiple objects by holding the modifier set by \ref QCustomPlot::setMultiSelectModifier while clicking
+                   ,iSelectPlottables = 0x008 ///< <tt>0x008</tt> Plottables are selectable (e.g. graphs, curves, bars,... see QCPAbstractPlottable)
+                   ,iSelectAxes       = 0x010 ///< <tt>0x010</tt> Axes are selectable (or parts of them, see QCPAxis::setSelectableParts)
+                   ,iSelectLegend     = 0x020 ///< <tt>0x020</tt> Legends are selectable (or their child items, see QCPLegend::setSelectableParts)
+                   ,iSelectItems      = 0x040 ///< <tt>0x040</tt> Items are
