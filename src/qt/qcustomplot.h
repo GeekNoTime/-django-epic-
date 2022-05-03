@@ -244,4 +244,48 @@ public:
   Q_ENUMS(ScatterShape)
   enum ScatterShape { ssNone       ///< no scatter symbols are drawn (e.g. in QCPGraph, data only represented with lines)
                       ,ssDot       ///< \enumimage{ssDot.png} a single pixel (use \ref ssDisc or \ref ssCircle if you want a round shape with a certain radius)
-                      ,ssCross     ///< \enum
+                      ,ssCross     ///< \enumimage{ssCross.png} a cross
+                      ,ssPlus      ///< \enumimage{ssPlus.png} a plus
+                      ,ssCircle    ///< \enumimage{ssCircle.png} a circle
+                      ,ssDisc      ///< \enumimage{ssDisc.png} a circle which is filled with the pen's color (not the brush as with ssCircle)
+                      ,ssSquare    ///< \enumimage{ssSquare.png} a square
+                      ,ssDiamond   ///< \enumimage{ssDiamond.png} a diamond
+                      ,ssStar      ///< \enumimage{ssStar.png} a star with eight arms, i.e. a combination of cross and plus
+                      ,ssTriangle  ///< \enumimage{ssTriangle.png} an equilateral triangle, standing on baseline
+                      ,ssTriangleInverted ///< \enumimage{ssTriangleInverted.png} an equilateral triangle, standing on corner
+                      ,ssCrossSquare      ///< \enumimage{ssCrossSquare.png} a square with a cross inside
+                      ,ssPlusSquare       ///< \enumimage{ssPlusSquare.png} a square with a plus inside
+                      ,ssCrossCircle      ///< \enumimage{ssCrossCircle.png} a circle with a cross inside
+                      ,ssPlusCircle       ///< \enumimage{ssPlusCircle.png} a circle with a plus inside
+                      ,ssPeace     ///< \enumimage{ssPeace.png} a circle, with one vertical and two downward diagonal lines
+                      ,ssPixmap    ///< a custom pixmap specified by \ref setPixmap, centered on the data point coordinates
+                      ,ssCustom    ///< custom painter operations are performed per scatter (As QPainterPath, see \ref setCustomPath)
+                    };
+
+  QCPScatterStyle();
+  QCPScatterStyle(ScatterShape shape, double size=6);
+  QCPScatterStyle(ScatterShape shape, const QColor &color, double size);
+  QCPScatterStyle(ScatterShape shape, const QColor &color, const QColor &fill, double size);
+  QCPScatterStyle(ScatterShape shape, const QPen &pen, const QBrush &brush, double size);
+  QCPScatterStyle(const QPixmap &pixmap);
+  QCPScatterStyle(const QPainterPath &customPath, const QPen &pen, const QBrush &brush=Qt::NoBrush, double size=6);
+  
+  // getters:
+  double size() const { return mSize; }
+  ScatterShape shape() const { return mShape; }
+  QPen pen() const { return mPen; }
+  QBrush brush() const { return mBrush; }
+  QPixmap pixmap() const { return mPixmap; }
+  QPainterPath customPath() const { return mCustomPath; }
+
+  // setters:
+  void setSize(double size);
+  void setShape(ScatterShape shape);
+  void setPen(const QPen &pen);
+  void setBrush(const QBrush &brush);
+  void setPixmap(const QPixmap &pixmap);
+  void setCustomPath(const QPainterPath &customPath);
+
+  // non-property methods:
+  bool isNone() const { return mShape == ssNone; }
+  bool isPenDefined() const { return mPenDefined; }
