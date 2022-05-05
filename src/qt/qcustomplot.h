@@ -722,4 +722,81 @@ public:
   explicit QCPLayout();
   
   // reimplemented virtual methods:
-  virtual void update(UpdatePhase
+  virtual void update(UpdatePhase phase);
+  virtual QList<QCPLayoutElement*> elements(bool recursive) const;
+  
+  // introduced virtual methods:
+  virtual int elementCount() const = 0;
+  virtual QCPLayoutElement* elementAt(int index) const = 0;
+  virtual QCPLayoutElement* takeAt(int index) = 0;
+  virtual bool take(QCPLayoutElement* element) = 0;
+  virtual void simplify();
+  
+  // non-virtual methods:
+  bool removeAt(int index);
+  bool remove(QCPLayoutElement* element);
+  void clear();
+  
+protected:
+  // introduced virtual methods:
+  virtual void updateLayout();
+  
+  // non-virtual methods:
+  void sizeConstraintsChanged() const;
+  void adoptElement(QCPLayoutElement *el);
+  void releaseElement(QCPLayoutElement *el);
+  QVector<int> getSectionSizes(QVector<int> maxSizes, QVector<int> minSizes, QVector<double> stretchFactors, int totalSize) const;
+  
+private:
+  Q_DISABLE_COPY(QCPLayout)
+  friend class QCPLayoutElement;
+};
+
+
+class QCP_LIB_DECL QCPLayoutGrid : public QCPLayout
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(int rowCount READ rowCount)
+  Q_PROPERTY(int columnCount READ columnCount)
+  Q_PROPERTY(QList<double> columnStretchFactors READ columnStretchFactors WRITE setColumnStretchFactors)
+  Q_PROPERTY(QList<double> rowStretchFactors READ rowStretchFactors WRITE setRowStretchFactors)
+  Q_PROPERTY(int columnSpacing READ columnSpacing WRITE setColumnSpacing)
+  Q_PROPERTY(int rowSpacing READ rowSpacing WRITE setRowSpacing)
+  /// \endcond
+public:
+  explicit QCPLayoutGrid();
+  virtual ~QCPLayoutGrid();
+  
+  // getters:
+  int rowCount() const;
+  int columnCount() const;
+  QList<double> columnStretchFactors() const { return mColumnStretchFactors; }
+  QList<double> rowStretchFactors() const { return mRowStretchFactors; }
+  int columnSpacing() const { return mColumnSpacing; }
+  int rowSpacing() const { return mRowSpacing; }
+  
+  // setters:
+  void setColumnStretchFactor(int column, double factor);
+  void setColumnStretchFactors(const QList<double> &factors);
+  void setRowStretchFactor(int row, double factor);
+  void setRowStretchFactors(const QList<double> &factors);
+  void setColumnSpacing(int pixels);
+  void setRowSpacing(int pixels);
+  
+  // reimplemented virtual methods:
+  virtual void updateLayout();
+  virtual int elementCount() const;
+  virtual QCPLayoutElement* elementAt(int index) const;
+  virtual QCPLayoutElement* takeAt(int index);
+  virtual bool take(QCPLayoutElement* element);
+  virtual QList<QCPLayoutElement*> elements(bool recursive) const;
+  virtual void simplify();
+  virtual QSize minimumSizeHint() const;
+  virtual QSize maximumSizeHint() const;
+  
+  // non-virtual methods:
+  QCPLayoutElement *element(int row, int column) const;
+  bool addElement(int row, int column, QCPLayoutElement *element);
+  bool hasElement(int row, int column);
+  void expandTo(int newRowCount, int ne
