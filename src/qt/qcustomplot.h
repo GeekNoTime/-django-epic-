@@ -369,3 +369,94 @@ class QCP_LIB_DECL QCPLayer : public QObject
   Q_PROPERTY(QString name READ name)
   Q_PROPERTY(int index READ index)
   Q_PROPERTY(QList<QCPLayerable*> children READ children)
+  Q_PROPERTY(bool visible READ visible WRITE setVisible)
+  /// \endcond
+public:
+  QCPLayer(QCustomPlot* parentPlot, const QString &layerName);
+  ~QCPLayer();
+  
+  // getters:
+  QCustomPlot *parentPlot() const { return mParentPlot; }
+  QString name() const { return mName; }
+  int index() const { return mIndex; }
+  QList<QCPLayerable*> children() const { return mChildren; }
+  bool visible() const { return mVisible; }
+  
+  // setters:
+  void setVisible(bool visible);
+  
+protected:
+  // property members:
+  QCustomPlot *mParentPlot;
+  QString mName;
+  int mIndex;
+  QList<QCPLayerable*> mChildren;
+  bool mVisible;
+  
+  // non-virtual methods:
+  void addChild(QCPLayerable *layerable, bool prepend);
+  void removeChild(QCPLayerable *layerable);
+  
+private:
+  Q_DISABLE_COPY(QCPLayer)
+  
+  friend class QCustomPlot;
+  friend class QCPLayerable;
+};
+
+class QCP_LIB_DECL QCPLayerable : public QObject
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(bool visible READ visible WRITE setVisible)
+  Q_PROPERTY(QCustomPlot* parentPlot READ parentPlot)
+  Q_PROPERTY(QCPLayerable* parentLayerable READ parentLayerable)
+  Q_PROPERTY(QCPLayer* layer READ layer WRITE setLayer NOTIFY layerChanged)
+  Q_PROPERTY(bool antialiased READ antialiased WRITE setAntialiased)
+  /// \endcond
+public:
+  QCPLayerable(QCustomPlot *plot, QString targetLayer="", QCPLayerable *parentLayerable=0);
+  ~QCPLayerable();
+  
+  // getters:
+  bool visible() const { return mVisible; }
+  QCustomPlot *parentPlot() const { return mParentPlot; }
+  QCPLayerable *parentLayerable() const { return mParentLayerable.data(); }
+  QCPLayer *layer() const { return mLayer; }
+  bool antialiased() const { return mAntialiased; }
+  
+  // setters:
+  void setVisible(bool on);
+  Q_SLOT bool setLayer(QCPLayer *layer);
+  bool setLayer(const QString &layerName);
+  void setAntialiased(bool enabled);
+  
+  // introduced virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+  // non-property methods:
+  bool realVisibility() const;
+  
+signals:
+  void layerChanged(QCPLayer *newLayer);
+  
+protected:
+  // property members:
+  bool mVisible;
+  QCustomPlot *mParentPlot;
+  QPointer<QCPLayerable> mParentLayerable;
+  QCPLayer *mLayer;
+  bool mAntialiased;
+  
+  // introduced virtual methods:
+  virtual void parentPlotInitialized(QCustomPlot *parentPlot);
+  virtual QCP::Interaction selectionCategory() const;
+  virtual QRect clipRect() const;
+  virtual void applyDefaultAntialiasingHint(QCPPainter *painter) const = 0;
+  virtual void draw(QCPPainter *painter) = 0;
+  // events:
+  virtual void selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged);
+  virtual void deselectEvent(bool *selectionStateChanged);
+  
+  // non-property methods:
+  void initializeParen
