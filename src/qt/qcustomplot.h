@@ -459,4 +459,91 @@ protected:
   virtual void deselectEvent(bool *selectionStateChanged);
   
   // non-property methods:
-  void initializeParen
+  void initializeParentPlot(QCustomPlot *parentPlot);
+  void setParentLayerable(QCPLayerable* parentLayerable);
+  bool moveToLayer(QCPLayer *layer, bool prepend);
+  void applyAntialiasingHint(QCPPainter *painter, bool localAntialiased, QCP::AntialiasedElement overrideElement) const;
+  
+private:
+  Q_DISABLE_COPY(QCPLayerable)
+  
+  friend class QCustomPlot;
+  friend class QCPAxisRect;
+};
+
+
+class QCP_LIB_DECL QCPRange
+{
+public:
+  double lower, upper;
+  
+  QCPRange();
+  QCPRange(double lower, double upper);
+  
+  bool operator==(const QCPRange& other) { return lower == other.lower && upper == other.upper; }
+  bool operator!=(const QCPRange& other) { return !(*this == other); }
+  
+  QCPRange &operator+=(const double& value) { lower+=value; upper+=value; return *this; }
+  QCPRange &operator-=(const double& value) { lower-=value; upper-=value; return *this; }
+  QCPRange &operator*=(const double& value) { lower*=value; upper*=value; return *this; }
+  QCPRange &operator/=(const double& value) { lower/=value; upper/=value; return *this; }
+  friend inline const QCPRange operator+(const QCPRange&, double);
+  friend inline const QCPRange operator+(double, const QCPRange&);
+  friend inline const QCPRange operator-(const QCPRange& range, double value);
+  friend inline const QCPRange operator*(const QCPRange& range, double value);
+  friend inline const QCPRange operator*(double value, const QCPRange& range);
+  friend inline const QCPRange operator/(const QCPRange& range, double value);
+  
+  double size() const;
+  double center() const;
+  void normalize();
+  void expand(const QCPRange &otherRange);
+  QCPRange expanded(const QCPRange &otherRange) const;
+  QCPRange sanitizedForLogScale() const;
+  QCPRange sanitizedForLinScale() const;
+  bool contains(double value) const;
+  
+  static bool validRange(double lower, double upper);
+  static bool validRange(const QCPRange &range);
+  static const double minRange; //1e-280;
+  static const double maxRange; //1e280;
+  
+};
+Q_DECLARE_TYPEINFO(QCPRange, Q_MOVABLE_TYPE);
+
+/* documentation of inline functions */
+
+/*! \fn QCPRange &QCPRange::operator+=(const double& value)
+  
+  Adds \a value to both boundaries of the range.
+*/
+
+/*! \fn QCPRange &QCPRange::operator-=(const double& value)
+  
+  Subtracts \a value from both boundaries of the range.
+*/
+
+/*! \fn QCPRange &QCPRange::operator*=(const double& value)
+  
+  Multiplies both boundaries of the range by \a value.
+*/
+
+/*! \fn QCPRange &QCPRange::operator/=(const double& value)
+  
+  Divides both boundaries of the range by \a value.
+*/
+
+/* end documentation of inline functions */
+
+/*!
+  Adds \a value to both boundaries of the range.
+*/
+inline const QCPRange operator+(const QCPRange& range, double value)
+{
+  QCPRange result(range);
+  result += value;
+  return result;
+}
+
+/*!
+  Adds \a value to both boundaries of the range.
