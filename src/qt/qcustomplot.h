@@ -799,4 +799,88 @@ public:
   QCPLayoutElement *element(int row, int column) const;
   bool addElement(int row, int column, QCPLayoutElement *element);
   bool hasElement(int row, int column);
-  void expandTo(int newRowCount, int ne
+  void expandTo(int newRowCount, int newColumnCount);
+  void insertRow(int newIndex);
+  void insertColumn(int newIndex);
+  
+protected:
+  // property members:
+  QList<QList<QCPLayoutElement*> > mElements;
+  QList<double> mColumnStretchFactors;
+  QList<double> mRowStretchFactors;
+  int mColumnSpacing, mRowSpacing;
+  
+  // non-virtual methods:
+  void getMinimumRowColSizes(QVector<int> *minColWidths, QVector<int> *minRowHeights) const;
+  void getMaximumRowColSizes(QVector<int> *maxColWidths, QVector<int> *maxRowHeights) const;
+  
+private:
+  Q_DISABLE_COPY(QCPLayoutGrid)
+};
+
+
+class QCP_LIB_DECL QCPLayoutInset : public QCPLayout
+{
+  Q_OBJECT
+public:
+  /*!
+    Defines how the placement and sizing is handled for a certain element in a QCPLayoutInset.
+  */
+  enum InsetPlacement { ipFree            ///< The element may be positioned/sized arbitrarily, see \ref setInsetRect
+                        ,ipBorderAligned  ///< The element is aligned to one of the layout sides, see \ref setInsetAlignment
+                      };
+  
+  explicit QCPLayoutInset();
+  virtual ~QCPLayoutInset();
+  
+  // getters:
+  InsetPlacement insetPlacement(int index) const;
+  Qt::Alignment insetAlignment(int index) const;
+  QRectF insetRect(int index) const;
+  
+  // setters:
+  void setInsetPlacement(int index, InsetPlacement placement);
+  void setInsetAlignment(int index, Qt::Alignment alignment);
+  void setInsetRect(int index, const QRectF &rect);
+  
+  // reimplemented virtual methods:
+  virtual void updateLayout();
+  virtual int elementCount() const;
+  virtual QCPLayoutElement* elementAt(int index) const;
+  virtual QCPLayoutElement* takeAt(int index);
+  virtual bool take(QCPLayoutElement* element);
+  virtual void simplify() {}
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+  // non-virtual methods:
+  void addElement(QCPLayoutElement *element, Qt::Alignment alignment);
+  void addElement(QCPLayoutElement *element, const QRectF &rect);
+  
+protected:
+  // property members:
+  QList<QCPLayoutElement*> mElements;
+  QList<InsetPlacement> mInsetPlacement;
+  QList<Qt::Alignment> mInsetAlignment;
+  QList<QRectF> mInsetRect;
+  
+private:
+  Q_DISABLE_COPY(QCPLayoutInset)
+};
+
+
+class QCP_LIB_DECL QCPLineEnding
+{
+  Q_GADGET
+public:
+  /*!
+    Defines the type of ending decoration for line-like items, e.g. an arrow.
+    
+    \image html QCPLineEnding.png
+    
+    The width and length of these decorations can be controlled with the functions \ref setWidth
+    and \ref setLength. Some decorations like \ref esDisc, \ref esSquare, \ref esDiamond and \ref esBar only
+    support a width, the length property is ignored.
+    
+    \see QCPItemLine::setHead, QCPItemLine::setTail, QCPItemCurve::setHead, QCPItemCurve::setTail, QCPAxis::setLowerEnding, QCPAxis::setUpperEnding
+  */
+  Q_ENUMS(EndingSt
