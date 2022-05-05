@@ -652,4 +652,74 @@ public:
   virtual ~QCPLayoutElement();
   
   // getters:
-  QCPLayout *layout() const { return 
+  QCPLayout *layout() const { return mParentLayout; }
+  QRect rect() const { return mRect; }
+  QRect outerRect() const { return mOuterRect; }
+  QMargins margins() const { return mMargins; }
+  QMargins minimumMargins() const { return mMinimumMargins; }
+  QCP::MarginSides autoMargins() const { return mAutoMargins; }
+  QSize minimumSize() const { return mMinimumSize; }
+  QSize maximumSize() const { return mMaximumSize; }
+  QCPMarginGroup *marginGroup(QCP::MarginSide side) const { return mMarginGroups.value(side, (QCPMarginGroup*)0); }
+  QHash<QCP::MarginSide, QCPMarginGroup*> marginGroups() const { return mMarginGroups; }
+  
+  // setters:
+  void setOuterRect(const QRect &rect);
+  void setMargins(const QMargins &margins);
+  void setMinimumMargins(const QMargins &margins);
+  void setAutoMargins(QCP::MarginSides sides);
+  void setMinimumSize(const QSize &size);
+  void setMinimumSize(int width, int height);
+  void setMaximumSize(const QSize &size);
+  void setMaximumSize(int width, int height);
+  void setMarginGroup(QCP::MarginSides sides, QCPMarginGroup *group);
+  
+  // introduced virtual methods:
+  virtual void update(UpdatePhase phase);
+  virtual QSize minimumSizeHint() const;
+  virtual QSize maximumSizeHint() const;
+  virtual QList<QCPLayoutElement*> elements(bool recursive) const;
+  
+  // reimplemented virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+protected:
+  // property members:
+  QCPLayout *mParentLayout;
+  QSize mMinimumSize, mMaximumSize;
+  QRect mRect, mOuterRect;
+  QMargins mMargins, mMinimumMargins;
+  QCP::MarginSides mAutoMargins;
+  QHash<QCP::MarginSide, QCPMarginGroup*> mMarginGroups;
+  
+  // introduced virtual methods:
+  virtual int calculateAutoMargin(QCP::MarginSide side);
+  // events:
+  virtual void mousePressEvent(QMouseEvent *event) {Q_UNUSED(event)}
+  virtual void mouseMoveEvent(QMouseEvent *event) {Q_UNUSED(event)}
+  virtual void mouseReleaseEvent(QMouseEvent *event) {Q_UNUSED(event)}
+  virtual void mouseDoubleClickEvent(QMouseEvent *event) {Q_UNUSED(event)}
+  virtual void wheelEvent(QWheelEvent *event) {Q_UNUSED(event)}
+  
+  // reimplemented virtual methods:
+  virtual void applyDefaultAntialiasingHint(QCPPainter *painter) const { Q_UNUSED(painter) }
+  virtual void draw(QCPPainter *painter) { Q_UNUSED(painter) }
+  virtual void parentPlotInitialized(QCustomPlot *parentPlot);
+
+private:
+  Q_DISABLE_COPY(QCPLayoutElement)
+  
+  friend class QCustomPlot;
+  friend class QCPLayout;
+  friend class QCPMarginGroup;
+};
+
+
+class QCP_LIB_DECL QCPLayout : public QCPLayoutElement
+{
+  Q_OBJECT
+public:
+  explicit QCPLayout();
+  
+  // reimplemented virtual methods:
+  virtual void update(UpdatePhase
