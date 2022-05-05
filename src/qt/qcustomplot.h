@@ -547,3 +547,109 @@ inline const QCPRange operator+(const QCPRange& range, double value)
 
 /*!
   Adds \a value to both boundaries of the range.
+*/
+inline const QCPRange operator+(double value, const QCPRange& range)
+{
+  QCPRange result(range);
+  result += value;
+  return result;
+}
+
+/*!
+  Subtracts \a value from both boundaries of the range.
+*/
+inline const QCPRange operator-(const QCPRange& range, double value)
+{
+  QCPRange result(range);
+  result -= value;
+  return result;
+}
+
+/*!
+  Multiplies both boundaries of the range by \a value.
+*/
+inline const QCPRange operator*(const QCPRange& range, double value)
+{
+  QCPRange result(range);
+  result *= value;
+  return result;
+}
+
+/*!
+  Multiplies both boundaries of the range by \a value.
+*/
+inline const QCPRange operator*(double value, const QCPRange& range)
+{
+  QCPRange result(range);
+  result *= value;
+  return result;
+}
+
+/*!
+  Divides both boundaries of the range by \a value.
+*/
+inline const QCPRange operator/(const QCPRange& range, double value)
+{
+  QCPRange result(range);
+  result /= value;
+  return result;
+}
+
+
+class QCP_LIB_DECL QCPMarginGroup : public QObject
+{
+  Q_OBJECT
+public:
+  QCPMarginGroup(QCustomPlot *parentPlot);
+  ~QCPMarginGroup();
+  
+  // non-virtual methods:
+  QList<QCPLayoutElement*> elements(QCP::MarginSide side) const { return mChildren.value(side); }
+  bool isEmpty() const;
+  void clear();
+  
+protected:
+  // non-property members:
+  QCustomPlot *mParentPlot;
+  QHash<QCP::MarginSide, QList<QCPLayoutElement*> > mChildren;
+  
+  // non-virtual methods:
+  int commonMargin(QCP::MarginSide side) const;
+  void addChild(QCP::MarginSide side, QCPLayoutElement *element);
+  void removeChild(QCP::MarginSide side, QCPLayoutElement *element);
+  
+private:
+  Q_DISABLE_COPY(QCPMarginGroup)
+  
+  friend class QCPLayoutElement;
+};
+
+
+class QCP_LIB_DECL QCPLayoutElement : public QCPLayerable
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QCPLayout* layout READ layout)
+  Q_PROPERTY(QRect rect READ rect)
+  Q_PROPERTY(QRect outerRect READ outerRect WRITE setOuterRect)
+  Q_PROPERTY(QMargins margins READ margins WRITE setMargins)
+  Q_PROPERTY(QMargins minimumMargins READ minimumMargins WRITE setMinimumMargins)
+  Q_PROPERTY(QSize minimumSize READ minimumSize WRITE setMinimumSize)
+  Q_PROPERTY(QSize maximumSize READ maximumSize WRITE setMaximumSize)
+  /// \endcond
+public:
+  /*!
+    Defines the phases of the update process, that happens just before a replot. At each phase,
+    \ref update is called with the according UpdatePhase value.
+  */
+  enum UpdatePhase { upPreparation ///< Phase used for any type of preparation that needs to be done before margin calculation and layout
+                     ,upMargins    ///< Phase in which the margins are calculated and set
+                     ,upLayout     ///< Final phase in which the layout system places the rects of the elements
+                   };
+  Q_ENUMS(UpdatePhase)
+
+  explicit QCPLayoutElement(QCustomPlot *parentPlot=0);
+  virtual ~QCPLayoutElement();
+  
+  // getters:
+  QCPLayout *layout() const { return 
