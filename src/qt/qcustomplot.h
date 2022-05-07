@@ -950,4 +950,62 @@ public:
   
   // setters:
   void setSubGridVisible(bool visible);
-  void setAntialiasedSubGr
+  void setAntialiasedSubGrid(bool enabled);
+  void setAntialiasedZeroLine(bool enabled);
+  void setPen(const QPen &pen);
+  void setSubGridPen(const QPen &pen);
+  void setZeroLinePen(const QPen &pen);
+  
+protected:
+  // property members:
+  bool mSubGridVisible;
+  bool mAntialiasedSubGrid, mAntialiasedZeroLine;
+  QPen mPen, mSubGridPen, mZeroLinePen;
+  // non-property members:
+  QCPAxis *mParentAxis;
+  
+  // reimplemented virtual methods:
+  virtual void applyDefaultAntialiasingHint(QCPPainter *painter) const;
+  virtual void draw(QCPPainter *painter);
+  
+  // non-virtual methods:
+  void drawGridLines(QCPPainter *painter) const;
+  void drawSubGridLines(QCPPainter *painter) const;
+  
+  friend class QCPAxis;
+};
+
+
+class QCP_LIB_DECL QCPAxis : public QCPLayerable
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(AxisType axisType READ axisType)
+  Q_PROPERTY(QCPAxisRect* axisRect READ axisRect)
+  Q_PROPERTY(ScaleType scaleType READ scaleType WRITE setScaleType NOTIFY scaleTypeChanged)
+  Q_PROPERTY(double scaleLogBase READ scaleLogBase WRITE setScaleLogBase)
+  Q_PROPERTY(QCPRange range READ range WRITE setRange NOTIFY rangeChanged)
+  Q_PROPERTY(bool rangeReversed READ rangeReversed WRITE setRangeReversed)
+  Q_PROPERTY(bool autoTicks READ autoTicks WRITE setAutoTicks)
+  Q_PROPERTY(int autoTickCount READ autoTickCount WRITE setAutoTickCount)
+  Q_PROPERTY(bool autoTickLabels READ autoTickLabels WRITE setAutoTickLabels)
+  Q_PROPERTY(bool autoTickStep READ autoTickStep WRITE setAutoTickStep)
+  Q_PROPERTY(bool autoSubTicks READ autoSubTicks WRITE setAutoSubTicks)
+  Q_PROPERTY(bool ticks READ ticks WRITE setTicks)
+  Q_PROPERTY(bool tickLabels READ tickLabels WRITE setTickLabels)
+  Q_PROPERTY(int tickLabelPadding READ tickLabelPadding WRITE setTickLabelPadding)
+  Q_PROPERTY(LabelType tickLabelType READ tickLabelType WRITE setTickLabelType)
+  Q_PROPERTY(QFont tickLabelFont READ tickLabelFont WRITE setTickLabelFont)
+  Q_PROPERTY(QColor tickLabelColor READ tickLabelColor WRITE setTickLabelColor)
+  Q_PROPERTY(double tickLabelRotation READ tickLabelRotation WRITE setTickLabelRotation)
+  Q_PROPERTY(QString dateTimeFormat READ dateTimeFormat WRITE setDateTimeFormat)
+  Q_PROPERTY(Qt::TimeSpec dateTimeSpec READ dateTimeSpec WRITE setDateTimeSpec)
+  Q_PROPERTY(QString numberFormat READ numberFormat WRITE setNumberFormat)
+  Q_PROPERTY(int numberPrecision READ numberPrecision WRITE setNumberPrecision)
+  Q_PROPERTY(double tickStep READ tickStep WRITE setTickStep)
+  Q_PROPERTY(QVector<double> tickVector READ tickVector WRITE setTickVector)
+  Q_PROPERTY(QVector<QString> tickVectorLabels READ tickVectorLabels WRITE setTickVectorLabels)
+  Q_PROPERTY(int tickLengthIn READ tickLengthIn WRITE setTickLengthIn)
+  Q_PROPERTY(int tickLengthOut READ tickLengthOut WRITE setTickLengthOut)
+  Q_PROPERTY(int subTickCount READ subTickCount WRITE setSubTickCount)
+  Q_PROPERTY(int subTickLength
