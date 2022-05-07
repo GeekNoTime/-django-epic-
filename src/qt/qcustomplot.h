@@ -883,4 +883,71 @@ public:
     
     \see QCPItemLine::setHead, QCPItemLine::setTail, QCPItemCurve::setHead, QCPItemCurve::setTail, QCPAxis::setLowerEnding, QCPAxis::setUpperEnding
   */
-  Q_ENUMS(EndingSt
+  Q_ENUMS(EndingStyle)
+  enum EndingStyle { esNone          ///< No ending decoration
+                     ,esFlatArrow    ///< A filled arrow head with a straight/flat back (a triangle)
+                     ,esSpikeArrow   ///< A filled arrow head with an indented back
+                     ,esLineArrow    ///< A non-filled arrow head with open back
+                     ,esDisc         ///< A filled circle
+                     ,esSquare       ///< A filled square
+                     ,esDiamond      ///< A filled diamond (45° rotated square)
+                     ,esBar          ///< A bar perpendicular to the line
+                     ,esHalfBar      ///< A bar perpendicular to the line, pointing out to only one side (to which side can be changed with \ref setInverted)
+                     ,esSkewedBar    ///< A bar that is skewed (skew controllable via \ref setLength)
+                   };
+  
+  QCPLineEnding();
+  QCPLineEnding(EndingStyle style, double width=8, double length=10, bool inverted=false);
+  
+  // getters:
+  EndingStyle style() const { return mStyle; }
+  double width() const { return mWidth; }
+  double length() const { return mLength; }
+  bool inverted() const { return mInverted; }
+  
+  // setters:
+  void setStyle(EndingStyle style);
+  void setWidth(double width);
+  void setLength(double length);
+  void setInverted(bool inverted);
+  
+  // non-property methods:
+  double boundingDistance() const;
+  double realLength() const;
+  void draw(QCPPainter *painter, const QVector2D &pos, const QVector2D &dir) const;
+  void draw(QCPPainter *painter, const QVector2D &pos, double angle) const;
+  
+protected:
+  // property members:
+  EndingStyle mStyle;
+  double mWidth, mLength;
+  bool mInverted;
+};
+Q_DECLARE_TYPEINFO(QCPLineEnding, Q_MOVABLE_TYPE);
+
+
+class QCP_LIB_DECL QCPGrid :public QCPLayerable
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(bool subGridVisible READ subGridVisible WRITE setSubGridVisible)
+  Q_PROPERTY(bool antialiasedSubGrid READ antialiasedSubGrid WRITE setAntialiasedSubGrid)
+  Q_PROPERTY(bool antialiasedZeroLine READ antialiasedZeroLine WRITE setAntialiasedZeroLine)
+  Q_PROPERTY(QPen pen READ pen WRITE setPen)
+  Q_PROPERTY(QPen subGridPen READ subGridPen WRITE setSubGridPen)
+  Q_PROPERTY(QPen zeroLinePen READ zeroLinePen WRITE setZeroLinePen)
+  /// \endcond
+public:
+  QCPGrid(QCPAxis *parentAxis);
+  
+  // getters:
+  bool subGridVisible() const { return mSubGridVisible; }
+  bool antialiasedSubGrid() const { return mAntialiasedSubGrid; }
+  bool antialiasedZeroLine() const { return mAntialiasedZeroLine; }
+  QPen pen() const { return mPen; }
+  QPen subGridPen() const { return mSubGridPen; }
+  QPen zeroLinePen() const { return mZeroLinePen; }
+  
+  // setters:
+  void setSubGridVisible(bool visible);
+  void setAntialiasedSubGr
