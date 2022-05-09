@@ -1008,4 +1008,47 @@ class QCP_LIB_DECL QCPAxis : public QCPLayerable
   Q_PROPERTY(int tickLengthIn READ tickLengthIn WRITE setTickLengthIn)
   Q_PROPERTY(int tickLengthOut READ tickLengthOut WRITE setTickLengthOut)
   Q_PROPERTY(int subTickCount READ subTickCount WRITE setSubTickCount)
-  Q_PROPERTY(int subTickLength
+  Q_PROPERTY(int subTickLengthIn READ subTickLengthIn WRITE setSubTickLengthIn)
+  Q_PROPERTY(int subTickLengthOut READ subTickLengthOut WRITE setSubTickLengthOut)
+  Q_PROPERTY(QPen basePen READ basePen WRITE setBasePen)
+  Q_PROPERTY(QPen tickPen READ tickPen WRITE setTickPen)
+  Q_PROPERTY(QPen subTickPen READ subTickPen WRITE setSubTickPen)
+  Q_PROPERTY(QFont labelFont READ labelFont WRITE setLabelFont)
+  Q_PROPERTY(QColor labelColor READ labelColor WRITE setLabelColor)
+  Q_PROPERTY(QString label READ label WRITE setLabel)
+  Q_PROPERTY(int labelPadding READ labelPadding WRITE setLabelPadding)
+  Q_PROPERTY(int padding READ padding WRITE setPadding)
+  Q_PROPERTY(int offset READ offset WRITE setOffset)
+  Q_PROPERTY(SelectableParts selectedParts READ selectedParts WRITE setSelectedParts NOTIFY selectionChanged)
+  Q_PROPERTY(SelectableParts selectableParts READ selectableParts WRITE setSelectableParts NOTIFY selectableChanged)
+  Q_PROPERTY(QFont selectedTickLabelFont READ selectedTickLabelFont WRITE setSelectedTickLabelFont)
+  Q_PROPERTY(QFont selectedLabelFont READ selectedLabelFont WRITE setSelectedLabelFont)
+  Q_PROPERTY(QColor selectedTickLabelColor READ selectedTickLabelColor WRITE setSelectedTickLabelColor)
+  Q_PROPERTY(QColor selectedLabelColor READ selectedLabelColor WRITE setSelectedLabelColor)
+  Q_PROPERTY(QPen selectedBasePen READ selectedBasePen WRITE setSelectedBasePen)
+  Q_PROPERTY(QPen selectedTickPen READ selectedTickPen WRITE setSelectedTickPen)
+  Q_PROPERTY(QPen selectedSubTickPen READ selectedSubTickPen WRITE setSelectedSubTickPen)
+  Q_PROPERTY(QCPLineEnding lowerEnding READ lowerEnding WRITE setLowerEnding)
+  Q_PROPERTY(QCPLineEnding upperEnding READ upperEnding WRITE setUpperEnding)
+  Q_PROPERTY(QCPGrid* grid READ grid)
+  /// \endcond
+public:
+  /*!
+    Defines at which side of the axis rect the axis will appear. This also affects how the tick
+    marks are drawn, on which side the labels are placed etc.
+  */
+  enum AxisType { atLeft    = 0x01  ///< <tt>0x01</tt> Axis is vertical and on the left side of the axis rect
+                  ,atRight  = 0x02  ///< <tt>0x02</tt> Axis is vertical and on the right side of the axis rect
+                  ,atTop    = 0x04  ///< <tt>0x04</tt> Axis is horizontal and on the top side of the axis rect
+                  ,atBottom = 0x08  ///< <tt>0x08</tt> Axis is horizontal and on the bottom side of the axis rect
+                };
+  Q_FLAGS(AxisType AxisTypes)
+  Q_DECLARE_FLAGS(AxisTypes, AxisType)
+  /*!
+    When automatic tick label generation is enabled (\ref setAutoTickLabels), defines how the
+    coordinate of the tick is interpreted, i.e. translated into a string.
+    
+    \see setTickLabelType
+  */
+  enum LabelType { ltNumber    ///< Tick coordinate is regarded as normal number and will be displayed as such. (see \ref setNumberFormat)
+          
