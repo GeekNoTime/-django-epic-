@@ -1051,4 +1051,63 @@ public:
     \see setTickLabelType
   */
   enum LabelType { ltNumber    ///< Tick coordinate is regarded as normal number and will be displayed as such. (see \ref setNumberFormat)
-          
+                   ,ltDateTime ///< Tick coordinate is regarded as a date/time (seconds since 1970-01-01T00:00:00 UTC) and will be displayed and formatted as such. (for details, see \ref setDateTimeFormat)
+                 };
+  Q_ENUMS(LabelType)
+  /*!
+    Defines the scale of an axis.
+    \see setScaleType
+  */
+  enum ScaleType { stLinear       ///< Linear scaling
+                   ,stLogarithmic ///< Logarithmic scaling with correspondingly transformed plots and (major) tick marks at every base power (see \ref setScaleLogBase).
+                 };
+  Q_ENUMS(ScaleType)
+  /*!
+    Defines the selectable parts of an axis.
+    \see setSelectableParts, setSelectedParts
+  */
+  enum SelectablePart { spNone        = 0      ///< None of the selectable parts
+                        ,spAxis       = 0x001  ///< The axis backbone and tick marks
+                        ,spTickLabels = 0x002  ///< Tick labels (numbers) of this axis (as a whole, not individually)
+                        ,spAxisLabel  = 0x004  ///< The axis label
+                      };
+  Q_FLAGS(SelectablePart SelectableParts)
+  Q_DECLARE_FLAGS(SelectableParts, SelectablePart)
+  
+  explicit QCPAxis(QCPAxisRect *parent, AxisType type);
+  virtual ~QCPAxis();
+  
+  // getters:
+  AxisType axisType() const { return mAxisType; }
+  QCPAxisRect *axisRect() const { return mAxisRect; }
+  ScaleType scaleType() const { return mScaleType; }
+  double scaleLogBase() const { return mScaleLogBase; }
+  const QCPRange range() const { return mRange; }
+  bool rangeReversed() const { return mRangeReversed; }
+  bool autoTicks() const { return mAutoTicks; }
+  int autoTickCount() const { return mAutoTickCount; }
+  bool autoTickLabels() const { return mAutoTickLabels; }
+  bool autoTickStep() const { return mAutoTickStep; }
+  bool autoSubTicks() const { return mAutoSubTicks; }
+  bool ticks() const { return mTicks; }
+  bool tickLabels() const { return mTickLabels; }
+  int tickLabelPadding() const;
+  LabelType tickLabelType() const { return mTickLabelType; }
+  QFont tickLabelFont() const { return mTickLabelFont; }
+  QColor tickLabelColor() const { return mTickLabelColor; }
+  double tickLabelRotation() const;
+  QString dateTimeFormat() const { return mDateTimeFormat; }
+  Qt::TimeSpec dateTimeSpec() const { return mDateTimeSpec; }
+  QString numberFormat() const;
+  int numberPrecision() const { return mNumberPrecision; }
+  double tickStep() const { return mTickStep; }
+  QVector<double> tickVector() const { return mTickVector; }
+  QVector<QString> tickVectorLabels() const { return mTickVectorLabels; }
+  int tickLengthIn() const;
+  int tickLengthOut() const;
+  int subTickCount() const { return mSubTickCount; }
+  int subTickLengthIn() const;
+  int subTickLengthOut() const;
+  QPen basePen() const { return mBasePen; }
+  QPen tickPen() const { return mTickPen; }
+  QPen subT
