@@ -1110,4 +1110,65 @@ public:
   int subTickLengthOut() const;
   QPen basePen() const { return mBasePen; }
   QPen tickPen() const { return mTickPen; }
-  QPen subT
+  QPen subTickPen() const { return mSubTickPen; }
+  QFont labelFont() const { return mLabelFont; }
+  QColor labelColor() const { return mLabelColor; }
+  QString label() const { return mLabel; }
+  int labelPadding() const;
+  int padding() const { return mPadding; }
+  int offset() const;
+  SelectableParts selectedParts() const { return mSelectedParts; }
+  SelectableParts selectableParts() const { return mSelectableParts; }
+  QFont selectedTickLabelFont() const { return mSelectedTickLabelFont; }
+  QFont selectedLabelFont() const { return mSelectedLabelFont; }
+  QColor selectedTickLabelColor() const { return mSelectedTickLabelColor; }
+  QColor selectedLabelColor() const { return mSelectedLabelColor; }
+  QPen selectedBasePen() const { return mSelectedBasePen; }
+  QPen selectedTickPen() const { return mSelectedTickPen; }
+  QPen selectedSubTickPen() const { return mSelectedSubTickPen; }
+  QCPLineEnding lowerEnding() const;
+  QCPLineEnding upperEnding() const;
+  QCPGrid *grid() const { return mGrid; }
+  
+  // setters:
+  Q_SLOT void setScaleType(QCPAxis::ScaleType type);
+  void setScaleLogBase(double base);
+  Q_SLOT void setRange(const QCPRange &range);
+  void setRange(double lower, double upper);
+  void setRange(double position, double size, Qt::AlignmentFlag alignment);
+  void setRangeLower(double lower);
+  void setRangeUpper(double upper);
+  void setRangeReversed(bool reversed);
+  void setAutoTicks(bool on);
+  void setAutoTickCount(int approximateCount);
+  void setAutoTickLabels(bool on);
+  void setAutoTickStep(bool on);
+  void setAutoSubTicks(bool on);
+  void setTicks(bool show);
+  void setTickLabels(bool show);
+  void setTickLabelPadding(int padding);
+  void setTickLabelType(LabelType type);
+  void setTickLabelFont(const QFont &font);
+  void setTickLabelColor(const QColor &color);
+  void setTickLabelRotation(double degrees);
+  void setDateTimeFormat(const QString &format);
+  void setDateTimeSpec(const Qt::TimeSpec &timeSpec);
+  void setNumberFormat(const QString &formatCode);
+  void setNumberPrecision(int precision);
+  void setTickStep(double step);
+  void setTickVector(const QVector<double> &vec);
+  void setTickVectorLabels(const QVector<QString> &vec);
+  void setTickLength(int inside, int outside=0);
+  void setTickLengthIn(int inside);
+  void setTickLengthOut(int outside);
+  void setSubTickCount(int count);
+  void setSubTickLength(int inside, int outside=0);
+  void setSubTickLengthIn(int inside);
+  void setSubTickLengthOut(int outside);
+  void setBasePen(const QPen &pen);
+  void setTickPen(const QPen &pen);
+  void setSubTickPen(const QPen &pen);
+  void setLabelFont(const QFont &font);
+  void setLabelColor(const QColor &color);
+  void setLabel(const QString &str);
+  void setLabelPadding
