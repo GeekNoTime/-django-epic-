@@ -1327,4 +1327,66 @@ public:
   QFont labelFont;
   QColor labelColor;
   QString label;
-  int tickLabelPadding; /
+  int tickLabelPadding; // directly accessed by QCPAxis setters/getters
+  double tickLabelRotation; // directly accessed by QCPAxis setters/getters
+  bool substituteExponent;
+  bool numberMultiplyCross; // directly accessed by QCPAxis setters/getters
+  int tickLengthIn, tickLengthOut, subTickLengthIn, subTickLengthOut; // directly accessed by QCPAxis setters/getters
+  QPen tickPen, subTickPen;
+  QFont tickLabelFont;
+  QColor tickLabelColor;
+  QRect alignmentRect, viewportRect;
+  double offset; // directly accessed by QCPAxis setters/getters
+  bool abbreviateDecimalPowers;
+  bool reversedEndings;
+  
+  QVector<double> subTickPositions;
+  QVector<double> tickPositions;
+  QVector<QString> tickLabels;
+  
+protected:
+  struct CachedLabel
+  {
+    QPointF offset;
+    QPixmap pixmap;
+  };
+  struct TickLabelData
+  {
+    QString basePart, expPart;
+    QRect baseBounds, expBounds, totalBounds, rotatedTotalBounds;
+    QFont baseFont, expFont;
+  };
+  QCustomPlot *mParentPlot;
+  QByteArray mLabelParameterHash; // to determine whether mLabelCache needs to be cleared due to changed parameters
+  QCache<QString, CachedLabel> mLabelCache;
+  QRect mAxisSelectionBox, mTickLabelsSelectionBox, mLabelSelectionBox;
+  
+  virtual QByteArray generateLabelParameterHash() const;
+  
+  virtual void placeTickLabel(QCPPainter *painter, double position, int distanceToAxis, const QString &text, QSize *tickLabelsSize);
+  virtual void drawTickLabel(QCPPainter *painter, double x, double y, const TickLabelData &labelData) const;
+  virtual TickLabelData getTickLabelData(const QFont &font, const QString &text) const;
+  virtual QPointF getTickLabelDrawOffset(const TickLabelData &labelData) const;
+  virtual void getMaxTickLabelSize(const QFont &font, const QString &text, QSize *tickLabelsSize) const;
+};
+
+
+class QCP_LIB_DECL QCPAbstractPlottable : public QCPLayerable
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QString name READ name WRITE setName)
+  Q_PROPERTY(bool antialiasedFill READ antialiasedFill WRITE setAntialiasedFill)
+  Q_PROPERTY(bool antialiasedScatters READ antialiasedScatters WRITE setAntialiasedScatters)
+  Q_PROPERTY(bool antialiasedErrorBars READ antialiasedErrorBars WRITE setAntialiasedErrorBars)
+  Q_PROPERTY(QPen pen READ pen WRITE setPen)
+  Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
+  Q_PROPERTY(QBrush brush READ brush WRITE setBrush)
+  Q_PROPERTY(QBrush selectedBrush READ selectedBrush WRITE setSelectedBrush)
+  Q_PROPERTY(QCPAxis* keyAxis READ keyAxis WRITE setKeyAxis)
+  Q_PROPERTY(QCPAxis* valueAxis READ valueAxis WRITE setValueAxis)
+  Q_PROPERTY(bool selectable READ selectable WRITE setSelectable NOTIFY selectableChanged)
+  Q_PROPERTY(bool selected READ selected WRITE setSelected NOTIFY selectionChanged)
+  /// \endcond
+public:
+  QCPAbstractPlottable(QCPAxis *keyAxis, QCPAxis *
