@@ -1241,4 +1241,90 @@ protected:
   Qt::TimeSpec mDateTimeSpec;
   int mNumberPrecision;
   char mNumberFormatChar;
-  boo
+  bool mNumberBeautifulPowers;
+  //bool mNumberMultiplyCross; // QCPAxisPainter
+  // ticks and subticks:
+  bool mTicks;
+  double mTickStep;
+  int mSubTickCount, mAutoTickCount;
+  bool mAutoTicks, mAutoTickStep, mAutoSubTicks;
+  //int mTickLengthIn, mTickLengthOut, mSubTickLengthIn, mSubTickLengthOut; // QCPAxisPainter
+  QPen mTickPen, mSelectedTickPen;
+  QPen mSubTickPen, mSelectedSubTickPen;
+  // scale and range:
+  QCPRange mRange;
+  bool mRangeReversed;
+  ScaleType mScaleType;
+  double mScaleLogBase, mScaleLogBaseLogInv;
+  
+  // non-property members:
+  QCPGrid *mGrid;
+  QCPAxisPainterPrivate *mAxisPainter;
+  int mLowestVisibleTick, mHighestVisibleTick;
+  QVector<double> mTickVector;
+  QVector<QString> mTickVectorLabels;
+  QVector<double> mSubTickVector;
+  bool mCachedMarginValid;
+  int mCachedMargin;
+  
+  // introduced virtual methods:
+  virtual void setupTickVectors();
+  virtual void generateAutoTicks();
+  virtual int calculateAutoSubTickCount(double tickStep) const;
+  virtual int calculateMargin();
+  
+  // reimplemented virtual methods:
+  virtual void applyDefaultAntialiasingHint(QCPPainter *painter) const;
+  virtual void draw(QCPPainter *painter);
+  virtual QCP::Interaction selectionCategory() const;
+  // events:
+  virtual void selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged);
+  virtual void deselectEvent(bool *selectionStateChanged);
+  
+  // non-virtual methods:
+  void visibleTickBounds(int &lowIndex, int &highIndex) const;
+  double baseLog(double value) const;
+  double basePow(double value) const;
+  QPen getBasePen() const;
+  QPen getTickPen() const;
+  QPen getSubTickPen() const;
+  QFont getTickLabelFont() const;
+  QFont getLabelFont() const;
+  QColor getTickLabelColor() const;
+  QColor getLabelColor() const;
+  
+private:
+  Q_DISABLE_COPY(QCPAxis)
+  
+  friend class QCustomPlot;
+  friend class QCPGrid;
+  friend class QCPAxisRect;
+};
+Q_DECLARE_OPERATORS_FOR_FLAGS(QCPAxis::SelectableParts)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QCPAxis::AxisTypes)
+Q_DECLARE_METATYPE(QCPAxis::SelectablePart)
+
+
+class QCPAxisPainterPrivate
+{
+public:
+  explicit QCPAxisPainterPrivate(QCustomPlot *parentPlot);
+  virtual ~QCPAxisPainterPrivate();
+  
+  virtual void draw(QCPPainter *painter);
+  virtual int size() const;
+  void clearCache();
+  
+  QRect axisSelectionBox() const { return mAxisSelectionBox; }
+  QRect tickLabelsSelectionBox() const { return mTickLabelsSelectionBox; }
+  QRect labelSelectionBox() const { return mLabelSelectionBox; }
+  
+  // public property members:
+  QCPAxis::AxisType type;
+  QPen basePen;
+  QCPLineEnding lowerEnding, upperEnding; // directly accessed by QCPAxis setters/getters
+  int labelPadding; // directly accessed by QCPAxis setters/getters
+  QFont labelFont;
+  QColor labelColor;
+  QString label;
+  int tickLabelPadding; /
