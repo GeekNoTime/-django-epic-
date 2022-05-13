@@ -1171,4 +1171,74 @@ public:
   void setLabelFont(const QFont &font);
   void setLabelColor(const QColor &color);
   void setLabel(const QString &str);
-  void setLabelPadding
+  void setLabelPadding(int padding);
+  void setPadding(int padding);
+  void setOffset(int offset);
+  void setSelectedTickLabelFont(const QFont &font);
+  void setSelectedLabelFont(const QFont &font);
+  void setSelectedTickLabelColor(const QColor &color);
+  void setSelectedLabelColor(const QColor &color);
+  void setSelectedBasePen(const QPen &pen);
+  void setSelectedTickPen(const QPen &pen);
+  void setSelectedSubTickPen(const QPen &pen);
+  Q_SLOT void setSelectableParts(const QCPAxis::SelectableParts &selectableParts);
+  Q_SLOT void setSelectedParts(const QCPAxis::SelectableParts &selectedParts);
+  void setLowerEnding(const QCPLineEnding &ending);
+  void setUpperEnding(const QCPLineEnding &ending);
+  
+  // reimplemented virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+  // non-property methods:
+  Qt::Orientation orientation() const { return mOrientation; }
+  void moveRange(double diff);
+  void scaleRange(double factor, double center);
+  void setScaleRatio(const QCPAxis *otherAxis, double ratio=1.0);
+  void rescale(bool onlyVisiblePlottables=false);
+  double pixelToCoord(double value) const;
+  double coordToPixel(double value) const;
+  SelectablePart getPartAt(const QPointF &pos) const;
+  QList<QCPAbstractPlottable*> plottables() const;
+  QList<QCPGraph*> graphs() const;
+  QList<QCPAbstractItem*> items() const;
+  
+  static AxisType marginSideToAxisType(QCP::MarginSide side);
+  static Qt::Orientation orientation(AxisType type) { return type==atBottom||type==atTop ? Qt::Horizontal : Qt::Vertical; }
+  static AxisType opposite(AxisType type);
+  
+signals:
+  void ticksRequest();
+  void rangeChanged(const QCPRange &newRange);
+  void rangeChanged(const QCPRange &newRange, const QCPRange &oldRange);
+  void scaleTypeChanged(QCPAxis::ScaleType scaleType);
+  void selectionChanged(const QCPAxis::SelectableParts &parts);
+  void selectableChanged(const QCPAxis::SelectableParts &parts);
+
+protected:
+  // property members:
+  // axis base:
+  AxisType mAxisType;
+  QCPAxisRect *mAxisRect;
+  //int mOffset; // in QCPAxisPainter
+  int mPadding;
+  Qt::Orientation mOrientation;
+  SelectableParts mSelectableParts, mSelectedParts;
+  QPen mBasePen, mSelectedBasePen;
+  //QCPLineEnding mLowerEnding, mUpperEnding; // in QCPAxisPainter
+  // axis label:
+  //int mLabelPadding; // in QCPAxisPainter
+  QString mLabel;
+  QFont mLabelFont, mSelectedLabelFont;
+  QColor mLabelColor, mSelectedLabelColor;
+  // tick labels:
+  //int mTickLabelPadding; // in QCPAxisPainter
+  bool mTickLabels, mAutoTickLabels;
+  //double mTickLabelRotation; // in QCPAxisPainter
+  LabelType mTickLabelType;
+  QFont mTickLabelFont, mSelectedTickLabelFont;
+  QColor mTickLabelColor, mSelectedTickLabelColor;
+  QString mDateTimeFormat;
+  Qt::TimeSpec mDateTimeSpec;
+  int mNumberPrecision;
+  char mNumberFormatChar;
+  boo
