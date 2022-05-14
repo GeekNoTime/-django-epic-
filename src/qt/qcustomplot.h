@@ -1389,4 +1389,75 @@ class QCP_LIB_DECL QCPAbstractPlottable : public QCPLayerable
   Q_PROPERTY(bool selected READ selected WRITE setSelected NOTIFY selectionChanged)
   /// \endcond
 public:
-  QCPAbstractPlottable(QCPAxis *keyAxis, QCPAxis *
+  QCPAbstractPlottable(QCPAxis *keyAxis, QCPAxis *valueAxis);
+  
+  // getters:
+  QString name() const { return mName; }
+  bool antialiasedFill() const { return mAntialiasedFill; }
+  bool antialiasedScatters() const { return mAntialiasedScatters; }
+  bool antialiasedErrorBars() const { return mAntialiasedErrorBars; }
+  QPen pen() const { return mPen; }
+  QPen selectedPen() const { return mSelectedPen; }
+  QBrush brush() const { return mBrush; }
+  QBrush selectedBrush() const { return mSelectedBrush; }
+  QCPAxis *keyAxis() const { return mKeyAxis.data(); }
+  QCPAxis *valueAxis() const { return mValueAxis.data(); }
+  bool selectable() const { return mSelectable; }
+  bool selected() const { return mSelected; }
+  
+  // setters:
+  void setName(const QString &name);
+  void setAntialiasedFill(bool enabled);
+  void setAntialiasedScatters(bool enabled);
+  void setAntialiasedErrorBars(bool enabled);
+  void setPen(const QPen &pen);
+  void setSelectedPen(const QPen &pen);
+  void setBrush(const QBrush &brush);
+  void setSelectedBrush(const QBrush &brush);
+  void setKeyAxis(QCPAxis *axis);
+  void setValueAxis(QCPAxis *axis);
+  Q_SLOT void setSelectable(bool selectable);
+  Q_SLOT void setSelected(bool selected);
+
+  // introduced virtual methods:
+  virtual void clearData() = 0;
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const = 0;
+  virtual bool addToLegend();
+  virtual bool removeFromLegend() const;
+  
+  // non-property methods:
+  void rescaleAxes(bool onlyEnlarge=false) const;
+  void rescaleKeyAxis(bool onlyEnlarge=false) const;
+  void rescaleValueAxis(bool onlyEnlarge=false) const;
+  
+signals:
+  void selectionChanged(bool selected);
+  void selectableChanged(bool selectable);
+  
+protected:
+  /*!
+    Represents negative and positive sign domain for passing to \ref getKeyRange and \ref getValueRange.
+  */
+  enum SignDomain { sdNegative  ///< The negative sign domain, i.e. numbers smaller than zero
+                    ,sdBoth     ///< Both sign domains, including zero, i.e. all (rational) numbers
+                    ,sdPositive ///< The positive sign domain, i.e. numbers greater than zero
+                  };
+  
+  // property members:
+  QString mName;
+  bool mAntialiasedFill, mAntialiasedScatters, mAntialiasedErrorBars;
+  QPen mPen, mSelectedPen;
+  QBrush mBrush, mSelectedBrush;
+  QPointer<QCPAxis> mKeyAxis, mValueAxis;
+  bool mSelectable, mSelected;
+  
+  // reimplemented virtual methods:
+  virtual QRect clipRect() const;
+  virtual void draw(QCPPainter *painter) = 0;
+  virtual QCP::Interaction selectionCategory() const;
+  void applyDefaultAntialiasingHint(QCPPainter *painter) const;
+  // events:
+  virtual void selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged);
+  virtual void deselectEvent(bool *selectionStateChanged);
+  
+  
