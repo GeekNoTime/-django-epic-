@@ -1460,4 +1460,77 @@ protected:
   virtual void selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged);
   virtual void deselectEvent(bool *selectionStateChanged);
   
+  // introduced virtual methods:
+  virtual void drawLegendIcon(QCPPainter *painter, const QRectF &rect) const = 0;
+  virtual QCPRange getKeyRange(bool &foundRange, SignDomain inSignDomain=sdBoth) const = 0;
+  virtual QCPRange getValueRange(bool &foundRange, SignDomain inSignDomain=sdBoth) const = 0;
   
+  // non-virtual methods:
+  void coordsToPixels(double key, double value, double &x, double &y) const;
+  const QPointF coordsToPixels(double key, double value) const;
+  void pixelsToCoords(double x, double y, double &key, double &value) const;
+  void pixelsToCoords(const QPointF &pixelPos, double &key, double &value) const;
+  QPen mainPen() const;
+  QBrush mainBrush() const;
+  void applyFillAntialiasingHint(QCPPainter *painter) const;
+  void applyScattersAntialiasingHint(QCPPainter *painter) const;
+  void applyErrorBarsAntialiasingHint(QCPPainter *painter) const;
+  double distSqrToLine(const QPointF &start, const QPointF &end, const QPointF &point) const;
+
+private:
+  Q_DISABLE_COPY(QCPAbstractPlottable)
+  
+  friend class QCustomPlot;
+  friend class QCPAxis;
+  friend class QCPPlottableLegendItem;
+};
+
+
+class QCP_LIB_DECL QCPItemAnchor
+{
+public:
+  QCPItemAnchor(QCustomPlot *parentPlot, QCPAbstractItem *parentItem, const QString name, int anchorId=-1);
+  virtual ~QCPItemAnchor();
+  
+  // getters:
+  QString name() const { return mName; }
+  virtual QPointF pixelPoint() const;
+  
+protected:
+  // property members:
+  QString mName;
+  
+  // non-property members:
+  QCustomPlot *mParentPlot;
+  QCPAbstractItem *mParentItem;
+  int mAnchorId;
+  QSet<QCPItemPosition*> mChildren;
+  
+  // introduced virtual methods:
+  virtual QCPItemPosition *toQCPItemPosition() { return 0; }
+  
+  // non-virtual methods:
+  void addChild(QCPItemPosition* pos); // called from pos when this anchor is set as parent
+  void removeChild(QCPItemPosition *pos); // called from pos when its parent anchor is reset or pos deleted
+  
+private:
+  Q_DISABLE_COPY(QCPItemAnchor)
+  
+  friend class QCPItemPosition;
+};
+
+
+
+class QCP_LIB_DECL QCPItemPosition : public QCPItemAnchor
+{
+public:
+  /*!
+    Defines the ways an item position can be specified. Thus it defines what the numbers passed to
+    \ref setCoords actually mean.
+    
+    \see setType
+  */
+  enum PositionType { ptAbsolute        ///< Static positioning in pixels, starting from the top left corner of the viewport/widget.
+                      ,ptViewportRatio  ///< Static positioning given by a fraction of the viewport size. For example, if you call setCoords(0, 0), the position will be at the top
+                                        ///< left corner of the viewport/widget. setCoords(1, 1) will be at the bottom right corner, setCoords(0.5, 0) will be horizontally centered and
+                                        ///
