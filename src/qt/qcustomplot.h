@@ -1669,4 +1669,54 @@ class QCP_LIB_DECL QCustomPlot : public QWidget
   /// \endcond
 public:
   /*!
-    Defines how a layer should be inserted relative to an other 
+    Defines how a layer should be inserted relative to an other layer.
+
+    \see addLayer, moveLayer
+  */
+  enum LayerInsertMode { limBelow  ///< Layer is inserted below other layer
+                         ,limAbove ///< Layer is inserted above other layer
+                       };
+  Q_ENUMS(LayerInsertMode)
+  
+  /*!
+    Defines with what timing the QCustomPlot surface is refreshed after a replot.
+
+    \see replot
+  */
+  enum RefreshPriority { rpImmediate ///< The QCustomPlot surface is immediately refreshed, by calling QWidget::repaint() after the replot
+                         ,rpQueued   ///< Queues the refresh such that it is performed at a slightly delayed point in time after the replot, by calling QWidget::update() after the replot
+                         ,rpHint     ///< Whether to use immediate repaint or queued update depends on whether the plotting hint \ref QCP::phForceRepaint is set, see \ref setPlottingHints.
+                       };
+  
+  explicit QCustomPlot(QWidget *parent = 0);
+  virtual ~QCustomPlot();
+  
+  // getters:
+  QRect viewport() const { return mViewport; }
+  QPixmap background() const { return mBackgroundPixmap; }
+  bool backgroundScaled() const { return mBackgroundScaled; }
+  Qt::AspectRatioMode backgroundScaledMode() const { return mBackgroundScaledMode; }
+  QCPLayoutGrid *plotLayout() const { return mPlotLayout; }
+  QCP::AntialiasedElements antialiasedElements() const { return mAntialiasedElements; }
+  QCP::AntialiasedElements notAntialiasedElements() const { return mNotAntialiasedElements; }
+  bool autoAddPlottableToLegend() const { return mAutoAddPlottableToLegend; }
+  const QCP::Interactions interactions() const { return mInteractions; }
+  int selectionTolerance() const { return mSelectionTolerance; }
+  bool noAntialiasingOnDrag() const { return mNoAntialiasingOnDrag; }
+  QCP::PlottingHints plottingHints() const { return mPlottingHints; }
+  Qt::KeyboardModifier multiSelectModifier() const { return mMultiSelectModifier; }
+
+  // setters:
+  void setViewport(const QRect &rect);
+  void setBackground(const QPixmap &pm);
+  void setBackground(const QPixmap &pm, bool scaled, Qt::AspectRatioMode mode=Qt::KeepAspectRatioByExpanding);
+  void setBackground(const QBrush &brush);
+  void setBackgroundScaled(bool scaled);
+  void setBackgroundScaledMode(Qt::AspectRatioMode mode);
+  void setAntialiasedElements(const QCP::AntialiasedElements &antialiasedElements);
+  void setAntialiasedElement(QCP::AntialiasedElement antialiasedElement, bool enabled=true);
+  void setNotAntialiasedElements(const QCP::AntialiasedElements &notAntialiasedElements);
+  void setNotAntialiasedElement(QCP::AntialiasedElement notAntialiasedElement, bool enabled=true);
+  void setAutoAddPlottableToLegend(bool on);
+  void setInteractions(const QCP::Interactions &interactions);
+  void setInteraction(const QCP
