@@ -1597,4 +1597,76 @@ public:
   bool clipToAxisRect() const { return mClipToAxisRect; }
   QCPAxisRect *clipAxisRect() const;
   bool selectable() const { return mSelectable; }
-  bool selected() const { return mSel
+  bool selected() const { return mSelected; }
+  
+  // setters:
+  void setClipToAxisRect(bool clip);
+  void setClipAxisRect(QCPAxisRect *rect);
+  Q_SLOT void setSelectable(bool selectable);
+  Q_SLOT void setSelected(bool selected);
+  
+  // reimplemented virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const = 0;
+  
+  // non-virtual methods:
+  QList<QCPItemPosition*> positions() const { return mPositions; }
+  QList<QCPItemAnchor*> anchors() const { return mAnchors; }
+  QCPItemPosition *position(const QString &name) const;
+  QCPItemAnchor *anchor(const QString &name) const;
+  bool hasAnchor(const QString &name) const;
+  
+signals:
+  void selectionChanged(bool selected);
+  void selectableChanged(bool selectable);
+  
+protected:
+  // property members:
+  bool mClipToAxisRect;
+  QPointer<QCPAxisRect> mClipAxisRect;
+  QList<QCPItemPosition*> mPositions;
+  QList<QCPItemAnchor*> mAnchors;
+  bool mSelectable, mSelected;
+  
+  // reimplemented virtual methods:
+  virtual QCP::Interaction selectionCategory() const;
+  virtual QRect clipRect() const;
+  virtual void applyDefaultAntialiasingHint(QCPPainter *painter) const;
+  virtual void draw(QCPPainter *painter) = 0;
+  // events:
+  virtual void selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged);
+  virtual void deselectEvent(bool *selectionStateChanged);
+  
+  // introduced virtual methods:
+  virtual QPointF anchorPixelPoint(int anchorId) const;
+  
+  // non-virtual methods:
+  double distSqrToLine(const QPointF &start, const QPointF &end, const QPointF &point) const;
+  double rectSelectTest(const QRectF &rect, const QPointF &pos, bool filledRect) const;
+  QCPItemPosition *createPosition(const QString &name);
+  QCPItemAnchor *createAnchor(const QString &name, int anchorId);
+  
+private:
+  Q_DISABLE_COPY(QCPAbstractItem)
+  
+  friend class QCustomPlot;
+  friend class QCPItemAnchor;
+};
+
+
+class QCP_LIB_DECL QCustomPlot : public QWidget
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QRect viewport READ viewport WRITE setViewport)
+  Q_PROPERTY(QPixmap background READ background WRITE setBackground)
+  Q_PROPERTY(bool backgroundScaled READ backgroundScaled WRITE setBackgroundScaled)
+  Q_PROPERTY(Qt::AspectRatioMode backgroundScaledMode READ backgroundScaledMode WRITE setBackgroundScaledMode)
+  Q_PROPERTY(QCPLayoutGrid* plotLayout READ plotLayout)
+  Q_PROPERTY(bool autoAddPlottableToLegend READ autoAddPlottableToLegend WRITE setAutoAddPlottableToLegend)
+  Q_PROPERTY(int selectionTolerance READ selectionTolerance WRITE setSelectionTolerance)
+  Q_PROPERTY(bool noAntialiasingOnDrag READ noAntialiasingOnDrag WRITE setNoAntialiasingOnDrag)
+  Q_PROPERTY(Qt::KeyboardModifier multiSelectModifier READ multiSelectModifier WRITE setMultiSelectModifier)
+  /// \endcond
+public:
+  /*!
+    Defines how a layer should be inserted relative to an other 
