@@ -1533,4 +1533,68 @@ public:
   enum PositionType { ptAbsolute        ///< Static positioning in pixels, starting from the top left corner of the viewport/widget.
                       ,ptViewportRatio  ///< Static positioning given by a fraction of the viewport size. For example, if you call setCoords(0, 0), the position will be at the top
                                         ///< left corner of the viewport/widget. setCoords(1, 1) will be at the bottom right corner, setCoords(0.5, 0) will be horizontally centered and
-                                        ///
+                                        ///< vertically at the top of the viewport/widget, etc.
+                      ,ptAxisRectRatio  ///< Static positioning given by a fraction of the axis rect size (see \ref setAxisRect). For example, if you call setCoords(0, 0), the position will be at the top
+                                        ///< left corner of the axis rect. setCoords(1, 1) will be at the bottom right corner, setCoords(0.5, 0) will be horizontally centered and
+                                        ///< vertically at the top of the axis rect, etc. You can also go beyond the axis rect by providing negative coordinates or coordinates larger than 1.
+                      ,ptPlotCoords     ///< Dynamic positioning at a plot coordinate defined by two axes (see \ref setAxes).
+                    };
+  
+  QCPItemPosition(QCustomPlot *parentPlot, QCPAbstractItem *parentItem, const QString name);
+  virtual ~QCPItemPosition();
+  
+  // getters:
+  PositionType type() const { return mPositionType; }
+  QCPItemAnchor *parentAnchor() const { return mParentAnchor; }
+  double key() const { return mKey; }
+  double value() const { return mValue; }
+  QPointF coords() const { return QPointF(mKey, mValue); }
+  QCPAxis *keyAxis() const { return mKeyAxis.data(); }
+  QCPAxis *valueAxis() const { return mValueAxis.data(); }
+  QCPAxisRect *axisRect() const;
+  virtual QPointF pixelPoint() const;
+  
+  // setters:
+  void setType(PositionType type);
+  bool setParentAnchor(QCPItemAnchor *parentAnchor, bool keepPixelPosition=false);
+  void setCoords(double key, double value);
+  void setCoords(const QPointF &coords);
+  void setAxes(QCPAxis* keyAxis, QCPAxis* valueAxis);
+  void setAxisRect(QCPAxisRect *axisRect);
+  void setPixelPoint(const QPointF &pixelPoint);
+  
+protected:
+  // property members:
+  PositionType mPositionType;
+  QPointer<QCPAxis> mKeyAxis, mValueAxis;
+  QPointer<QCPAxisRect> mAxisRect;
+  double mKey, mValue;
+  QCPItemAnchor *mParentAnchor;
+  
+  // reimplemented virtual methods:
+  virtual QCPItemPosition *toQCPItemPosition() { return this; }
+  
+private:
+  Q_DISABLE_COPY(QCPItemPosition)
+  
+};
+
+
+class QCP_LIB_DECL QCPAbstractItem : public QCPLayerable
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(bool clipToAxisRect READ clipToAxisRect WRITE setClipToAxisRect)
+  Q_PROPERTY(QCPAxisRect* clipAxisRect READ clipAxisRect WRITE setClipAxisRect)
+  Q_PROPERTY(bool selectable READ selectable WRITE setSelectable NOTIFY selectableChanged)
+  Q_PROPERTY(bool selected READ selected WRITE setSelected NOTIFY selectionChanged)
+  /// \endcond
+public:
+  QCPAbstractItem(QCustomPlot *parentPlot);
+  virtual ~QCPAbstractItem();
+  
+  // getters:
+  bool clipToAxisRect() const { return mClipToAxisRect; }
+  QCPAxisRect *clipAxisRect() const;
+  bool selectable() const { return mSelectable; }
+  bool selected() const { return mSel
