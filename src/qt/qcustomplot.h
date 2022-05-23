@@ -1899,4 +1899,67 @@ public:
                         ,gpGeography ///< Colors suitable to represent different elevations on geographical maps
                         ,gpIon       ///< Half hue spectrum from black over purple to blue and finally green (creates banding illusion but allows more precise magnitude estimates)
                         ,gpThermal   ///< Colors suitable for thermal imaging, ranging from dark blue over purple to orange, yellow and white
-                        ,gpPolar     ///< Colors suitable to emphasize polarity around the center, with blue for negative, black in 
+                        ,gpPolar     ///< Colors suitable to emphasize polarity around the center, with blue for negative, black in the middle and red for positive values
+                        ,gpSpectrum  ///< An approximation of the visible light spectrum (creates banding illusion but allows more precise magnitude estimates)
+                        ,gpJet       ///< Hue variation similar to a spectrum, often used in numerical visualization (creates banding illusion but allows more precise magnitude estimates)
+                        ,gpHues      ///< Full hue cycle, with highest and lowest color red (suitable for periodic data, such as angles and phases, see \ref setPeriodic)
+                      };
+  Q_ENUMS(GradientPreset)
+  
+  QCPColorGradient(GradientPreset preset=gpCold);
+  bool operator==(const QCPColorGradient &other) const;
+  bool operator!=(const QCPColorGradient &other) const { return !(*this == other); }
+  
+  // getters:
+  int levelCount() const { return mLevelCount; }
+  QMap<double, QColor> colorStops() const { return mColorStops; }
+  ColorInterpolation colorInterpolation() const { return mColorInterpolation; }
+  bool periodic() const { return mPeriodic; }
+  
+  // setters:
+  void setLevelCount(int n);
+  void setColorStops(const QMap<double, QColor> &colorStops);
+  void setColorStopAt(double position, const QColor &color);
+  void setColorInterpolation(ColorInterpolation interpolation);
+  void setPeriodic(bool enabled);
+  
+  // non-property methods:
+  void colorize(const double *data, const QCPRange &range, QRgb *scanLine, int n, int dataIndexFactor=1, bool logarithmic=false);
+  QRgb color(double position, const QCPRange &range, bool logarithmic=false);
+  void loadPreset(GradientPreset preset);
+  void clearColorStops();
+  QCPColorGradient inverted() const;
+  
+protected:
+  void updateColorBuffer();
+  
+  // property members:
+  int mLevelCount;
+  QMap<double, QColor> mColorStops;
+  ColorInterpolation mColorInterpolation;
+  bool mPeriodic;
+  
+  // non-property members:
+  QVector<QRgb> mColorBuffer;
+  bool mColorBufferInvalidated;
+};
+
+
+class QCP_LIB_DECL QCPAxisRect : public QCPLayoutElement
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QPixmap background READ background WRITE setBackground)
+  Q_PROPERTY(bool backgroundScaled READ backgroundScaled WRITE setBackgroundScaled)
+  Q_PROPERTY(Qt::AspectRatioMode backgroundScaledMode READ backgroundScaledMode WRITE setBackgroundScaledMode)
+  Q_PROPERTY(Qt::Orientations rangeDrag READ rangeDrag WRITE setRangeDrag)
+  Q_PROPERTY(Qt::Orientations rangeZoom READ rangeZoom WRITE setRangeZoom)
+  /// \endcond
+public:
+  explicit QCPAxisRect(QCustomPlot *parentPlot, bool setupDefaultAxes=true);
+  virtual ~QCPAxisRect();
+  
+  // getters:
+  QPixmap background() const { return mBackgroundPixmap; }
+  bool backgroundScaled() const { return mBackgroundScaled; }
+  Qt::AspectRatioMode backgroundScaledMode() const { return mBackgroundS
