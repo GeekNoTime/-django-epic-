@@ -1784,4 +1784,67 @@ public:
   Q_SLOT void deselectAll();
   
   bool savePdf(const QString &fileName, bool noCosmeticPen=false, int width=0, int height=0, const QString &pdfCreator="", const QString &pdfTitle="");
-  bool savePng(const QString &fileName, int width=0, int height=0, double sca
+  bool savePng(const QString &fileName, int width=0, int height=0, double scale=1.0, int quality=-1);
+  bool saveJpg(const QString &fileName, int width=0, int height=0, double scale=1.0, int quality=-1);
+  bool saveBmp(const QString &fileName, int width=0, int height=0, double scale=1.0);
+  bool saveRastered(const QString &fileName, int width, int height, double scale, const char *format, int quality=-1);
+  QPixmap toPixmap(int width=0, int height=0, double scale=1.0);
+  void toPainter(QCPPainter *painter, int width=0, int height=0);
+  Q_SLOT void replot(QCustomPlot::RefreshPriority refreshPriority=QCustomPlot::rpHint);
+  
+  QCPAxis *xAxis, *yAxis, *xAxis2, *yAxis2;
+  QCPLegend *legend;
+  
+signals:
+  void mouseDoubleClick(QMouseEvent *event);
+  void mousePress(QMouseEvent *event);
+  void mouseMove(QMouseEvent *event);
+  void mouseRelease(QMouseEvent *event);
+  void mouseWheel(QWheelEvent *event);
+  
+  void plottableClick(QCPAbstractPlottable *plottable, QMouseEvent *event);
+  void plottableDoubleClick(QCPAbstractPlottable *plottable, QMouseEvent *event);
+  void itemClick(QCPAbstractItem *item, QMouseEvent *event);
+  void itemDoubleClick(QCPAbstractItem *item, QMouseEvent *event);
+  void axisClick(QCPAxis *axis, QCPAxis::SelectablePart part, QMouseEvent *event);
+  void axisDoubleClick(QCPAxis *axis, QCPAxis::SelectablePart part, QMouseEvent *event);
+  void legendClick(QCPLegend *legend, QCPAbstractLegendItem *item, QMouseEvent *event);
+  void legendDoubleClick(QCPLegend *legend,  QCPAbstractLegendItem *item, QMouseEvent *event);
+  void titleClick(QMouseEvent *event, QCPPlotTitle *title);
+  void titleDoubleClick(QMouseEvent *event, QCPPlotTitle *title);
+  
+  void selectionChangedByUser();
+  void beforeReplot();
+  void afterReplot();
+  
+protected:
+  // property members:
+  QRect mViewport;
+  QCPLayoutGrid *mPlotLayout;
+  bool mAutoAddPlottableToLegend;
+  QList<QCPAbstractPlottable*> mPlottables;
+  QList<QCPGraph*> mGraphs; // extra list of plottables also in mPlottables that are of type QCPGraph
+  QList<QCPAbstractItem*> mItems;
+  QList<QCPLayer*> mLayers;
+  QCP::AntialiasedElements mAntialiasedElements, mNotAntialiasedElements;
+  QCP::Interactions mInteractions;
+  int mSelectionTolerance;
+  bool mNoAntialiasingOnDrag;
+  QBrush mBackgroundBrush;
+  QPixmap mBackgroundPixmap;
+  QPixmap mScaledBackgroundPixmap;
+  bool mBackgroundScaled;
+  Qt::AspectRatioMode mBackgroundScaledMode;
+  QCPLayer *mCurrentLayer;
+  QCP::PlottingHints mPlottingHints;
+  Qt::KeyboardModifier mMultiSelectModifier;
+  
+  // non-property members:
+  QPixmap mPaintBuffer;
+  QPoint mMousePressPos;
+  QPointer<QCPLayoutElement> mMouseEventElement;
+  bool mReplotting;
+  
+  // reimplemented virtual methods:
+  virtual QSize minimumSizeHint() const;
+  virtual QSize sizeHint() const;
