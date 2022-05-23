@@ -1962,4 +1962,70 @@ public:
   // getters:
   QPixmap background() const { return mBackgroundPixmap; }
   bool backgroundScaled() const { return mBackgroundScaled; }
-  Qt::AspectRatioMode backgroundScaledMode() const { return mBackgroundS
+  Qt::AspectRatioMode backgroundScaledMode() const { return mBackgroundScaledMode; }
+  Qt::Orientations rangeDrag() const { return mRangeDrag; }
+  Qt::Orientations rangeZoom() const { return mRangeZoom; }
+  QCPAxis *rangeDragAxis(Qt::Orientation orientation);
+  QCPAxis *rangeZoomAxis(Qt::Orientation orientation);
+  double rangeZoomFactor(Qt::Orientation orientation);
+  
+  // setters:
+  void setBackground(const QPixmap &pm);
+  void setBackground(const QPixmap &pm, bool scaled, Qt::AspectRatioMode mode=Qt::KeepAspectRatioByExpanding);
+  void setBackground(const QBrush &brush);
+  void setBackgroundScaled(bool scaled);
+  void setBackgroundScaledMode(Qt::AspectRatioMode mode);
+  void setRangeDrag(Qt::Orientations orientations);
+  void setRangeZoom(Qt::Orientations orientations);
+  void setRangeDragAxes(QCPAxis *horizontal, QCPAxis *vertical);
+  void setRangeZoomAxes(QCPAxis *horizontal, QCPAxis *vertical);
+  void setRangeZoomFactor(double horizontalFactor, double verticalFactor);
+  void setRangeZoomFactor(double factor);
+  
+  // non-property methods:
+  int axisCount(QCPAxis::AxisType type) const;
+  QCPAxis *axis(QCPAxis::AxisType type, int index=0) const;
+  QList<QCPAxis*> axes(QCPAxis::AxisTypes types) const;
+  QList<QCPAxis*> axes() const;
+  QCPAxis *addAxis(QCPAxis::AxisType type);
+  QList<QCPAxis*> addAxes(QCPAxis::AxisTypes types);
+  bool removeAxis(QCPAxis *axis);
+  QCPLayoutInset *insetLayout() const { return mInsetLayout; }
+  
+  void setupFullAxesBox(bool connectRanges=false);
+  QList<QCPAbstractPlottable*> plottables() const;
+  QList<QCPGraph*> graphs() const;
+  QList<QCPAbstractItem*> items() const;
+  
+  // read-only interface imitating a QRect:
+  int left() const { return mRect.left(); }
+  int right() const { return mRect.right(); }
+  int top() const { return mRect.top(); }
+  int bottom() const { return mRect.bottom(); }
+  int width() const { return mRect.width(); }
+  int height() const { return mRect.height(); }
+  QSize size() const { return mRect.size(); }
+  QPoint topLeft() const { return mRect.topLeft(); }
+  QPoint topRight() const { return mRect.topRight(); }
+  QPoint bottomLeft() const { return mRect.bottomLeft(); }
+  QPoint bottomRight() const { return mRect.bottomRight(); }
+  QPoint center() const { return mRect.center(); }
+  
+  // reimplemented virtual methods:
+  virtual void update(UpdatePhase phase);
+  virtual QList<QCPLayoutElement*> elements(bool recursive) const;
+
+protected:
+  // property members:
+  QBrush mBackgroundBrush;
+  QPixmap mBackgroundPixmap;
+  QPixmap mScaledBackgroundPixmap;
+  bool mBackgroundScaled;
+  Qt::AspectRatioMode mBackgroundScaledMode;
+  QCPLayoutInset *mInsetLayout;
+  Qt::Orientations mRangeDrag, mRangeZoom;
+  QPointer<QCPAxis> mRangeDragHorzAxis, mRangeDragVertAxis, mRangeZoomHorzAxis, mRangeZoomVertAxis;
+  double mRangeZoomFactorHorz, mRangeZoomFactorVert;
+  // non-property members:
+  QCPRange mDragStartHorzRange, mDragStartVertRange;
+  QCP::AntialiasedElements mAADragBackup, mNotAADrag
