@@ -1848,3 +1848,55 @@ protected:
   // reimplemented virtual methods:
   virtual QSize minimumSizeHint() const;
   virtual QSize sizeHint() const;
+  virtual void paintEvent(QPaintEvent *event);
+  virtual void resizeEvent(QResizeEvent *event);
+  virtual void mouseDoubleClickEvent(QMouseEvent *event);
+  virtual void mousePressEvent(QMouseEvent *event);
+  virtual void mouseMoveEvent(QMouseEvent *event);
+  virtual void mouseReleaseEvent(QMouseEvent *event);
+  virtual void wheelEvent(QWheelEvent *event);
+  
+  // introduced virtual methods:
+  virtual void draw(QCPPainter *painter);
+  virtual void axisRemoved(QCPAxis *axis);
+  virtual void legendRemoved(QCPLegend *legend);
+  
+  // non-virtual methods:
+  void updateLayerIndices() const;
+  QCPLayerable *layerableAt(const QPointF &pos, bool onlySelectable, QVariant *selectionDetails=0) const;
+  void drawBackground(QCPPainter *painter);
+  
+  friend class QCPLegend;
+  friend class QCPAxis;
+  friend class QCPLayer;
+  friend class QCPAxisRect;
+};
+
+
+class QCP_LIB_DECL QCPColorGradient
+{
+  Q_GADGET
+public:
+  /*!
+    Defines the color spaces in which color interpolation between gradient stops can be performed.
+    
+    \see setColorInterpolation
+  */
+  enum ColorInterpolation { ciRGB  ///< Color channels red, green and blue are linearly interpolated
+                            ,ciHSV ///< Color channels hue, saturation and value are linearly interpolated (The hue is interpolated over the shortest angle distance)
+                          };
+  Q_ENUMS(ColorInterpolation)
+  
+  /*!
+    Defines the available presets that can be loaded with \ref loadPreset. See the documentation
+    there for an image of the presets.
+  */
+  enum GradientPreset { gpGrayscale  ///< Continuous lightness from black to white (suited for non-biased data representation)
+                        ,gpHot       ///< Continuous lightness from black over firey colors to white (suited for non-biased data representation)
+                        ,gpCold      ///< Continuous lightness from black over icey colors to white (suited for non-biased data representation)
+                        ,gpNight     ///< Continuous lightness from black over weak blueish colors to white (suited for non-biased data representation)
+                        ,gpCandy     ///< Blue over pink to white
+                        ,gpGeography ///< Colors suitable to represent different elevations on geographical maps
+                        ,gpIon       ///< Half hue spectrum from black over purple to blue and finally green (creates banding illusion but allows more precise magnitude estimates)
+                        ,gpThermal   ///< Colors suitable for thermal imaging, ranging from dark blue over purple to orange, yellow and white
+                        ,gpPolar     ///< Colors suitable to emphasize polarity around the center, with blue for negative, black in 
