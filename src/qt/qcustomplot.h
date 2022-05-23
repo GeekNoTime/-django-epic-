@@ -1719,4 +1719,69 @@ public:
   void setNotAntialiasedElement(QCP::AntialiasedElement notAntialiasedElement, bool enabled=true);
   void setAutoAddPlottableToLegend(bool on);
   void setInteractions(const QCP::Interactions &interactions);
-  void setInteraction(const QCP
+  void setInteraction(const QCP::Interaction &interaction, bool enabled=true);
+  void setSelectionTolerance(int pixels);
+  void setNoAntialiasingOnDrag(bool enabled);
+  void setPlottingHints(const QCP::PlottingHints &hints);
+  void setPlottingHint(QCP::PlottingHint hint, bool enabled=true);
+  void setMultiSelectModifier(Qt::KeyboardModifier modifier);
+  
+  // non-property methods:
+  // plottable interface:
+  QCPAbstractPlottable *plottable(int index);
+  QCPAbstractPlottable *plottable();
+  bool addPlottable(QCPAbstractPlottable *plottable);
+  bool removePlottable(QCPAbstractPlottable *plottable);
+  bool removePlottable(int index);
+  int clearPlottables();
+  int plottableCount() const;
+  QList<QCPAbstractPlottable*> selectedPlottables() const;
+  QCPAbstractPlottable *plottableAt(const QPointF &pos, bool onlySelectable=false) const;
+  bool hasPlottable(QCPAbstractPlottable *plottable) const;
+ 
+  // specialized interface for QCPGraph:
+  QCPGraph *graph(int index) const;
+  QCPGraph *graph() const;
+  QCPGraph *addGraph(QCPAxis *keyAxis=0, QCPAxis *valueAxis=0);
+  bool removeGraph(QCPGraph *graph);
+  bool removeGraph(int index);
+  int clearGraphs();
+  int graphCount() const;
+  QList<QCPGraph*> selectedGraphs() const;
+
+  // item interface:
+  QCPAbstractItem *item(int index) const;
+  QCPAbstractItem *item() const;
+  bool addItem(QCPAbstractItem* item);
+  bool removeItem(QCPAbstractItem *item);
+  bool removeItem(int index);
+  int clearItems();
+  int itemCount() const;
+  QList<QCPAbstractItem*> selectedItems() const;
+  QCPAbstractItem *itemAt(const QPointF &pos, bool onlySelectable=false) const;
+  bool hasItem(QCPAbstractItem *item) const;
+  
+  // layer interface:
+  QCPLayer *layer(const QString &name) const;
+  QCPLayer *layer(int index) const;
+  QCPLayer *currentLayer() const;
+  bool setCurrentLayer(const QString &name);
+  bool setCurrentLayer(QCPLayer *layer);
+  int layerCount() const;
+  bool addLayer(const QString &name, QCPLayer *otherLayer=0, LayerInsertMode insertMode=limAbove);
+  bool removeLayer(QCPLayer *layer);
+  bool moveLayer(QCPLayer *layer, QCPLayer *otherLayer, LayerInsertMode insertMode=limAbove);
+  
+  // axis rect/layout interface:
+  int axisRectCount() const;
+  QCPAxisRect* axisRect(int index=0) const;
+  QList<QCPAxisRect*> axisRects() const;
+  QCPLayoutElement* layoutElementAt(const QPointF &pos) const;
+  Q_SLOT void rescaleAxes(bool onlyVisiblePlottables=false);
+  
+  QList<QCPAxis*> selectedAxes() const;
+  QList<QCPLegend*> selectedLegends() const;
+  Q_SLOT void deselectAll();
+  
+  bool savePdf(const QString &fileName, bool noCosmeticPen=false, int width=0, int height=0, const QString &pdfCreator="", const QString &pdfTitle="");
+  bool savePng(const QString &fileName, int width=0, int height=0, double sca
