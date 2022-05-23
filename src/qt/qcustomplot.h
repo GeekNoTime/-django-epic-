@@ -2104,4 +2104,82 @@ protected:
   
   // reimplemented virtual methods:
   virtual QCP::Interaction selectionCategory() const;
-  virtual void applyDefaultAntialiasingHint(QCPPainter *painte
+  virtual void applyDefaultAntialiasingHint(QCPPainter *painter) const;
+  virtual QRect clipRect() const;
+  virtual void draw(QCPPainter *painter) = 0;
+  // events:
+  virtual void selectEvent(QMouseEvent *event, bool additive, const QVariant &details, bool *selectionStateChanged);
+  virtual void deselectEvent(bool *selectionStateChanged);
+  
+private:
+  Q_DISABLE_COPY(QCPAbstractLegendItem)
+  
+  friend class QCPLegend;
+};
+
+
+class QCP_LIB_DECL QCPPlottableLegendItem : public QCPAbstractLegendItem
+{
+  Q_OBJECT
+public:
+  QCPPlottableLegendItem(QCPLegend *parent, QCPAbstractPlottable *plottable);
+  
+  // getters:
+  QCPAbstractPlottable *plottable() { return mPlottable; }
+  
+protected:
+  // property members:
+  QCPAbstractPlottable *mPlottable;
+  
+  // reimplemented virtual methods:
+  virtual void draw(QCPPainter *painter);
+  virtual QSize minimumSizeHint() const;
+  
+  // non-virtual methods:
+  QPen getIconBorderPen() const;
+  QColor getTextColor() const;
+  QFont getFont() const;
+};
+
+
+class QCP_LIB_DECL QCPLegend : public QCPLayoutGrid
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QPen borderPen READ borderPen WRITE setBorderPen)
+  Q_PROPERTY(QBrush brush READ brush WRITE setBrush)
+  Q_PROPERTY(QFont font READ font WRITE setFont)
+  Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor)
+  Q_PROPERTY(QSize iconSize READ iconSize WRITE setIconSize)
+  Q_PROPERTY(int iconTextPadding READ iconTextPadding WRITE setIconTextPadding)
+  Q_PROPERTY(QPen iconBorderPen READ iconBorderPen WRITE setIconBorderPen)
+  Q_PROPERTY(SelectableParts selectableParts READ selectableParts WRITE setSelectableParts NOTIFY selectionChanged)
+  Q_PROPERTY(SelectableParts selectedParts READ selectedParts WRITE setSelectedParts NOTIFY selectableChanged)
+  Q_PROPERTY(QPen selectedBorderPen READ selectedBorderPen WRITE setSelectedBorderPen)
+  Q_PROPERTY(QPen selectedIconBorderPen READ selectedIconBorderPen WRITE setSelectedIconBorderPen)
+  Q_PROPERTY(QBrush selectedBrush READ selectedBrush WRITE setSelectedBrush)
+  Q_PROPERTY(QFont selectedFont READ selectedFont WRITE setSelectedFont)
+  Q_PROPERTY(QColor selectedTextColor READ selectedTextColor WRITE setSelectedTextColor)
+  /// \endcond
+public:
+  /*!
+    Defines the selectable parts of a legend
+    
+    \see setSelectedParts, setSelectableParts
+  */
+  enum SelectablePart { spNone       = 0x000  ///< <tt>0x000</tt> None
+                        ,spLegendBox  = 0x001 ///< <tt>0x001</tt> The legend box (frame)
+                        ,spItems      = 0x002 ///< <tt>0x002</tt> Legend items individually (see \ref selectedItems)
+                      };
+  Q_FLAGS(SelectablePart SelectableParts)
+  Q_DECLARE_FLAGS(SelectableParts, SelectablePart)
+  
+  explicit QCPLegend();
+  virtual ~QCPLegend();
+  
+  // getters:
+  QPen borderPen() const { return mBorderPen; }
+  QBrush brush() const { return mBrush; }
+  QFont font() const { return mFont; }
+  QColor textColor() const { return mTextColor; }
+  QSize iconSize() const { re
