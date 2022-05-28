@@ -2182,4 +2182,71 @@ public:
   QBrush brush() const { return mBrush; }
   QFont font() const { return mFont; }
   QColor textColor() const { return mTextColor; }
-  QSize iconSize() const { re
+  QSize iconSize() const { return mIconSize; }
+  int iconTextPadding() const { return mIconTextPadding; }
+  QPen iconBorderPen() const { return mIconBorderPen; }
+  SelectableParts selectableParts() const { return mSelectableParts; }
+  SelectableParts selectedParts() const;
+  QPen selectedBorderPen() const { return mSelectedBorderPen; }
+  QPen selectedIconBorderPen() const { return mSelectedIconBorderPen; }
+  QBrush selectedBrush() const { return mSelectedBrush; }
+  QFont selectedFont() const { return mSelectedFont; }
+  QColor selectedTextColor() const { return mSelectedTextColor; }
+  
+  // setters:
+  void setBorderPen(const QPen &pen);
+  void setBrush(const QBrush &brush);
+  void setFont(const QFont &font);
+  void setTextColor(const QColor &color);
+  void setIconSize(const QSize &size);
+  void setIconSize(int width, int height);
+  void setIconTextPadding(int padding);
+  void setIconBorderPen(const QPen &pen);
+  Q_SLOT void setSelectableParts(const SelectableParts &selectableParts);
+  Q_SLOT void setSelectedParts(const SelectableParts &selectedParts);
+  void setSelectedBorderPen(const QPen &pen);
+  void setSelectedIconBorderPen(const QPen &pen);
+  void setSelectedBrush(const QBrush &brush);
+  void setSelectedFont(const QFont &font);
+  void setSelectedTextColor(const QColor &color);
+  
+  // reimplemented virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+  // non-virtual methods:
+  QCPAbstractLegendItem *item(int index) const;
+  QCPPlottableLegendItem *itemWithPlottable(const QCPAbstractPlottable *plottable) const;
+  int itemCount() const;
+  bool hasItem(QCPAbstractLegendItem *item) const;
+  bool hasItemWithPlottable(const QCPAbstractPlottable *plottable) const;
+  bool addItem(QCPAbstractLegendItem *item);
+  bool removeItem(int index);
+  bool removeItem(QCPAbstractLegendItem *item);
+  void clearItems();
+  QList<QCPAbstractLegendItem*> selectedItems() const;
+  
+signals:
+  void selectionChanged(QCPLegend::SelectableParts parts);
+  void selectableChanged(QCPLegend::SelectableParts parts);
+  
+protected:
+  // property members:
+  QPen mBorderPen, mIconBorderPen;
+  QBrush mBrush;
+  QFont mFont;
+  QColor mTextColor;
+  QSize mIconSize;
+  int mIconTextPadding;
+  SelectableParts mSelectedParts, mSelectableParts;
+  QPen mSelectedBorderPen, mSelectedIconBorderPen;
+  QBrush mSelectedBrush;
+  QFont mSelectedFont;
+  QColor mSelectedTextColor;
+  
+  // reimplemented virtual methods:
+  virtual void parentPlotInitialized(QCustomPlot *parentPlot);
+  virtual QCP::Interaction selectionCategory() const;
+  virtual void applyDefaultAntialiasingHint(QCPPainter *painter) const;
+  virtual void draw(QCPPainter *painter);
+  // events:
+  virtual void selectEvent(QMouseEve
