@@ -2486,4 +2486,46 @@ public:
                                  ///< with symbols according to the scatter style, see \ref setScatterStyle)
                    ,lsLine       ///< data points are connected by a straight line
                    ,lsStepLeft   ///< line is drawn as steps where the step height is the value of the left data point
-                   
+                   ,lsStepRight  ///< line is drawn as steps where the step height is the value of the right data point
+                   ,lsStepCenter ///< line is drawn as steps where the step is in between two data points
+                   ,lsImpulse    ///< each data point is represented by a line parallel to the value axis, which reaches from the data point to the zero-value-line
+                 };
+  Q_ENUMS(LineStyle)
+  /*!
+    Defines what kind of error bars are drawn for each data point
+  */
+  enum ErrorType { etNone   ///< No error bars are shown
+                   ,etKey   ///< Error bars for the key dimension of the data point are shown
+                   ,etValue ///< Error bars for the value dimension of the data point are shown
+                   ,etBoth  ///< Error bars for both key and value dimensions of the data point are shown
+                 };
+  Q_ENUMS(ErrorType)
+  
+  explicit QCPGraph(QCPAxis *keyAxis, QCPAxis *valueAxis);
+  virtual ~QCPGraph();
+  
+  // getters:
+  QCPDataMap *data() const { return mData; }
+  LineStyle lineStyle() const { return mLineStyle; }
+  QCPScatterStyle scatterStyle() const { return mScatterStyle; }
+  ErrorType errorType() const { return mErrorType; }
+  QPen errorPen() const { return mErrorPen; }
+  double errorBarSize() const { return mErrorBarSize; }
+  bool errorBarSkipSymbol() const { return mErrorBarSkipSymbol; }
+  QCPGraph *channelFillGraph() const { return mChannelFillGraph.data(); }
+  bool adaptiveSampling() const { return mAdaptiveSampling; }
+  
+  // setters:
+  void setData(QCPDataMap *data, bool copy=false);
+  void setData(const QVector<double> &key, const QVector<double> &value);
+  void setDataKeyError(const QVector<double> &key, const QVector<double> &value, const QVector<double> &keyError);
+  void setDataKeyError(const QVector<double> &key, const QVector<double> &value, const QVector<double> &keyErrorMinus, const QVector<double> &keyErrorPlus);
+  void setDataValueError(const QVector<double> &key, const QVector<double> &value, const QVector<double> &valueError);
+  void setDataValueError(const QVector<double> &key, const QVector<double> &value, const QVector<double> &valueErrorMinus, const QVector<double> &valueErrorPlus);
+  void setDataBothError(const QVector<double> &key, const QVector<double> &value, const QVector<double> &keyError, const QVector<double> &valueError);
+  void setDataBothError(const QVector<double> &key, const QVector<double> &value, const QVector<double> &keyErrorMinus, const QVector<double> &keyErrorPlus, const QVector<double> &valueErrorMinus, const QVector<double> &valueErrorPlus);
+  void setLineStyle(LineStyle ls);
+  void setScatterStyle(const QCPScatterStyle &style);
+  void setErrorType(ErrorType errorType);
+  void setErrorPen(const QPen &pen);
+  void setErrorB
