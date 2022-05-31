@@ -2407,3 +2407,83 @@ public:
 signals:
   void dataRangeChanged(QCPRange newRange);
   void dataScaleTypeChanged(QCPAxis::ScaleType scaleType);
+  void gradientChanged(QCPColorGradient newGradient);
+
+protected:
+  // property members:
+  QCPAxis::AxisType mType;
+  QCPRange mDataRange;
+  QCPAxis::ScaleType mDataScaleType;
+  QCPColorGradient mGradient;
+  int mBarWidth;
+  
+  // non-property members:
+  QPointer<QCPColorScaleAxisRectPrivate> mAxisRect;
+  QPointer<QCPAxis> mColorAxis;
+  
+  // reimplemented virtual methods:
+  virtual void applyDefaultAntialiasingHint(QCPPainter *painter) const;
+  // events:
+  virtual void mousePressEvent(QMouseEvent *event);
+  virtual void mouseMoveEvent(QMouseEvent *event);
+  virtual void mouseReleaseEvent(QMouseEvent *event);
+  virtual void wheelEvent(QWheelEvent *event);
+  
+private:
+  Q_DISABLE_COPY(QCPColorScale)
+  
+  friend class QCPColorScaleAxisRectPrivate;
+};
+
+
+/*! \file */
+
+
+
+class QCP_LIB_DECL QCPData
+{
+public:
+  QCPData();
+  QCPData(double key, double value);
+  double key, value;
+  double keyErrorPlus, keyErrorMinus;
+  double valueErrorPlus, valueErrorMinus;
+};
+Q_DECLARE_TYPEINFO(QCPData, Q_MOVABLE_TYPE);
+
+/*! \typedef QCPDataMap
+  Container for storing QCPData items in a sorted fashion. The key of the map
+  is the key member of the QCPData instance.
+  
+  This is the container in which QCPGraph holds its data.
+  \see QCPData, QCPGraph::setData
+*/
+typedef QMap<double, QCPData> QCPDataMap;
+typedef QMapIterator<double, QCPData> QCPDataMapIterator;
+typedef QMutableMapIterator<double, QCPData> QCPDataMutableMapIterator;
+
+
+class QCP_LIB_DECL QCPGraph : public QCPAbstractPlottable
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(LineStyle lineStyle READ lineStyle WRITE setLineStyle)
+  Q_PROPERTY(QCPScatterStyle scatterStyle READ scatterStyle WRITE setScatterStyle)
+  Q_PROPERTY(ErrorType errorType READ errorType WRITE setErrorType)
+  Q_PROPERTY(QPen errorPen READ errorPen WRITE setErrorPen)
+  Q_PROPERTY(double errorBarSize READ errorBarSize WRITE setErrorBarSize)
+  Q_PROPERTY(bool errorBarSkipSymbol READ errorBarSkipSymbol WRITE setErrorBarSkipSymbol)
+  Q_PROPERTY(QCPGraph* channelFillGraph READ channelFillGraph WRITE setChannelFillGraph)
+  Q_PROPERTY(bool adaptiveSampling READ adaptiveSampling WRITE setAdaptiveSampling)
+  /// \endcond
+public:
+  /*!
+    Defines how the graph's line is represented visually in the plot. The line is drawn with the
+    current pen of the graph (\ref setPen).
+    \see setLineStyle
+  */
+  enum LineStyle { lsNone        ///< data points are not connected with any lines (e.g. data only represented
+                                 ///< with symbols according to the scatter style, see \ref setScatterStyle)
+                   ,lsLine       ///< data points are connected by a straight line
+                   ,lsStepLeft   ///< line is drawn as steps where the step height is the value of the left data point
+                   
