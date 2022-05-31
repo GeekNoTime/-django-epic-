@@ -2528,4 +2528,59 @@ public:
   void setScatterStyle(const QCPScatterStyle &style);
   void setErrorType(ErrorType errorType);
   void setErrorPen(const QPen &pen);
-  void setErrorB
+  void setErrorBarSize(double size);
+  void setErrorBarSkipSymbol(bool enabled);
+  void setChannelFillGraph(QCPGraph *targetGraph);
+  void setAdaptiveSampling(bool enabled);
+  
+  // non-property methods:
+  void addData(const QCPDataMap &dataMap);
+  void addData(const QCPData &data);
+  void addData(double key, double value);
+  void addData(const QVector<double> &keys, const QVector<double> &values);
+  void removeDataBefore(double key);
+  void removeDataAfter(double key);
+  void removeData(double fromKey, double toKey);
+  void removeData(double key);
+  
+  // reimplemented virtual methods:
+  virtual void clearData();
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  using QCPAbstractPlottable::rescaleAxes;
+  using QCPAbstractPlottable::rescaleKeyAxis;
+  using QCPAbstractPlottable::rescaleValueAxis;
+  void rescaleAxes(bool onlyEnlarge, bool includeErrorBars) const; // overloads base class interface
+  void rescaleKeyAxis(bool onlyEnlarge, bool includeErrorBars) const; // overloads base class interface
+  void rescaleValueAxis(bool onlyEnlarge, bool includeErrorBars) const; // overloads base class interface
+  
+protected:
+  // property members:
+  QCPDataMap *mData;
+  QPen mErrorPen;
+  LineStyle mLineStyle;
+  QCPScatterStyle mScatterStyle;
+  ErrorType mErrorType;
+  double mErrorBarSize;
+  bool mErrorBarSkipSymbol;
+  QPointer<QCPGraph> mChannelFillGraph;
+  bool mAdaptiveSampling;
+  
+  // reimplemented virtual methods:
+  virtual void draw(QCPPainter *painter);
+  virtual void drawLegendIcon(QCPPainter *painter, const QRectF &rect) const;
+  virtual QCPRange getKeyRange(bool &foundRange, SignDomain inSignDomain=sdBoth) const;
+  virtual QCPRange getValueRange(bool &foundRange, SignDomain inSignDomain=sdBoth) const;
+  virtual QCPRange getKeyRange(bool &foundRange, SignDomain inSignDomain, bool includeErrors) const; // overloads base class interface
+  virtual QCPRange getValueRange(bool &foundRange, SignDomain inSignDomain, bool includeErrors) const; // overloads base class interface
+  
+  // introduced virtual methods:
+  virtual void drawFill(QCPPainter *painter, QVector<QPointF> *lineData) const;
+  virtual void drawScatterPlot(QCPPainter *painter, QVector<QCPData> *scatterData) const;
+  virtual void drawLinePlot(QCPPainter *painter, QVector<QPointF> *lineData) const;
+  virtual void drawImpulsePlot(QCPPainter *painter, QVector<QPointF> *lineData) const;
+  
+  // non-virtual methods:
+  void getPreparedData(QVector<QCPData> *lineData, QVector<QCPData> *scatterData) const;
+  void getPlotData(QVector<QPointF> *lineData, QVector<QCPData> *scatterData) const;
+  void getScatterPlotData(QVector<QCPData> *scatterData) const;
+  void getLinePlotData(QVector<QPointF> *linePixe
