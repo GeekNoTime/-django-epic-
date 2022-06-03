@@ -2583,4 +2583,69 @@ protected:
   void getPreparedData(QVector<QCPData> *lineData, QVector<QCPData> *scatterData) const;
   void getPlotData(QVector<QPointF> *lineData, QVector<QCPData> *scatterData) const;
   void getScatterPlotData(QVector<QCPData> *scatterData) const;
-  void getLinePlotData(QVector<QPointF> *linePixe
+  void getLinePlotData(QVector<QPointF> *linePixelData, QVector<QCPData> *scatterData) const;
+  void getStepLeftPlotData(QVector<QPointF> *linePixelData, QVector<QCPData> *scatterData) const;
+  void getStepRightPlotData(QVector<QPointF> *linePixelData, QVector<QCPData> *scatterData) const;
+  void getStepCenterPlotData(QVector<QPointF> *linePixelData, QVector<QCPData> *scatterData) const;
+  void getImpulsePlotData(QVector<QPointF> *linePixelData, QVector<QCPData> *scatterData) const;
+  void drawError(QCPPainter *painter, double x, double y, const QCPData &data) const;
+  void getVisibleDataBounds(QCPDataMap::const_iterator &lower, QCPDataMap::const_iterator &upper) const;
+  int countDataInBounds(const QCPDataMap::const_iterator &lower, const QCPDataMap::const_iterator &upper, int maxCount) const;
+  void addFillBasePoints(QVector<QPointF> *lineData) const;
+  void removeFillBasePoints(QVector<QPointF> *lineData) const;
+  QPointF lowerFillBasePoint(double lowerKey) const;
+  QPointF upperFillBasePoint(double upperKey) const;
+  const QPolygonF getChannelFillPolygon(const QVector<QPointF> *lineData) const;
+  int findIndexBelowX(const QVector<QPointF> *data, double x) const;
+  int findIndexAboveX(const QVector<QPointF> *data, double x) const;
+  int findIndexBelowY(const QVector<QPointF> *data, double y) const;
+  int findIndexAboveY(const QVector<QPointF> *data, double y) const;
+  double pointDistance(const QPointF &pixelPoint) const;
+  
+  friend class QCustomPlot;
+  friend class QCPLegend;
+};
+
+
+/*! \file */
+
+
+
+class QCP_LIB_DECL QCPCurveData
+{
+public:
+  QCPCurveData();
+  QCPCurveData(double t, double key, double value);
+  double t, key, value;
+};
+Q_DECLARE_TYPEINFO(QCPCurveData, Q_MOVABLE_TYPE);
+
+/*! \typedef QCPCurveDataMap
+  Container for storing QCPCurveData items in a sorted fashion. The key of the map
+  is the t member of the QCPCurveData instance.
+  
+  This is the container in which QCPCurve holds its data.
+  \see QCPCurveData, QCPCurve::setData
+*/
+
+typedef QMap<double, QCPCurveData> QCPCurveDataMap;
+typedef QMapIterator<double, QCPCurveData> QCPCurveDataMapIterator;
+typedef QMutableMapIterator<double, QCPCurveData> QCPCurveDataMutableMapIterator;
+
+
+class QCP_LIB_DECL QCPCurve : public QCPAbstractPlottable
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QCPScatterStyle scatterStyle READ scatterStyle WRITE setScatterStyle)
+  Q_PROPERTY(LineStyle lineStyle READ lineStyle WRITE setLineStyle)
+  /// \endcond
+public:
+  /*!
+    Defines how the curve's line is represented visually in the plot. The line is drawn with the
+    current pen of the curve (\ref setPen).
+    \see setLineStyle
+  */
+  enum LineStyle { lsNone  ///< No line is drawn between data points (e.g. only scatters)
+                   ,lsLine ///< Data points are connected with a straight line
+           
