@@ -2732,4 +2732,81 @@ typedef QMutableMapIterator<double, QCPBarData> QCPBarDataMutableMapIterator;
 class QCP_LIB_DECL QCPBars : public QCPAbstractPlottable
 {
   Q_OBJECT
-  /// \cond INCLUDE_QPR
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(double width READ width WRITE setWidth)
+  Q_PROPERTY(QCPBars* barBelow READ barBelow)
+  Q_PROPERTY(QCPBars* barAbove READ barAbove)
+  /// \endcond
+public:
+  explicit QCPBars(QCPAxis *keyAxis, QCPAxis *valueAxis);
+  virtual ~QCPBars();
+  
+  // getters:
+  double width() const { return mWidth; }
+  QCPBars *barBelow() const { return mBarBelow.data(); }
+  QCPBars *barAbove() const { return mBarAbove.data(); }
+  QCPBarDataMap *data() const { return mData; }
+  
+  // setters:
+  void setWidth(double width);
+  void setData(QCPBarDataMap *data, bool copy=false);
+  void setData(const QVector<double> &key, const QVector<double> &value);
+  
+  // non-property methods:
+  void moveBelow(QCPBars *bars);
+  void moveAbove(QCPBars *bars);
+  void addData(const QCPBarDataMap &dataMap);
+  void addData(const QCPBarData &data);
+  void addData(double key, double value);
+  void addData(const QVector<double> &keys, const QVector<double> &values);
+  void removeDataBefore(double key);
+  void removeDataAfter(double key);
+  void removeData(double fromKey, double toKey);
+  void removeData(double key);
+  
+  // reimplemented virtual methods:
+  virtual void clearData();
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+protected:
+  // property members:
+  QCPBarDataMap *mData;
+  double mWidth;
+  QPointer<QCPBars> mBarBelow, mBarAbove;
+  
+  // reimplemented virtual methods:
+  virtual void draw(QCPPainter *painter);
+  virtual void drawLegendIcon(QCPPainter *painter, const QRectF &rect) const;
+  virtual QCPRange getKeyRange(bool &foundRange, SignDomain inSignDomain=sdBoth) const;
+  virtual QCPRange getValueRange(bool &foundRange, SignDomain inSignDomain=sdBoth) const;
+  
+  // non-virtual methods:
+  QPolygonF getBarPolygon(double key, double value) const;
+  double getBaseValue(double key, bool positive) const;
+  static void connectBars(QCPBars* lower, QCPBars* upper);
+  
+  friend class QCustomPlot;
+  friend class QCPLegend;
+};
+
+
+/*! \file */
+
+
+
+class QCP_LIB_DECL QCPStatisticalBox : public QCPAbstractPlottable
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(double key READ key WRITE setKey)
+  Q_PROPERTY(double minimum READ minimum WRITE setMinimum)
+  Q_PROPERTY(double lowerQuartile READ lowerQuartile WRITE setLowerQuartile)
+  Q_PROPERTY(double median READ median WRITE setMedian)
+  Q_PROPERTY(double upperQuartile READ upperQuartile WRITE setUpperQuartile)
+  Q_PROPERTY(double maximum READ maximum WRITE setMaximum)
+  Q_PROPERTY(QVector<double> outliers READ outliers WRITE setOutliers)
+  Q_PROPERTY(double width READ width WRITE setWidth)
+  Q_PROPERTY(double whiskerWidth READ whiskerWidth WRITE setWhiskerWidth)
+  Q_PROPERTY(QPen whiskerPen READ whiskerPen WRITE setWhiskerPen)
+  Q_PROPERTY(QPen whiskerBarPen READ whiskerBarPen WRITE setWhiskerBarPen)
+  Q_PROPERTY(QPen medianPen READ medianPen WRITE setMedianP
