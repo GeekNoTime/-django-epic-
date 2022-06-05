@@ -2954,4 +2954,96 @@ public:
   Q_SLOT void setDataRange(const QCPRange &dataRange);
   Q_SLOT void setDataScaleType(QCPAxis::ScaleType scaleType);
   Q_SLOT void setGradient(const QCPColorGradient &gradient);
-  void s
+  void setInterpolate(bool enabled);
+  void setTightBoundary(bool enabled);
+  void setColorScale(QCPColorScale *colorScale);
+  
+  // non-property methods:
+  void rescaleDataRange(bool recalculateDataBounds=false);
+  Q_SLOT void updateLegendIcon(Qt::TransformationMode transformMode=Qt::SmoothTransformation, const QSize &thumbSize=QSize(32, 18));
+  
+  // reimplemented virtual methods:
+  virtual void clearData();
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+signals:
+  void dataRangeChanged(QCPRange newRange);
+  void dataScaleTypeChanged(QCPAxis::ScaleType scaleType);
+  void gradientChanged(QCPColorGradient newGradient);
+  
+protected:
+  // property members:
+  QCPRange mDataRange;
+  QCPAxis::ScaleType mDataScaleType;
+  QCPColorMapData *mMapData;
+  QCPColorGradient mGradient;
+  bool mInterpolate;
+  bool mTightBoundary;
+  QPointer<QCPColorScale> mColorScale;
+  // non-property members:
+  QImage mMapImage;
+  QPixmap mLegendIcon;
+  bool mMapImageInvalidated;
+  
+  // introduced virtual methods:
+  virtual void updateMapImage();
+  
+  // reimplemented virtual methods:
+  virtual void draw(QCPPainter *painter);
+  virtual void drawLegendIcon(QCPPainter *painter, const QRectF &rect) const;
+  virtual QCPRange getKeyRange(bool &foundRange, SignDomain inSignDomain=sdBoth) const;
+  virtual QCPRange getValueRange(bool &foundRange, SignDomain inSignDomain=sdBoth) const;
+  
+  friend class QCustomPlot;
+  friend class QCPLegend;
+};
+
+
+class QCP_LIB_DECL QCPItemStraightLine : public QCPAbstractItem
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QPen pen READ pen WRITE setPen)
+  Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
+  /// \endcond
+public:
+  QCPItemStraightLine(QCustomPlot *parentPlot);
+  virtual ~QCPItemStraightLine();
+  
+  // getters:
+  QPen pen() const { return mPen; }
+  QPen selectedPen() const { return mSelectedPen; }
+  
+  // setters;
+  void setPen(const QPen &pen);
+  void setSelectedPen(const QPen &pen);
+  
+  // reimplemented virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+  QCPItemPosition * const point1;
+  QCPItemPosition * const point2;
+  
+protected:
+  // property members:
+  QPen mPen, mSelectedPen;
+  
+  // reimplemented virtual methods:
+  virtual void draw(QCPPainter *painter);
+  
+  // non-virtual methods:
+  double distToStraightLine(const QVector2D &point1, const QVector2D &vec, const QVector2D &point) const;
+  QLineF getRectClippedStraightLine(const QVector2D &point1, const QVector2D &vec, const QRect &rect) const;
+  QPen mainPen() const;
+};
+
+
+class QCP_LIB_DECL QCPItemLine : public QCPAbstractItem
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QPen pen READ pen WRITE setPen)
+  Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
+  Q_PROPERTY(QCPLineEnding head READ head WRITE setHead)
+  Q_PROPERTY(QCPLineEnding tail READ tail WRITE setTail)
+  /// \endco
