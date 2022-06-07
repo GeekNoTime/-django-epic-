@@ -3046,4 +3046,103 @@ class QCP_LIB_DECL QCPItemLine : public QCPAbstractItem
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
   Q_PROPERTY(QCPLineEnding head READ head WRITE setHead)
   Q_PROPERTY(QCPLineEnding tail READ tail WRITE setTail)
-  /// \endco
+  /// \endcond
+public:
+  QCPItemLine(QCustomPlot *parentPlot);
+  virtual ~QCPItemLine();
+  
+  // getters:
+  QPen pen() const { return mPen; }
+  QPen selectedPen() const { return mSelectedPen; }
+  QCPLineEnding head() const { return mHead; }
+  QCPLineEnding tail() const { return mTail; }
+  
+  // setters;
+  void setPen(const QPen &pen);
+  void setSelectedPen(const QPen &pen);
+  void setHead(const QCPLineEnding &head);
+  void setTail(const QCPLineEnding &tail);
+  
+  // reimplemented virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+  QCPItemPosition * const start;
+  QCPItemPosition * const end;
+  
+protected:
+  // property members:
+  QPen mPen, mSelectedPen;
+  QCPLineEnding mHead, mTail;
+  
+  // reimplemented virtual methods:
+  virtual void draw(QCPPainter *painter);
+  
+  // non-virtual methods:
+  QLineF getRectClippedLine(const QVector2D &start, const QVector2D &end, const QRect &rect) const;
+  QPen mainPen() const;
+};
+
+
+class QCP_LIB_DECL QCPItemCurve : public QCPAbstractItem
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QPen pen READ pen WRITE setPen)
+  Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
+  Q_PROPERTY(QCPLineEnding head READ head WRITE setHead)
+  Q_PROPERTY(QCPLineEnding tail READ tail WRITE setTail)
+  /// \endcond
+public:
+  QCPItemCurve(QCustomPlot *parentPlot);
+  virtual ~QCPItemCurve();
+  
+  // getters:
+  QPen pen() const { return mPen; }
+  QPen selectedPen() const { return mSelectedPen; }
+  QCPLineEnding head() const { return mHead; }
+  QCPLineEnding tail() const { return mTail; }
+  
+  // setters;
+  void setPen(const QPen &pen);
+  void setSelectedPen(const QPen &pen);
+  void setHead(const QCPLineEnding &head);
+  void setTail(const QCPLineEnding &tail);
+  
+  // reimplemented virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+  QCPItemPosition * const start;
+  QCPItemPosition * const startDir;
+  QCPItemPosition * const endDir;
+  QCPItemPosition * const end;
+  
+protected:
+  // property members:
+  QPen mPen, mSelectedPen;
+  QCPLineEnding mHead, mTail;
+  
+  // reimplemented virtual methods:
+  virtual void draw(QCPPainter *painter);
+  
+  // non-virtual methods:
+  QPen mainPen() const;
+};
+
+
+class QCP_LIB_DECL QCPItemRect : public QCPAbstractItem
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QPen pen READ pen WRITE setPen)
+  Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
+  Q_PROPERTY(QBrush brush READ brush WRITE setBrush)
+  Q_PROPERTY(QBrush selectedBrush READ selectedBrush WRITE setSelectedBrush)
+  /// \endcond
+public:
+  QCPItemRect(QCustomPlot *parentPlot);
+  virtual ~QCPItemRect();
+  
+  // getters:
+  QPen pen() const { return mPen; }
+  QPen selectedPen() const { return mSelectedPen; }
+  QBrush brush() const { return mBrush; }
