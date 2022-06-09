@@ -3306,4 +3306,94 @@ public:
   QCPItemPosition * const topLeft;
   QCPItemPosition * const bottomRight;
   QCPItemAnchor * const topLeftRim;
+  QCPItemAnchor * const top;
+  QCPItemAnchor * const topRightRim;
+  QCPItemAnchor * const right;
+  QCPItemAnchor * const bottomRightRim;
+  QCPItemAnchor * const bottom;
+  QCPItemAnchor * const bottomLeftRim;
+  QCPItemAnchor * const left;
+  QCPItemAnchor * const center;
   
+protected:
+  enum AnchorIndex {aiTopLeftRim, aiTop, aiTopRightRim, aiRight, aiBottomRightRim, aiBottom, aiBottomLeftRim, aiLeft, aiCenter};
+  
+  // property members:
+  QPen mPen, mSelectedPen;
+  QBrush mBrush, mSelectedBrush;
+  
+  // reimplemented virtual methods:
+  virtual void draw(QCPPainter *painter);
+  virtual QPointF anchorPixelPoint(int anchorId) const;
+  
+  // non-virtual methods:
+  QPen mainPen() const;
+  QBrush mainBrush() const;
+};
+
+
+class QCP_LIB_DECL QCPItemPixmap : public QCPAbstractItem
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QPixmap pixmap READ pixmap WRITE setPixmap)
+  Q_PROPERTY(bool scaled READ scaled WRITE setScaled)
+  Q_PROPERTY(Qt::AspectRatioMode aspectRatioMode READ aspectRatioMode)
+  Q_PROPERTY(QPen pen READ pen WRITE setPen)
+  Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
+  /// \endcond
+public:
+  QCPItemPixmap(QCustomPlot *parentPlot);
+  virtual ~QCPItemPixmap();
+  
+  // getters:
+  QPixmap pixmap() const { return mPixmap; }
+  bool scaled() const { return mScaled; }
+  Qt::AspectRatioMode aspectRatioMode() const { return mAspectRatioMode; }
+  QPen pen() const { return mPen; }
+  QPen selectedPen() const { return mSelectedPen; }
+  
+  // setters;
+  void setPixmap(const QPixmap &pixmap);
+  void setScaled(bool scaled, Qt::AspectRatioMode aspectRatioMode=Qt::KeepAspectRatio);
+  void setPen(const QPen &pen);
+  void setSelectedPen(const QPen &pen);
+  
+  // reimplemented virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+  QCPItemPosition * const topLeft;
+  QCPItemPosition * const bottomRight;
+  QCPItemAnchor * const top;
+  QCPItemAnchor * const topRight;
+  QCPItemAnchor * const right;
+  QCPItemAnchor * const bottom;
+  QCPItemAnchor * const bottomLeft;
+  QCPItemAnchor * const left;
+  
+protected:
+  enum AnchorIndex {aiTop, aiTopRight, aiRight, aiBottom, aiBottomLeft, aiLeft};
+  
+  // property members:
+  QPixmap mPixmap;
+  QPixmap mScaledPixmap;
+  bool mScaled;
+  Qt::AspectRatioMode mAspectRatioMode;
+  QPen mPen, mSelectedPen;
+  
+  // reimplemented virtual methods:
+  virtual void draw(QCPPainter *painter);
+  virtual QPointF anchorPixelPoint(int anchorId) const;
+  
+  // non-virtual methods:
+  void updateScaledPixmap(QRect finalRect=QRect(), bool flipHorz=false, bool flipVert=false);
+  QRect getFinalRect(bool *flippedHorz=0, bool *flippedVert=0) const;
+  QPen mainPen() const;
+};
+
+
+class QCP_LIB_DECL QCPItemTracer : public QCPAbstractItem
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+ 
