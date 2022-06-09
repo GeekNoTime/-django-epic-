@@ -3146,3 +3146,80 @@ public:
   QPen pen() const { return mPen; }
   QPen selectedPen() const { return mSelectedPen; }
   QBrush brush() const { return mBrush; }
+  QBrush selectedBrush() const { return mSelectedBrush; }
+  
+  // setters;
+  void setPen(const QPen &pen);
+  void setSelectedPen(const QPen &pen);
+  void setBrush(const QBrush &brush);
+  void setSelectedBrush(const QBrush &brush);
+  
+  // reimplemented virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+  QCPItemPosition * const topLeft;
+  QCPItemPosition * const bottomRight;
+  QCPItemAnchor * const top;
+  QCPItemAnchor * const topRight;
+  QCPItemAnchor * const right;
+  QCPItemAnchor * const bottom;
+  QCPItemAnchor * const bottomLeft;
+  QCPItemAnchor * const left;
+  
+protected:
+  enum AnchorIndex {aiTop, aiTopRight, aiRight, aiBottom, aiBottomLeft, aiLeft};
+  
+  // property members:
+  QPen mPen, mSelectedPen;
+  QBrush mBrush, mSelectedBrush;
+  
+  // reimplemented virtual methods:
+  virtual void draw(QCPPainter *painter);
+  virtual QPointF anchorPixelPoint(int anchorId) const;
+  
+  // non-virtual methods:
+  QPen mainPen() const;
+  QBrush mainBrush() const;
+};
+
+
+class QCP_LIB_DECL QCPItemText : public QCPAbstractItem
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QColor color READ color WRITE setColor)
+  Q_PROPERTY(QColor selectedColor READ selectedColor WRITE setSelectedColor)
+  Q_PROPERTY(QPen pen READ pen WRITE setPen)
+  Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
+  Q_PROPERTY(QBrush brush READ brush WRITE setBrush)
+  Q_PROPERTY(QBrush selectedBrush READ selectedBrush WRITE setSelectedBrush)
+  Q_PROPERTY(QFont font READ font WRITE setFont)
+  Q_PROPERTY(QFont selectedFont READ selectedFont WRITE setSelectedFont)
+  Q_PROPERTY(QString text READ text WRITE setText)
+  Q_PROPERTY(Qt::Alignment positionAlignment READ positionAlignment WRITE setPositionAlignment)
+  Q_PROPERTY(Qt::Alignment textAlignment READ textAlignment WRITE setTextAlignment)
+  Q_PROPERTY(double rotation READ rotation WRITE setRotation)
+  Q_PROPERTY(QMargins padding READ padding WRITE setPadding)
+  /// \endcond
+public:
+  QCPItemText(QCustomPlot *parentPlot);
+  virtual ~QCPItemText();
+  
+  // getters:
+  QColor color() const { return mColor; }
+  QColor selectedColor() const { return mSelectedColor; }
+  QPen pen() const { return mPen; }
+  QPen selectedPen() const { return mSelectedPen; }
+  QBrush brush() const { return mBrush; }
+  QBrush selectedBrush() const { return mSelectedBrush; }
+  QFont font() const { return mFont; }
+  QFont selectedFont() const { return mSelectedFont; }
+  QString text() const { return mText; }
+  Qt::Alignment positionAlignment() const { return mPositionAlignment; }
+  Qt::Alignment textAlignment() const { return mTextAlignment; }
+  double rotation() const { return mRotation; }
+  QMargins padding() const { return mPadding; }
+  
+  // setters;
+  void setColor(const QColor &color);
+  void setSe
