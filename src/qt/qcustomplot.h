@@ -3222,4 +3222,88 @@ public:
   
   // setters;
   void setColor(const QColor &color);
-  void setSe
+  void setSelectedColor(const QColor &color);
+  void setPen(const QPen &pen);
+  void setSelectedPen(const QPen &pen);
+  void setBrush(const QBrush &brush);
+  void setSelectedBrush(const QBrush &brush);
+  void setFont(const QFont &font);
+  void setSelectedFont(const QFont &font);
+  void setText(const QString &text);
+  void setPositionAlignment(Qt::Alignment alignment);
+  void setTextAlignment(Qt::Alignment alignment);
+  void setRotation(double degrees);
+  void setPadding(const QMargins &padding);
+  
+  // reimplemented virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+  QCPItemPosition * const position;
+  QCPItemAnchor * const topLeft;
+  QCPItemAnchor * const top;
+  QCPItemAnchor * const topRight;
+  QCPItemAnchor * const right;
+  QCPItemAnchor * const bottomRight;
+  QCPItemAnchor * const bottom;
+  QCPItemAnchor * const bottomLeft;
+  QCPItemAnchor * const left;
+  
+protected:
+  enum AnchorIndex {aiTopLeft, aiTop, aiTopRight, aiRight, aiBottomRight, aiBottom, aiBottomLeft, aiLeft};
+  
+  // property members:
+  QColor mColor, mSelectedColor;
+  QPen mPen, mSelectedPen;
+  QBrush mBrush, mSelectedBrush;
+  QFont mFont, mSelectedFont;
+  QString mText;
+  Qt::Alignment mPositionAlignment;
+  Qt::Alignment mTextAlignment;
+  double mRotation;
+  QMargins mPadding;
+  
+  // reimplemented virtual methods:
+  virtual void draw(QCPPainter *painter);
+  virtual QPointF anchorPixelPoint(int anchorId) const;
+  
+  // non-virtual methods:
+  QPointF getTextDrawPoint(const QPointF &pos, const QRectF &rect, Qt::Alignment positionAlignment) const;
+  QFont mainFont() const;
+  QColor mainColor() const;
+  QPen mainPen() const;
+  QBrush mainBrush() const;
+};
+
+
+class QCP_LIB_DECL QCPItemEllipse : public QCPAbstractItem
+{
+  Q_OBJECT
+  /// \cond INCLUDE_QPROPERTIES
+  Q_PROPERTY(QPen pen READ pen WRITE setPen)
+  Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
+  Q_PROPERTY(QBrush brush READ brush WRITE setBrush)
+  Q_PROPERTY(QBrush selectedBrush READ selectedBrush WRITE setSelectedBrush)
+  /// \endcond
+public:
+  QCPItemEllipse(QCustomPlot *parentPlot);
+  virtual ~QCPItemEllipse();
+  
+  // getters:
+  QPen pen() const { return mPen; }
+  QPen selectedPen() const { return mSelectedPen; }
+  QBrush brush() const { return mBrush; }
+  QBrush selectedBrush() const { return mSelectedBrush; }
+  
+  // setters;
+  void setPen(const QPen &pen);
+  void setSelectedPen(const QPen &pen);
+  void setBrush(const QBrush &brush);
+  void setSelectedBrush(const QBrush &brush);
+  
+  // reimplemented virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+  QCPItemPosition * const topLeft;
+  QCPItemPosition * const bottomRight;
+  QCPItemAnchor * const topLeftRim;
+  
