@@ -3479,4 +3479,51 @@ class QCP_LIB_DECL QCPItemBracket : public QCPAbstractItem
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
   Q_PROPERTY(double length READ length WRITE setLength)
-  Q_PROPERTY
+  Q_PROPERTY(BracketStyle style READ style WRITE setStyle)
+  /// \endcond
+public:
+  enum BracketStyle { bsSquare  ///< A brace with angled edges
+                      ,bsRound  ///< A brace with round edges
+                      ,bsCurly  ///< A curly brace
+                      ,bsCalligraphic ///< A curly brace with varying stroke width giving a calligraphic impression
+  };
+
+  QCPItemBracket(QCustomPlot *parentPlot);
+  virtual ~QCPItemBracket();
+  
+  // getters:
+  QPen pen() const { return mPen; }
+  QPen selectedPen() const { return mSelectedPen; }
+  double length() const { return mLength; }
+  BracketStyle style() const { return mStyle; }
+  
+  // setters;
+  void setPen(const QPen &pen);
+  void setSelectedPen(const QPen &pen);
+  void setLength(double length);
+  void setStyle(BracketStyle style);
+  
+  // reimplemented virtual methods:
+  virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+  
+  QCPItemPosition * const left;
+  QCPItemPosition * const right;
+  QCPItemAnchor * const center;
+  
+protected:
+  // property members:
+  enum AnchorIndex {aiCenter};
+  QPen mPen, mSelectedPen;
+  double mLength;
+  BracketStyle mStyle;
+  
+  // reimplemented virtual methods:
+  virtual void draw(QCPPainter *painter);
+  virtual QPointF anchorPixelPoint(int anchorId) const;
+  
+  // non-virtual methods:
+  QPen mainPen() const;
+};
+
+#endif // QCUSTOMPLOT_H
+
