@@ -21,3 +21,18 @@ BEGIN
         BEGIN
             VALUE "CompanyName",        "HongyunCoin2"
             VALUE "FileDescription",    "HongyunCoin2-Qt (OSS GUI client for HongyunCoin2)"
+            VALUE "FileVersion",        VER_FILEVERSION_STR
+            VALUE "InternalName",       "HongyunCoin2-qt"
+            VALUE "LegalCopyright",     "2009-2014 The Bitcoin developers, 2012-2014 The HongyunCoin2 & PPCoin developers, 2014 The HongyunCoin2 developers"
+            VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
+            VALUE "OriginalFilename",   "HongyunCoin2-qt.exe"
+            VALUE "ProductName",        "HongyunCoin2-Qt"
+            VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0, 1252 // language neutral - multilingual (decimal)
+    END
+END
