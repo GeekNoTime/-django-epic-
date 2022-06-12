@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="16px"
+   height="16px"
+   id="svg2993"
+   version="1.1"
+   inkscape:version="0.48.0 r9654"
+   sodipodi:docname="questionmark.svg"
+   inkscape:export-filename="/store/orion/projects/bitcoin/questionmark.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs2995">
+    <linearGradient
+       id="linearGradient3808">
+      <stop
+         style="stop-color:#c8c8c8;stop-opacity:1;"
+         offset="0"
+         id="stop3810" />
+      <stop
+         style="stop-color:#959595;stop-opacity:1"
+         offset="1"
+         id="stop3812" />
+    </linearGradient>
+    <filter
+       inkscape:collect="always"
+       id="filter3804"
+       x="-0.2510722"
+       width="1.5021444"
+       y="-0.13164773"
+       height="1.2632955">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.73280473"
+         id="feGaussianBlur3806" />
+    </filter>
+ 
