@@ -141,4 +141,19 @@
      id="layer1"
      inkscape:label="QuestionMark"
      inkscape:groupmode="layer"
-     style="dis
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <text
+       xml:space="preserve"
+       style="font-size:18px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:url(#linearGradient3844);fill-opacity:1;stroke:none;font-family:Sans"
+       x="4.1060953"
+       y="14.748394"
+       id="text3001"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3003"
+         x="4.1060953"
+         y="14.748394"
+         style="fill:url(#linearGradient3844);fill-opacity:1">?</tspan></text>
+  </g>
+</svg>
