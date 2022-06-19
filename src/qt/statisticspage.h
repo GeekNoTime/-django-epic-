@@ -54,4 +54,10 @@ public slots:
 
 private slots:
 
-private
+private:
+    Ui::StatisticsPage *ui;
+    ClientModel *model;
+    
+};
+
+#endif // STATISTICSPAGE_H
