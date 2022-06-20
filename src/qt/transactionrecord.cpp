@@ -243,3 +243,7 @@ bool TransactionRecord::statusUpdateNeeded()
 }
 
 std::string TransactionRecord::getTxID()
+{
+    return hash.ToString() + strprintf("-%03d", idx);
+}
+
