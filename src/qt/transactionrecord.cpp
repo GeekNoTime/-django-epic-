@@ -146,4 +146,100 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             //
             // Mixed debit transaction, can't break down payees
             //
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", n
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
+        }
+    }
+
+    return parts;
+}
+
+void TransactionRecord::updateStatus(const CWalletTx &wtx)
+{
+    // Determine transaction status
+
+    // Find the block the tx is in
+    CBlockIndex* pindex = NULL;
+    std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(wtx.hashBlock);
+    if (mi != mapBlockIndex.end())
+        pindex = (*mi).second;
+
+    // Sort order, unrecorded transactions sort to the top
+    status.sortKey = strprintf("%010d-%01d-%010u-%03d",
+        (pindex ? pindex->nHeight : std::numeric_limits<int>::max()),
+        (wtx.IsCoinBase() ? 1 : 0),
+        wtx.nTimeReceived,
+        idx);
+    status.countsForBalance = wtx.IsTrusted() && !(wtx.GetBlocksToMaturity() > 0);
+    status.depth = wtx.GetDepthInMainChain();
+    status.cur_num_blocks = nBestHeight;
+
+    if (!wtx.IsFinal())
+    {
+        if (wtx.nLockTime < LOCKTIME_THRESHOLD)
+        {
+            status.status = TransactionStatus::OpenUntilBlock;
+            status.open_for = nBestHeight - wtx.nLockTime;
+        }
+        else
+        {
+            status.status = TransactionStatus::OpenUntilDate;
+            status.open_for = wtx.nLockTime;
+        }
+    }
+
+    // For generated transactions, determine maturity
+    else if(type == TransactionRecord::Generated)
+    {
+        if (wtx.GetBlocksToMaturity() > 0)
+        {
+            status.status = TransactionStatus::Immature;
+
+            if (wtx.IsInMainChain())
+            {
+                status.matures_in = wtx.GetBlocksToMaturity();
+
+                // Check if the block was requested by anyone
+                if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                    status.status = TransactionStatus::MaturesWarning;
+            }
+            else
+            {
+                status.status = TransactionStatus::NotAccepted;
+            }
+        }
+        else
+        {
+            status.status = TransactionStatus::Confirmed;
+        }
+    }
+    else
+    {
+        if (status.depth < 0)
+        {
+            status.status = TransactionStatus::Conflicted;
+        }
+        else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+        {
+            status.status = TransactionStatus::Offline;
+        }
+        else if (status.depth == 0)
+        {
+            status.status = TransactionStatus::Unconfirmed;
+        }
+        else if (status.depth < RecommendedNumConfirmations)
+        {
+            status.status = TransactionStatus::Confirming;
+        }
+        else
+        {
+            status.status = TransactionStatus::Confirmed;
+        }
+    }
+}
+
+bool TransactionRecord::statusUpdateNeeded()
+{
+    return status.cur_num_blocks != nBestHeight;
+}
+
+std::string TransactionRecord::getTxID()
