@@ -63,3 +63,25 @@ private:
     QStringList columns;
     TransactionTablePriv *priv;
     int cachedNumBlocks;
+
+    QString lookupAddress(const std::string &address, bool tooltip) const;
+    QVariant addressColor(const TransactionRecord *wtx) const;
+    QString formatTxStatus(const TransactionRecord *wtx) const;
+    QString formatTxDate(const TransactionRecord *wtx) const;
+    QString formatTxType(const TransactionRecord *wtx) const;
+    QString formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const;
+    QString formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true) const;
+    QString formatTooltip(const TransactionRecord *rec) const;
+    QVariant txStatusDecoration(const TransactionRecord *wtx) const;
+    QVariant txAddressDecoration(const TransactionRecord *wtx) const;
+
+public slots:
+    void updateTransaction(const QString &hash, int status);
+    void updateConfirmations();
+    void updateDisplayUnit();
+
+    friend class TransactionTablePriv;
+};
+
+#endif
+
