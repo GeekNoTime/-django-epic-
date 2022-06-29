@@ -354,4 +354,86 @@ void TransactionView::editLabel()
             EditAddressDialog dlg(type==AddressTableModel::Receive
                                          ? EditAddressDialog::EditReceivingAddress
                                          : EditAddressDialog::EditSendingAddress,
-                  
+                                  this);
+            dlg.setModel(addressBook);
+            dlg.loadRow(idx);
+            dlg.exec();
+        }
+        else
+        {
+            // Add sending address
+            EditAddressDialog dlg(EditAddressDialog::NewSendingAddress,
+                                  this);
+            dlg.setModel(addressBook);
+            dlg.setAddress(address);
+            dlg.exec();
+        }
+    }
+}
+
+void TransactionView::showDetails()
+{
+    if(!transactionView->selectionModel())
+        return;
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows();
+    if(!selection.isEmpty())
+    {
+        TransactionDescDialog dlg(selection.at(0));
+        dlg.exec();
+    }
+}
+
+QWidget *TransactionView::createDateRangeWidget()
+{
+    dateRangeWidget = new QFrame();
+    dateRangeWidget->setFrameStyle(QFrame::Panel | QFrame::Raised);
+    dateRangeWidget->setContentsMargins(1,1,1,1);
+    QHBoxLayout *layout = new QHBoxLayout(dateRangeWidget);
+    layout->setContentsMargins(0,0,0,0);
+    layout->addSpacing(23);
+    layout->addWidget(new QLabel(tr("Range:")));
+
+    dateFrom = new QDateTimeEdit(this);
+    dateFrom->setDisplayFormat("dd/MM/yy");
+    dateFrom->setCalendarPopup(true);
+    dateFrom->setMinimumWidth(100);
+    dateFrom->setDate(QDate::currentDate().addDays(-7));
+    layout->addWidget(dateFrom);
+    layout->addWidget(new QLabel(tr("to")));
+
+    dateTo = new QDateTimeEdit(this);
+    dateTo->setDisplayFormat("dd/MM/yy");
+    dateTo->setCalendarPopup(true);
+    dateTo->setMinimumWidth(100);
+    dateTo->setDate(QDate::currentDate());
+    layout->addWidget(dateTo);
+    layout->addStretch();
+
+    // Hide by default
+    dateRangeWidget->setVisible(false);
+
+    // Notify on change
+    connect(dateFrom, SIGNAL(dateChanged(QDate)), this, SLOT(dateRangeChanged()));
+    connect(dateTo, SIGNAL(dateChanged(QDate)), this, SLOT(dateRangeChanged()));
+
+    return dateRangeWidget;
+}
+
+void TransactionView::dateRangeChanged()
+{
+    if(!transactionProxyModel)
+        return;
+    transactionProxyModel->setDateRange(
+            QDateTime(dateFrom->date()),
+            QDateTime(dateTo->date()).addDays(1));
+}
+
+void TransactionView::focusTransaction(const QModelIndex &idx)
+{
+    if(!transactionProxyModel)
+        return;
+    QModelIndex targetIdx = transactionProxyModel->mapFromSource(idx);
+    transactionView->scrollTo(targetIdx);
+    transactionView->setCurrentIndex(targetIdx);
+    transactionView->setFocus();
+}
