@@ -185,4 +185,100 @@ void TransactionView::setModel(WalletModel *model)
         transactionView->horizontalHeader()->setResizeMode(
                 TransactionTableModel::ToAddress, QHeaderView::Stretch);
         transactionView->horizontalHeader()->resizeSection(
-       
+                TransactionTableModel::Amount, 100);
+    }
+}
+
+void TransactionView::chooseDate(int idx)
+{
+    if(!transactionProxyModel)
+        return;
+    QDate current = QDate::currentDate();
+    dateRangeWidget->setVisible(false);
+    switch(dateWidget->itemData(idx).toInt())
+    {
+    case All:
+        transactionProxyModel->setDateRange(
+                TransactionFilterProxy::MIN_DATE,
+                TransactionFilterProxy::MAX_DATE);
+        break;
+    case Today:
+        transactionProxyModel->setDateRange(
+                QDateTime(current),
+                TransactionFilterProxy::MAX_DATE);
+        break;
+    case ThisWeek: {
+        // Find last Monday
+        QDate startOfWeek = current.addDays(-(current.dayOfWeek()-1));
+        transactionProxyModel->setDateRange(
+                QDateTime(startOfWeek),
+                TransactionFilterProxy::MAX_DATE);
+
+        } break;
+    case ThisMonth:
+        transactionProxyModel->setDateRange(
+                QDateTime(QDate(current.year(), current.month(), 1)),
+                TransactionFilterProxy::MAX_DATE);
+        break;
+    case LastMonth:
+        transactionProxyModel->setDateRange(
+                QDateTime(QDate(current.year(), current.month()-1, 1)),
+                QDateTime(QDate(current.year(), current.month(), 1)));
+        break;
+    case ThisYear:
+        transactionProxyModel->setDateRange(
+                QDateTime(QDate(current.year(), 1, 1)),
+                TransactionFilterProxy::MAX_DATE);
+        break;
+    case Range:
+        dateRangeWidget->setVisible(true);
+        dateRangeChanged();
+        break;
+    }
+}
+
+void TransactionView::chooseType(int idx)
+{
+    if(!transactionProxyModel)
+        return;
+    transactionProxyModel->setTypeFilter(
+        typeWidget->itemData(idx).toInt());
+}
+
+void TransactionView::changedPrefix(const QString &prefix)
+{
+    if(!transactionProxyModel)
+        return;
+    transactionProxyModel->setAddressPrefix(prefix);
+}
+
+void TransactionView::changedAmount(const QString &amount)
+{
+    if(!transactionProxyModel)
+        return;
+    qint64 amount_parsed = 0;
+    if(BitcoinUnits::parse(model->getOptionsModel()->getDisplayUnit(), amount, &amount_parsed))
+    {
+        transactionProxyModel->setMinAmount(amount_parsed);
+    }
+    else
+    {
+        transactionProxyModel->setMinAmount(0);
+    }
+}
+
+void TransactionView::exportClicked()
+{
+    // CSV is currently the only supported format
+    QString filename = GUIUtil::getSaveFileName(
+            this,
+            tr("Export Transaction Data"), QString(),
+            tr("Comma separated file (*.csv)"));
+
+    if (filename.isNull()) return;
+
+    CSVModelWriter writer(filename);
+
+    // name, column, role
+    writer.setModel(transactionProxyModel);
+    writer.addColumn(tr("Confirmed
