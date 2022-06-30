@@ -13,3 +13,18 @@ tutoStackDialog::tutoStackDialog(QWidget *parent) :
 
 void tutoStackDialog::setModel(ClientModel *model)
 {
+    if(model)
+    {
+        ui->versionLabel->setText(model->formatFullVersion());
+    }
+}
+
+tutoStackDialog::~tutoStackDialog()
+{
+    delete ui;
+}
+
+void tutoStackDialog::on_buttonBox_accepted()
+{
+    close();
+}
