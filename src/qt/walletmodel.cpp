@@ -175,4 +175,103 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
         return AmountExceedsBalance;
     }
 
-    i
+    if((total + nTransactionFee) > nBalance)
+    {
+        return SendCoinsReturn(AmountWithFeeExceedsBalance, nTransactionFee);
+    }
+
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+
+        // Sendmany
+        std::vector<std::pair<CScript, int64_t> > vecSend;
+        foreach(const SendCoinsRecipient &rcp, recipients)
+        {
+            CScript scriptPubKey;
+            scriptPubKey.SetDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+            vecSend.push_back(make_pair(scriptPubKey, rcp.amount));
+        }
+
+        CWalletTx wtx;
+        CReserveKey keyChange(wallet);
+        int64_t nFeeRequired = 0;
+        bool fCreated = wallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, coinControl);
+
+        if(!fCreated)
+        {
+            if((total + nFeeRequired) > nBalance) // FIXME: could cause collisions in the future
+            {
+                return SendCoinsReturn(AmountWithFeeExceedsBalance, nFeeRequired);
+            }
+            return TransactionCreationFailed;
+        }
+        if(!uiInterface.ThreadSafeAskFee(nFeeRequired, tr("Sending...").toStdString()))
+        {
+            return Aborted;
+        }
+        if(!wallet->CommitTransaction(wtx, keyChange))
+        {
+            return TransactionCommitFailed;
+        }
+        hex = QString::fromStdString(wtx.GetHash().GetHex());
+    }
+
+    // Add addresses / update labels that we've sent to to the address book
+    foreach(const SendCoinsRecipient &rcp, recipients)
+    {
+        std::string strAddress = rcp.address.toStdString();
+        CTxDestination dest = CBitcoinAddress(strAddress).Get();
+        std::string strLabel = rcp.label.toStdString();
+        {
+            LOCK(wallet->cs_wallet);
+
+            std::map<CTxDestination, std::string>::iterator mi = wallet->mapAddressBook.find(dest);
+
+            // Check if we have a new address or an updated label
+            if (mi == wallet->mapAddressBook.end() || mi->second != strLabel)
+            {
+                wallet->SetAddressBookName(dest, strLabel);
+            }
+        }
+    }
+
+    return SendCoinsReturn(OK, 0, hex);
+}
+
+OptionsModel *WalletModel::getOptionsModel()
+{
+    return optionsModel;
+}
+
+AddressTableModel *WalletModel::getAddressTableModel()
+{
+    return addressTableModel;
+}
+
+TransactionTableModel *WalletModel::getTransactionTableModel()
+{
+    return transactionTableModel;
+}
+
+WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
+{
+    if(!wallet->IsCrypted())
+    {
+        return Unencrypted;
+    }
+    else if(wallet->IsLocked())
+    {
+        return Locked;
+    }
+    else
+    {
+        return Unlocked;
+    }
+}
+
+bool WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphrase)
+{
+    if(encrypted)
+    {
+        // Encrypt
+        return wallet->Encryp
