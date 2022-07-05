@@ -82,4 +82,82 @@ public:
             status(status), fee(fee), hex(hex) {}
         StatusCode status;
         qint64 fee; // is used in case status is "AmountWithFeeExceedsBalance"
-        QString hex; // 
+        QString hex; // is filled with the transaction hash if status is "OK"
+    };
+
+    // Send coins to a list of recipients
+    SendCoinsReturn sendCoins(const QList<SendCoinsRecipient> &recipients, const CCoinControl *coinControl=NULL);
+
+    // Wallet encryption
+    bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
+    // Passphrase only needed when unlocking
+    bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
+    bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
+    // Wallet backup
+    bool backupWallet(const QString &filename);
+
+    // RAI object for unlocking wallet, returned by requestUnlock()
+    class UnlockContext
+    {
+    public:
+        UnlockContext(WalletModel *wallet, bool valid, bool relock);
+        ~UnlockContext();
+
+        bool isValid() const { return valid; }
+
+        // Copy operator and constructor transfer the context
+        UnlockContext(const UnlockContext& obj) { CopyFrom(obj); }
+        UnlockContext& operator=(const UnlockContext& rhs) { CopyFrom(rhs); return *this; }
+    private:
+        WalletModel *wallet;
+        bool valid;
+        mutable bool relock; // mutable, as it can be set to false by copying
+
+        void CopyFrom(const UnlockContext& rhs);
+    };
+
+    UnlockContext requestUnlock();
+
+    bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
+    void listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const;
+    bool isLockedCoin(uint256 hash, unsigned int n) const;
+    void lockCoin(COutPoint& output);
+    void unlockCoin(COutPoint& output);
+    void listLockedCoins(std::vector<COutPoint>& vOutpts);
+
+private:
+    CWallet *wallet;
+
+    // Wallet has an options model for wallet-specific options
+    // (transaction fee, for example)
+    OptionsModel *optionsModel;
+
+    AddressTableModel *addressTableModel;
+    TransactionTableModel *transactionTableModel;
+
+    // Cache some values to be able to detect changes
+    qint64 cachedBalance;
+    qint64 cachedStake;
+    qint64 cachedUnconfirmedBalance;
+    qint64 cachedImmatureBalance;
+    qint64 cachedNumTransactions;
+    EncryptionStatus cachedEncryptionStatus;
+    int cachedNumBlocks;
+    //int cachedconvertmode;
+
+    QTimer *pollTimer;
+
+    void subscribeToCoreSignals();
+    void unsubscribeFromCoreSignals();
+    void checkBalanceChanged();
+
+
+public slots:
+    /* Wallet status might have changed */
+    void updateStatus();
+    /* New transaction, or transaction changed status */
+    void updateTransaction(const QString &hash, int status);
+    /* New, updated or removed address book entry */
+    void updateAddressBook(const QString &address, const QString &label, bool isMine, int status);
+    
