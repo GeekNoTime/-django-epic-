@@ -437,4 +437,34 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
     {
         COutput cout = out;
 
-        while (wallet->IsChange(cout.tx->vout[cout.i]) && cout.tx->vi
+        while (wallet->IsChange(cout.tx->vout[cout.i]) && cout.tx->vin.size() > 0 && wallet->IsMine(cout.tx->vin[0]))
+        {
+            if (!wallet->mapWallet.count(cout.tx->vin[0].prevout.hash)) break;
+            cout = COutput(&wallet->mapWallet[cout.tx->vin[0].prevout.hash], cout.tx->vin[0].prevout.n, 0);
+        }
+
+        CTxDestination address;
+        if(!ExtractDestination(cout.tx->vout[cout.i].scriptPubKey, address)) continue;
+        mapCoins[CBitcoinAddress(address).ToString().c_str()].push_back(out);
+    }
+}
+
+bool WalletModel::isLockedCoin(uint256 hash, unsigned int n) const
+{
+    return false;
+}
+
+void WalletModel::lockCoin(COutPoint& output)
+{
+    return;
+}
+
+void WalletModel::unlockCoin(COutPoint& output)
+{
+    return;
+}
+
+void WalletModel::listLockedCoins(std::vector<COutPoint>& vOutpts)
+{
+    return;
+}
