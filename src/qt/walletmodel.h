@@ -160,4 +160,27 @@ public slots:
     void updateTransaction(const QString &hash, int status);
     /* New, updated or removed address book entry */
     void updateAddressBook(const QString &address, const QString &label, bool isMine, int status);
-    
+    /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
+    void pollBalanceChanged();
+
+signals:
+    // Signal that balance in wallet changed
+    void balanceChanged(qint64 balance, qint64 stake, qint64 unconfirmedBalance, qint64 immatureBalance);
+
+    // Number of transactions in wallet changed
+    void numTransactionsChanged(int count);
+
+    // Encryption status of wallet changed
+    void encryptionStatusChanged(int status);
+
+    // Signal emitted when wallet needs to be unlocked
+    // It is valid behaviour for listeners to keep the wallet locked after this signal;
+    // this means that the unlocking failed or was cancelled.
+    void requireUnlock();
+
+    // Asynchronous error notification
+    void error(const QString &title, const QString &message, bool modal);
+};
+
+
+#endif // WALLETMODEL_H
