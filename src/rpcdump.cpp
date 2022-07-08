@@ -303,4 +303,19 @@ Value dumpwallet(const Array& params, bool fHelp)
         CKey key;
         if (pwalletMain->GetKey(keyid, key)) {
             if (pwalletMain->mapAddressBook.count(keyid)) {
-                CSe
+                CSecret secret = key.GetSecret(IsCompressed);
+                file << strprintf("%s %s label=%s # addr=%s\n", CBitcoinSecret(secret, IsCompressed).ToString().c_str(), strTime.c_str(), EncodeDumpString(pwalletMain->mapAddressBook[keyid]).c_str(), strAddr.c_str());
+            } else if (setKeyPool.count(keyid)) {
+                CSecret secret = key.GetSecret(IsCompressed);
+                file << strprintf("%s %s reserve=1 # addr=%s\n", CBitcoinSecret(secret, IsCompressed).ToString().c_str(), strTime.c_str(), strAddr.c_str());
+            } else {
+                CSecret secret = key.GetSecret(IsCompressed);
+                file << strprintf("%s %s change=1 # addr=%s\n", CBitcoinSecret(secret, IsCompressed).ToString().c_str(), strTime.c_str(), strAddr.c_str());
+            }
+        }
+    }
+    file << "\n";
+    file << "# End of dump\n";
+    file.close();
+    return Value::null;
+}
