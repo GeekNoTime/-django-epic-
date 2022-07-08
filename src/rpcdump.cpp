@@ -149,4 +149,90 @@ Value importwallet(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "importwallet <fil
+            "importwallet <filename>\n"
+            "Imports keys from a wallet dump file (see dumpwallet).");
+
+    EnsureWalletIsUnlocked();
+
+    ifstream file;
+    file.open(params[0].get_str().c_str());
+    if (!file.is_open())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
+
+    int64_t nTimeBegin = pindexBest->nTime;
+
+    bool fGood = true;
+
+    while (file.good()) {
+        std::string line;
+        std::getline(file, line);
+        if (line.empty() || line[0] == '#')
+            continue;
+
+        std::vector<std::string> vstr;
+        boost::split(vstr, line, boost::is_any_of(" "));
+        if (vstr.size() < 2)
+            continue;
+        CBitcoinSecret vchSecret;
+        if (!vchSecret.SetString(vstr[0]))
+            continue;
+
+        bool fCompressed;
+        CKey key;
+        CSecret secret = vchSecret.GetSecret(fCompressed);
+        key.SetSecret(secret, fCompressed);
+        CKeyID keyid = key.GetPubKey().GetID();
+
+        if (pwalletMain->HaveKey(keyid)) {
+            printf("Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString().c_str());
+            continue;
+        }
+        int64_t nTime = DecodeDumpTime(vstr[1]);
+        std::string strLabel;
+        bool fLabel = true;
+        for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
+            if (boost::algorithm::starts_with(vstr[nStr], "#"))
+                break;
+            if (vstr[nStr] == "change=1")
+                fLabel = false;
+            if (vstr[nStr] == "reserve=1")
+                fLabel = false;
+            if (boost::algorithm::starts_with(vstr[nStr], "label=")) {
+                strLabel = DecodeDumpString(vstr[nStr].substr(6));
+                fLabel = true;
+            }
+        }
+        printf("Importing %s...\n", CBitcoinAddress(keyid).ToString().c_str());
+        if (!pwalletMain->AddKey(key)) {
+            fGood = false;
+            continue;
+        }
+        pwalletMain->mapKeyMetadata[keyid].nCreateTime = nTime;
+        if (fLabel)
+            pwalletMain->SetAddressBookName(keyid, strLabel);
+        nTimeBegin = std::min(nTimeBegin, nTime);
+    }
+    file.close();
+
+    CBlockIndex *pindex = pindexBest;
+    while (pindex && pindex->pprev && pindex->nTime > nTimeBegin - 7200)
+        pindex = pindex->pprev;
+
+    if (!pwalletMain->nTimeFirstKey || nTimeBegin < pwalletMain->nTimeFirstKey)
+        pwalletMain->nTimeFirstKey = nTimeBegin;
+
+    printf("Rescanning last %i blocks\n", pindexBest->nHeight - pindex->nHeight + 1);
+    pwalletMain->ScanForWalletTransactions(pindex);
+    pwalletMain->ReacceptWalletTransactions();
+    pwalletMain->MarkDirty();
+
+    if (!fGood)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys to wallet");
+
+    return Value::null;
+}
+
+
+Value dumpprivkey(const Array& params, bool fHelp)
+{
+    if (
