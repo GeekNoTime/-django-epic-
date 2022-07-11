@@ -487,4 +487,88 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
             "getreceivedbyaccount <account> [minconf=1]\n"
             "Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.");
 
-    accountingDepreca
+    accountingDeprecationCheck();
+
+    // Minimum confirmations
+    int nMinDepth = 1;
+    if (params.size() > 1)
+        nMinDepth = params[1].get_int();
+
+    // Get the set of pub keys assigned to account
+    string strAccount = AccountFromValue(params[0]);
+    set<CTxDestination> setAddress;
+    GetAccountAddresses(strAccount, setAddress);
+
+    // Tally
+    int64_t nAmount = 0;
+    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    {
+        const CWalletTx& wtx = (*it).second;
+        if (wtx.IsCoinBase() || wtx.IsCoinStake() || !wtx.IsFinal())
+            continue;
+
+        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+        {
+            CTxDestination address;
+            if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*pwalletMain, address) && setAddress.count(address))
+                if (wtx.GetDepthInMainChain() >= nMinDepth)
+                    nAmount += txout.nValue;
+        }
+    }
+
+    return (double)nAmount / (double)COIN;
+}
+
+
+int64_t GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinDepth)
+{
+    int64_t nBalance = 0;
+
+    // Tally wallet transactions
+    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    {
+        const CWalletTx& wtx = (*it).second;
+        if (!wtx.IsFinal() || wtx.GetDepthInMainChain() < 0)
+            continue;
+
+        int64_t nReceived, nSent, nFee;
+        wtx.GetAccountAmounts(strAccount, nReceived, nSent, nFee);
+
+        if (nReceived != 0 && wtx.GetDepthInMainChain() >= nMinDepth && wtx.GetBlocksToMaturity() == 0)
+            nBalance += nReceived;
+        nBalance -= nSent + nFee;
+    }
+
+    // Tally internal accounting entries
+    nBalance += walletdb.GetAccountCreditDebit(strAccount);
+
+    return nBalance;
+}
+
+int64_t GetAccountBalance(const string& strAccount, int nMinDepth)
+{
+    CWalletDB walletdb(pwalletMain->strWalletFile);
+    return GetAccountBalance(walletdb, strAccount, nMinDepth);
+}
+
+
+Value getbalance(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 2)
+        throw runtime_error(
+            "getbalance [account] [minconf=1]\n"
+            "If [account] is not specified, returns the server's total available balance.\n"
+            "If [account] is specified, returns the balance in the account.");
+
+    if (params.size() == 0)
+        return  ValueFromAmount(pwalletMain->GetBalance());
+
+    int nMinDepth = 1;
+    if (params.size() > 1)
+        nMinDepth = params[1].get_int();
+
+    if (params[0].get_str() == "*") {
+        // Calculate total balance a different way from GetBalance()
+        // (GetBalance() sums up all unspent TxOuts)
+        // getbalance and getbalance '*' 0 should return the same number.
+      
