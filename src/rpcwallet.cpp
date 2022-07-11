@@ -88,4 +88,70 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
     obj.push_back(Pair("newmint",       ValueFromAmount(pwalletMain->GetNewMint())));
     obj.push_back(Pair("stake",         ValueFromAmount(pwalletMain->GetStake())));
-    obj.push_back(Pair("blocks",  
+    obj.push_back(Pair("blocks",        (int)nBestHeight));
+    obj.push_back(Pair("timeoffset",    (boost::int64_t)GetTimeOffset()));
+    obj.push_back(Pair("moneysupply",   ValueFromAmount(pindexBest->nMoneySupply)));
+    obj.push_back(Pair("connections",   (int)vNodes.size()));
+    obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
+    obj.push_back(Pair("ip",            addrSeenByPeer.ToStringIP()));
+
+    diff.push_back(Pair("proof-of-work",  GetDifficulty()));
+    diff.push_back(Pair("proof-of-stake", GetDifficulty(GetLastBlockIndex(pindexBest, true))));
+    obj.push_back(Pair("difficulty",    diff));
+
+    obj.push_back(Pair("testnet",       fTestNet));
+    obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
+    obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
+    obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
+    obj.push_back(Pair("mininput",      ValueFromAmount(nMinimumInputValue)));
+    if (pwalletMain->IsCrypted())
+        obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
+    obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+    return obj;
+}
+
+
+Value getnewpubkey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "getnewpubkey [account]\n"
+            "Returns new public key for coinbase generation.");
+
+    // Parse the account first so we don't generate a key if there's an error
+    string strAccount;
+    if (params.size() > 0)
+        strAccount = AccountFromValue(params[0]);
+
+    if (!pwalletMain->IsLocked())
+        pwalletMain->TopUpKeyPool();
+
+    // Generate a new key that is added to wallet
+    CPubKey newKey;
+    if (!pwalletMain->GetKeyFromPool(newKey, false))
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+    CKeyID keyID = newKey.GetID();
+
+    pwalletMain->SetAddressBookName(keyID, strAccount);
+    vector<unsigned char> vchPubKey = newKey.Raw();
+
+    return HexStr(vchPubKey.begin(), vchPubKey.end());
+}
+
+
+Value getnewaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "getnewaddress [account]\n"
+            "Returns a new HongyunCoin2 address for receiving payments.  "
+            "If [account] is specified (recommended), it is added to the address book "
+            "so payments received with the address will be credited to [account].");
+
+    // Parse the account first so we don't generate a key if there's an error
+    string strAccount;
+    if (params.size() > 0)
+        strAccount = AccountFromValue(params[0]);
+
+    if (!pwalletMain->IsLocked())
+        pwalletMain->TopUpKeyPool
