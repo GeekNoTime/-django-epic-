@@ -154,4 +154,91 @@ Value getnewaddress(const Array& params, bool fHelp)
         strAccount = AccountFromValue(params[0]);
 
     if (!pwalletMain->IsLocked())
-        pwalletMain->TopUpKeyPool
+        pwalletMain->TopUpKeyPool();
+
+    // Generate a new key that is added to wallet
+    CPubKey newKey;
+    if (!pwalletMain->GetKeyFromPool(newKey, false))
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+    CKeyID keyID = newKey.GetID();
+
+    pwalletMain->SetAddressBookName(keyID, strAccount);
+
+    return CBitcoinAddress(keyID).ToString();
+}
+
+
+CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
+{
+    CWalletDB walletdb(pwalletMain->strWalletFile);
+
+    CAccount account;
+    walletdb.ReadAccount(strAccount, account);
+
+    bool bKeyUsed = false;
+
+    // Check if the current key has been used
+    if (account.vchPubKey.IsValid())
+    {
+        CScript scriptPubKey;
+        scriptPubKey.SetDestination(account.vchPubKey.GetID());
+        for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
+             it != pwalletMain->mapWallet.end() && account.vchPubKey.IsValid();
+             ++it)
+        {
+            const CWalletTx& wtx = (*it).second;
+            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+                if (txout.scriptPubKey == scriptPubKey)
+                    bKeyUsed = true;
+        }
+    }
+
+    // Generate a new key
+    if (!account.vchPubKey.IsValid() || bForceNew || bKeyUsed)
+    {
+        if (!pwalletMain->GetKeyFromPool(account.vchPubKey, false))
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+
+        pwalletMain->SetAddressBookName(account.vchPubKey.GetID(), strAccount);
+        walletdb.WriteAccount(strAccount, account);
+    }
+
+    return CBitcoinAddress(account.vchPubKey.GetID());
+}
+
+Value getaccountaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "getaccountaddress <account>\n"
+            "Returns the current HongyunCoin2 address for receiving payments to this account.");
+
+    // Parse the account first so we don't generate a key if there's an error
+    string strAccount = AccountFromValue(params[0]);
+
+    Value ret;
+
+    ret = GetAccountAddress(strAccount).ToString();
+
+    return ret;
+}
+
+
+
+Value setaccount(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "setaccount <HongyunCoin2address> <account>\n"
+            "Sets the account associated with the given address.");
+
+    CBitcoinAddress address(params[0].get_str());
+    if (!address.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid HongyunCoin2 address");
+
+
+    string strAccount;
+    if (params.size() > 1)
+        strAccount = AccountFromValue(params[1]);
+
+    // Detect when changing the account of an address that is the 'unused
