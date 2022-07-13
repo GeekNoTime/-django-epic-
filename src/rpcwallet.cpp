@@ -1044,4 +1044,81 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 {
                     if (wtx.GetDepthInMainChain() < 1)
                         entry.push_back(Pair("category", "orphan"));
-            
+                    else if (wtx.GetBlocksToMaturity() > 0)
+                        entry.push_back(Pair("category", "immature"));
+                    else
+                        entry.push_back(Pair("category", "generate"));
+                }
+                else
+                {
+                    entry.push_back(Pair("category", "receive"));
+                }
+                if (!wtx.IsCoinStake())
+                    entry.push_back(Pair("amount", ValueFromAmount(r.second)));
+                else
+                {
+                    entry.push_back(Pair("amount", ValueFromAmount(-nFee)));
+                    stop = true; // only one coinstake output
+                }
+                if (fLong)
+                    WalletTxToJSON(wtx, entry);
+                ret.push_back(entry);
+            }
+            if (stop)
+                break;
+        }
+    }
+}
+
+void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Array& ret)
+{
+    bool fAllAccounts = (strAccount == string("*"));
+
+    if (fAllAccounts || acentry.strAccount == strAccount)
+    {
+        Object entry;
+        entry.push_back(Pair("account", acentry.strAccount));
+        entry.push_back(Pair("category", "move"));
+        entry.push_back(Pair("time", (boost::int64_t)acentry.nTime));
+        entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit)));
+        entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
+        entry.push_back(Pair("comment", acentry.strComment));
+        ret.push_back(entry);
+    }
+}
+
+Value listtransactions(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 3)
+        throw runtime_error(
+            "listtransactions [account] [count=10] [from=0]\n"
+            "Returns up to [count] most recent transactions skipping the first [from] transactions for account [account].");
+
+    string strAccount = "*";
+    if (params.size() > 0)
+        strAccount = params[0].get_str();
+    int nCount = 10;
+    if (params.size() > 1)
+        nCount = params[1].get_int();
+    int nFrom = 0;
+    if (params.size() > 2)
+        nFrom = params[2].get_int();
+
+    if (nCount < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+    if (nFrom < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
+
+    Array ret;
+
+    std::list<CAccountingEntry> acentries;
+    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, strAccount);
+
+    // iterate backwards until we have nCount items to return:
+    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
+    {
+        CWalletTx *const pwtx = (*it).second.first;
+        if (pwtx != 0)
+            ListTransactions(*pwtx, strAccount, 0, true, ret);
+        CAccountingEntry *const pacentry = (*it).second.second;
+    
