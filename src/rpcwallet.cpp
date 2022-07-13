@@ -803,4 +803,97 @@ Value addmultisigaddress(const Array& params, bool fHelp)
                 throw runtime_error(
                     strprintf("%s does not refer to a key",ks.c_str()));
             CPubKey vchPubKey;
-            if (!pwalletMain->GetPubKey(ke
+            if (!pwalletMain->GetPubKey(keyID, vchPubKey))
+                throw runtime_error(
+                    strprintf("no full public key for address %s",ks.c_str()));
+            if (!vchPubKey.IsValid() || !pubkeys[i].SetPubKey(vchPubKey))
+                throw runtime_error(" Invalid public key: "+ks);
+        }
+
+        // Case 2: hex public key
+        else if (IsHex(ks))
+        {
+            CPubKey vchPubKey(ParseHex(ks));
+            if (!vchPubKey.IsValid() || !pubkeys[i].SetPubKey(vchPubKey))
+                throw runtime_error(" Invalid public key: "+ks);
+        }
+        else
+        {
+            throw runtime_error(" Invalid public key: "+ks);
+        }
+    }
+
+    // Construct using pay-to-script-hash:
+    CScript inner;
+    inner.SetMultisig(nRequired, pubkeys);
+    CScriptID innerID = inner.GetID();
+    pwalletMain->AddCScript(inner);
+
+    pwalletMain->SetAddressBookName(innerID, strAccount);
+    return CBitcoinAddress(innerID).ToString();
+}
+
+Value addredeemscript(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+    {
+        string msg = "addredeemscript <redeemScript> [account]\n"
+            "Add a P2SH address with a specified redeemScript to the wallet.\n"
+            "If [account] is specified, assign address to [account].";
+        throw runtime_error(msg);
+    }
+
+    string strAccount;
+    if (params.size() > 1)
+        strAccount = AccountFromValue(params[1]);
+
+    // Construct using pay-to-script-hash:
+    vector<unsigned char> innerData = ParseHexV(params[0], "redeemScript");
+    CScript inner(innerData.begin(), innerData.end());
+    CScriptID innerID = inner.GetID();
+    pwalletMain->AddCScript(inner);
+
+    pwalletMain->SetAddressBookName(innerID, strAccount);
+    return CBitcoinAddress(innerID).ToString();
+}
+
+struct tallyitem
+{
+    int64_t nAmount;
+    int nConf;
+    tallyitem()
+    {
+        nAmount = 0;
+        nConf = std::numeric_limits<int>::max();
+    }
+};
+
+Value ListReceived(const Array& params, bool fByAccounts)
+{
+    // Minimum confirmations
+    int nMinDepth = 1;
+    if (params.size() > 0)
+        nMinDepth = params[0].get_int();
+
+    // Whether to include empty accounts
+    bool fIncludeEmpty = false;
+    if (params.size() > 1)
+        fIncludeEmpty = params[1].get_bool();
+
+    // Tally
+    map<CBitcoinAddress, tallyitem> mapTally;
+    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    {
+        const CWalletTx& wtx = (*it).second;
+
+        if (wtx.IsCoinBase() || wtx.IsCoinStake() || !wtx.IsFinal())
+            continue;
+
+        int nDepth = wtx.GetDepthInMainChain();
+        if (nDepth < nMinDepth)
+            continue;
+
+        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+        {
+            CTxDestination address;
+            if (!ExtractDestinat
