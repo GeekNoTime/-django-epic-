@@ -1303,4 +1303,98 @@ Value gettransaction(const Array& params, bool fHelp)
         if (GetTransaction(hash, tx, hashBlock))
         {
             TxToJSON(tx, 0, entry);
-            
+            if (hashBlock == 0)
+                entry.push_back(Pair("confirmations", 0));
+            else
+            {
+                entry.push_back(Pair("blockhash", hashBlock.GetHex()));
+                map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
+                if (mi != mapBlockIndex.end() && (*mi).second)
+                {
+                    CBlockIndex* pindex = (*mi).second;
+                    if (pindex->IsInMainChain())
+                        entry.push_back(Pair("confirmations", 1 + nBestHeight - pindex->nHeight));
+                    else
+                        entry.push_back(Pair("confirmations", 0));
+                }
+            }
+        }
+        else
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
+    }
+
+    return entry;
+}
+
+
+Value backupwallet(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "backupwallet <destination>\n"
+            "Safely copies wallet.dat to destination, which can be a directory or a path with filename.");
+
+    string strDest = params[0].get_str();
+    if (!BackupWallet(*pwalletMain, strDest))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet backup failed!");
+
+    return Value::null;
+}
+
+
+Value keypoolrefill(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "keypoolrefill [new-size]\n"
+            "Fills the keypool."
+            + HelpRequiringPassphrase());
+
+    unsigned int nSize = max(GetArg("-keypool", 100), (int64_t)0);
+    if (params.size() > 0) {
+        if (params[0].get_int() < 0)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size");
+        nSize = (unsigned int) params[0].get_int();
+    }
+
+    EnsureWalletIsUnlocked();
+
+    pwalletMain->TopUpKeyPool(nSize);
+
+    if (pwalletMain->GetKeyPoolSize() < nSize)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
+
+    return Value::null;
+}
+
+
+void ThreadTopUpKeyPool(void* parg)
+{
+    // Make this thread recognisable as the key-topping-up thread
+    RenameThread("HongyunCoin2-key-top");
+
+    pwalletMain->TopUpKeyPool();
+}
+
+void ThreadCleanWalletPassphrase(void* parg)
+{
+    // Make this thread recognisable as the wallet relocking thread
+    RenameThread("HongyunCoin2-lock-wa");
+
+    int64_t nMyWakeTime = GetTimeMillis() + *((int64_t*)parg) * 1000;
+
+    ENTER_CRITICAL_SECTION(cs_nWalletUnlockTime);
+
+    if (nWalletUnlockTime == 0)
+    {
+        nWalletUnlockTime = nMyWakeTime;
+
+        do
+        {
+            if (nWalletUnlockTime==0)
+                break;
+            int64_t nToSleep = nWalletUnlockTime - GetTimeMillis();
+            if (nToSleep <= 0)
+                break;
+
+            LEAVE_CRITICAL_SECTION(cs_nWalletUnl
