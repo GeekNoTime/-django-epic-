@@ -224,4 +224,66 @@ const char* GetOpName(opcodetype opcode)
     case OP_HASH256                : return "OP_HASH256";
     case OP_CODESEPARATOR          : return "OP_CODESEPARATOR";
     case OP_CHECKSIG               : return "OP_CHECKSIG";
-    case OP_CHECKSIGVERIFY      
+    case OP_CHECKSIGVERIFY         : return "OP_CHECKSIGVERIFY";
+    case OP_CHECKMULTISIG          : return "OP_CHECKMULTISIG";
+    case OP_CHECKMULTISIGVERIFY    : return "OP_CHECKMULTISIGVERIFY";
+
+    // expanson
+    case OP_NOP1                   : return "OP_NOP1";
+    case OP_NOP2                   : return "OP_NOP2";
+    case OP_NOP3                   : return "OP_NOP3";
+    case OP_NOP4                   : return "OP_NOP4";
+    case OP_NOP5                   : return "OP_NOP5";
+    case OP_NOP6                   : return "OP_NOP6";
+    case OP_NOP7                   : return "OP_NOP7";
+    case OP_NOP8                   : return "OP_NOP8";
+    case OP_NOP9                   : return "OP_NOP9";
+    case OP_NOP10                  : return "OP_NOP10";
+
+
+
+    // template matching params
+    case OP_PUBKEYHASH             : return "OP_PUBKEYHASH";
+    case OP_PUBKEY                 : return "OP_PUBKEY";
+
+    case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
+    default:
+        return "OP_UNKNOWN";
+    }
+}
+
+static bool IsCanonicalPubKey(const valtype &vchPubKey) {
+    if (vchPubKey.size() < 33)
+        return error("Non-canonical public key: too short");
+    if (vchPubKey[0] == 0x04) {
+        if (vchPubKey.size() != 65)
+            return error("Non-canonical public key: invalid length for uncompressed key");
+    } else if (vchPubKey[0] == 0x02 || vchPubKey[0] == 0x03) {
+        if (vchPubKey.size() != 33)
+            return error("Non-canonical public key: invalid length for compressed key");
+    } else {
+        return error("Non-canonical public key: compressed nor uncompressed");
+    }
+    return true;
+}
+
+static bool IsCanonicalSignature(const valtype &vchSig) {
+    // See https://bitcointalk.org/index.php?topic=8392.msg127623#msg127623
+    // A canonical signature exists of: <30> <total len> <02> <len R> <R> <02> <len S> <S> <hashtype>
+    // Where R and S are not negative (their first byte has its highest bit not set), and not
+    // excessively padded (do not start with a 0 byte, unless an otherwise negative number follows,
+    // in which case a single 0 byte is necessary and even required).
+    if (vchSig.size() < 9)
+        return error("Non-canonical signature: too short");
+    if (vchSig.size() > 73)
+        return error("Non-canonical signature: too long");
+    unsigned char nHashType = vchSig[vchSig.size() - 1] & (~(SIGHASH_ANYONECANPAY));
+    if (nHashType < SIGHASH_ALL || nHashType > SIGHASH_SINGLE)
+        return error("Non-canonical signature: unknown hashtype byte");
+    if (vchSig[0] != 0x30)
+        return error("Non-canonical signature: wrong type");
+    if (vchSig[1] != vchSig.size()-3)
+        return error("Non-canonical signature: wrong length marker");
+    unsigned int nLenR = vchSig[3];
+    if (5 + nLenR >= vchSig.size())
+        return error("Non-can
