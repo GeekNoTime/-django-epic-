@@ -286,4 +286,80 @@ static bool IsCanonicalSignature(const valtype &vchSig) {
         return error("Non-canonical signature: wrong length marker");
     unsigned int nLenR = vchSig[3];
     if (5 + nLenR >= vchSig.size())
-        return error("Non-can
+        return error("Non-canonical signature: S length misplaced");
+    unsigned int nLenS = vchSig[5+nLenR];
+    if ((unsigned long)(nLenR+nLenS+7) != vchSig.size())
+        return error("Non-canonical signature: R+S length mismatch");
+
+    const unsigned char *R = &vchSig[4];
+    if (R[-2] != 0x02)
+        return error("Non-canonical signature: R value type mismatch");
+    if (nLenR == 0)
+        return error("Non-canonical signature: R length is zero");
+    if (R[0] & 0x80)
+        return error("Non-canonical signature: R value negative");
+    if (nLenR > 1 && (R[0] == 0x00) && !(R[1] & 0x80))
+        return error("Non-canonical signature: R value excessively padded");
+
+    const unsigned char *S = &vchSig[6+nLenR];
+    if (S[-2] != 0x02)
+        return error("Non-canonical signature: S value type mismatch");
+    if (nLenS == 0)
+        return error("Non-canonical signature: S length is zero");
+    if (S[0] & 0x80)
+        return error("Non-canonical signature: S value negative");
+    if (nLenS > 1 && (S[0] == 0x00) && !(S[1] & 0x80))
+        return error("Non-canonical signature: S value excessively padded");
+
+    // If the above rules hold, and the S data is 33 bytes (or more), then
+    // the S value is above 2^255, which isn't necessary (its negative
+    // modulo the order of the curve could have been used).
+    if (nLenS > 32)
+        return error("Non-canonical signature: S value is unnecessarily high");
+
+    return true;
+}
+
+bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType)
+{
+    CAutoBN_CTX pctx;
+    CScript::const_iterator pc = script.begin();
+    CScript::const_iterator pend = script.end();
+    CScript::const_iterator pbegincodehash = script.begin();
+    opcodetype opcode;
+    valtype vchPushValue;
+    vector<bool> vfExec;
+    vector<valtype> altstack;
+    if (script.size() > 10000)
+        return false;
+    int nOpCount = 0;
+
+
+    try
+    {
+        while (pc < pend)
+        {
+            bool fExec = !count(vfExec.begin(), vfExec.end(), false);
+
+            //
+            // Read instruction
+            //
+            if (!script.GetOp(pc, opcode, vchPushValue))
+                return false;
+            if (vchPushValue.size() > 520)
+                return false;
+            if (opcode > OP_16 && ++nOpCount > 201)
+                return false;
+
+            if (opcode == OP_CAT ||
+                opcode == OP_SUBSTR ||
+                opcode == OP_LEFT ||
+                opcode == OP_RIGHT ||
+                opcode == OP_INVERT ||
+                opcode == OP_AND ||
+                opcode == OP_OR ||
+                opcode == OP_XOR ||
+                opcode == OP_2MUL ||
+                opcode == OP_2DIV ||
+                opcode == OP_MUL ||
+        
