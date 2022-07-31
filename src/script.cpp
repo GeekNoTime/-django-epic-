@@ -448,4 +448,95 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 {
                     // (true -- ) or
                     // (false -- false) and return
-                    if (st
+                    if (stack.size() < 1)
+                        return false;
+                    bool fValue = CastToBool(stacktop(-1));
+                    if (fValue)
+                        popstack(stack);
+                    else
+                        return false;
+                }
+                break;
+
+                case OP_RETURN:
+                {
+                    return false;
+                }
+                break;
+
+
+                //
+                // Stack ops
+                //
+                case OP_TOALTSTACK:
+                {
+                    if (stack.size() < 1)
+                        return false;
+                    altstack.push_back(stacktop(-1));
+                    popstack(stack);
+                }
+                break;
+
+                case OP_FROMALTSTACK:
+                {
+                    if (altstack.size() < 1)
+                        return false;
+                    stack.push_back(altstacktop(-1));
+                    popstack(altstack);
+                }
+                break;
+
+                case OP_2DROP:
+                {
+                    // (x1 x2 -- )
+                    if (stack.size() < 2)
+                        return false;
+                    popstack(stack);
+                    popstack(stack);
+                }
+                break;
+
+                case OP_2DUP:
+                {
+                    // (x1 x2 -- x1 x2 x1 x2)
+                    if (stack.size() < 2)
+                        return false;
+                    valtype vch1 = stacktop(-2);
+                    valtype vch2 = stacktop(-1);
+                    stack.push_back(vch1);
+                    stack.push_back(vch2);
+                }
+                break;
+
+                case OP_3DUP:
+                {
+                    // (x1 x2 x3 -- x1 x2 x3 x1 x2 x3)
+                    if (stack.size() < 3)
+                        return false;
+                    valtype vch1 = stacktop(-3);
+                    valtype vch2 = stacktop(-2);
+                    valtype vch3 = stacktop(-1);
+                    stack.push_back(vch1);
+                    stack.push_back(vch2);
+                    stack.push_back(vch3);
+                }
+                break;
+
+                case OP_2OVER:
+                {
+                    // (x1 x2 x3 x4 -- x1 x2 x3 x4 x1 x2)
+                    if (stack.size() < 4)
+                        return false;
+                    valtype vch1 = stacktop(-4);
+                    valtype vch2 = stacktop(-3);
+                    stack.push_back(vch1);
+                    stack.push_back(vch2);
+                }
+                break;
+
+                case OP_2ROT:
+                {
+                    // (x1 x2 x3 x4 x5 x6 -- x3 x4 x5 x6 x1 x2)
+                    if (stack.size() < 6)
+                        return false;
+                
