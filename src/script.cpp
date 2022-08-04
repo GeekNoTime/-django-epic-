@@ -707,4 +707,81 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 {
                     // (in size -- out)
                     if (stack.size() < 2)
-               
+                        return false;
+                    valtype& vch = stacktop(-2);
+                    int nSize = CastToBigNum(stacktop(-1)).getint();
+                    if (nSize < 0)
+                        return false;
+                    if (nSize > (int)vch.size())
+                        nSize = vch.size();
+                    if (opcode == OP_LEFT)
+                        vch.erase(vch.begin() + nSize, vch.end());
+                    else
+                        vch.erase(vch.begin(), vch.end() - nSize);
+                    popstack(stack);
+                }
+                break;
+
+                case OP_SIZE:
+                {
+                    // (in -- in size)
+                    if (stack.size() < 1)
+                        return false;
+                    CBigNum bn(stacktop(-1).size());
+                    stack.push_back(bn.getvch());
+                }
+                break;
+
+
+                //
+                // Bitwise logic
+                //
+                case OP_INVERT:
+                {
+                    // (in - out)
+                    if (stack.size() < 1)
+                        return false;
+                    valtype& vch = stacktop(-1);
+                    for (unsigned int i = 0; i < vch.size(); i++)
+                        vch[i] = ~vch[i];
+                }
+                break;
+
+                //
+                // WARNING: These disabled opcodes exhibit unexpected behavior
+                // when used on signed integers due to a bug in MakeSameSize()
+                // [see definition of MakeSameSize() above].
+                //
+                case OP_AND:
+                case OP_OR:
+                case OP_XOR:
+                {
+                    // (x1 x2 - out)
+                    if (stack.size() < 2)
+                        return false;
+                    valtype& vch1 = stacktop(-2);
+                    valtype& vch2 = stacktop(-1);
+                    MakeSameSize(vch1, vch2); // <-- NOT SAFE FOR SIGNED VALUES
+                    if (opcode == OP_AND)
+                    {
+                        for (unsigned int i = 0; i < vch1.size(); i++)
+                            vch1[i] &= vch2[i];
+                    }
+                    else if (opcode == OP_OR)
+                    {
+                        for (unsigned int i = 0; i < vch1.size(); i++)
+                            vch1[i] |= vch2[i];
+                    }
+                    else if (opcode == OP_XOR)
+                    {
+                        for (unsigned int i = 0; i < vch1.size(); i++)
+                            vch1[i] ^= vch2[i];
+                    }
+                    popstack(stack);
+                }
+                break;
+
+                case OP_EQUAL:
+                case OP_EQUALVERIFY:
+                //case OP_NOTEQUAL: // use OP_NUMNOTEQUAL
+                
