@@ -784,4 +784,76 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 case OP_EQUAL:
                 case OP_EQUALVERIFY:
                 //case OP_NOTEQUAL: // use OP_NUMNOTEQUAL
-                
+                {
+                    // (x1 x2 - bool)
+                    if (stack.size() < 2)
+                        return false;
+                    valtype& vch1 = stacktop(-2);
+                    valtype& vch2 = stacktop(-1);
+                    bool fEqual = (vch1 == vch2);
+                    // OP_NOTEQUAL is disabled because it would be too easy to say
+                    // something like n != 1 and have some wiseguy pass in 1 with extra
+                    // zero bytes after it (numerically, 0x01 == 0x0001 == 0x000001)
+                    //if (opcode == OP_NOTEQUAL)
+                    //    fEqual = !fEqual;
+                    popstack(stack);
+                    popstack(stack);
+                    stack.push_back(fEqual ? vchTrue : vchFalse);
+                    if (opcode == OP_EQUALVERIFY)
+                    {
+                        if (fEqual)
+                            popstack(stack);
+                        else
+                            return false;
+                    }
+                }
+                break;
+
+
+                //
+                // Numeric
+                //
+                case OP_1ADD:
+                case OP_1SUB:
+                case OP_2MUL:
+                case OP_2DIV:
+                case OP_NEGATE:
+                case OP_ABS:
+                case OP_NOT:
+                case OP_0NOTEQUAL:
+                {
+                    // (in -- out)
+                    if (stack.size() < 1)
+                        return false;
+                    CBigNum bn = CastToBigNum(stacktop(-1));
+                    switch (opcode)
+                    {
+                    case OP_1ADD:       bn += bnOne; break;
+                    case OP_1SUB:       bn -= bnOne; break;
+                    case OP_2MUL:       bn <<= 1; break;
+                    case OP_2DIV:       bn >>= 1; break;
+                    case OP_NEGATE:     bn = -bn; break;
+                    case OP_ABS:        if (bn < bnZero) bn = -bn; break;
+                    case OP_NOT:        bn = (bn == bnZero); break;
+                    case OP_0NOTEQUAL:  bn = (bn != bnZero); break;
+                    default:            assert(!"invalid opcode"); break;
+                    }
+                    popstack(stack);
+                    stack.push_back(bn.getvch());
+                }
+                break;
+
+                case OP_ADD:
+                case OP_SUB:
+                case OP_MUL:
+                case OP_DIV:
+                case OP_MOD:
+                case OP_LSHIFT:
+                case OP_RSHIFT:
+                case OP_BOOLAND:
+                case OP_BOOLOR:
+                case OP_NUMEQUAL:
+                case OP_NUMEQUALVERIFY:
+                case OP_NUMNOTEQUAL:
+                case OP_LESSTHAN:
+                case OP_GREATE
