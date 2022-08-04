@@ -856,4 +856,68 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 case OP_NUMEQUALVERIFY:
                 case OP_NUMNOTEQUAL:
                 case OP_LESSTHAN:
-                case OP_GREATE
+                case OP_GREATERTHAN:
+                case OP_LESSTHANOREQUAL:
+                case OP_GREATERTHANOREQUAL:
+                case OP_MIN:
+                case OP_MAX:
+                {
+                    // (x1 x2 -- out)
+                    if (stack.size() < 2)
+                        return false;
+                    CBigNum bn1 = CastToBigNum(stacktop(-2));
+                    CBigNum bn2 = CastToBigNum(stacktop(-1));
+                    CBigNum bn;
+                    switch (opcode)
+                    {
+                    case OP_ADD:
+                        bn = bn1 + bn2;
+                        break;
+
+                    case OP_SUB:
+                        bn = bn1 - bn2;
+                        break;
+
+                    case OP_MUL:
+                        if (!BN_mul(&bn, &bn1, &bn2, pctx))
+                            return false;
+                        break;
+
+                    case OP_DIV:
+                        if (!BN_div(&bn, NULL, &bn1, &bn2, pctx))
+                            return false;
+                        break;
+
+                    case OP_MOD:
+                        if (!BN_mod(&bn, &bn1, &bn2, pctx))
+                            return false;
+                        break;
+
+                    case OP_LSHIFT:
+                        if (bn2 < bnZero || bn2 > CBigNum(2048))
+                            return false;
+                        bn = bn1 << bn2.getulong();
+                        break;
+
+                    case OP_RSHIFT:
+                        if (bn2 < bnZero || bn2 > CBigNum(2048))
+                            return false;
+                        bn = bn1 >> bn2.getulong();
+                        break;
+
+                    case OP_BOOLAND:             bn = (bn1 != bnZero && bn2 != bnZero); break;
+                    case OP_BOOLOR:              bn = (bn1 != bnZero || bn2 != bnZero); break;
+                    case OP_NUMEQUAL:            bn = (bn1 == bn2); break;
+                    case OP_NUMEQUALVERIFY:      bn = (bn1 == bn2); break;
+                    case OP_NUMNOTEQUAL:         bn = (bn1 != bn2); break;
+                    case OP_LESSTHAN:            bn = (bn1 < bn2); break;
+                    case OP_GREATERTHAN:         bn = (bn1 > bn2); break;
+                    case OP_LESSTHANOREQUAL:     bn = (bn1 <= bn2); break;
+                    case OP_GREATERTHANOREQUAL:  bn = (bn1 >= bn2); break;
+                    case OP_MIN:                 bn = (bn1 < bn2 ? bn1 : bn2); break;
+                    case OP_MAX:                 bn = (bn1 > bn2 ? bn1 : bn2); break;
+                    default:                     assert(!"invalid opcode"); break;
+                    }
+                    popstack(stack);
+                    popstack(stack);
+                    stack.
