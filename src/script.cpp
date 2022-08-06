@@ -1407,4 +1407,96 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
 bool Sign1(const CKeyID& address, const CKeyStore& keystore, uint256 hash, int nHashType, CScript& scriptSigRet)
 {
     CKey key;
-    if (!keystore.GetKey(a
+    if (!keystore.GetKey(address, key))
+        return false;
+
+    vector<unsigned char> vchSig;
+    if (!key.Sign(hash, vchSig))
+        return false;
+    vchSig.push_back((unsigned char)nHashType);
+    scriptSigRet << vchSig;
+
+    return true;
+}
+
+bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint256 hash, int nHashType, CScript& scriptSigRet)
+{
+    int nSigned = 0;
+    int nRequired = multisigdata.front()[0];
+    for (unsigned int i = 1; i < multisigdata.size()-1 && nSigned < nRequired; i++)
+    {
+        const valtype& pubkey = multisigdata[i];
+        CKeyID keyID = CPubKey(pubkey).GetID();
+        if (Sign1(keyID, keystore, hash, nHashType, scriptSigRet))
+            ++nSigned;
+    }
+    return nSigned==nRequired;
+}
+
+//
+// Sign scriptPubKey with private keys stored in keystore, given transaction hash and hash type.
+// Signatures are returned in scriptSigRet (or returns false if scriptPubKey can't be signed),
+// unless whichTypeRet is TX_SCRIPTHASH, in which case scriptSigRet is the redemption script.
+// Returns false if scriptPubKey could not be completely satisfied.
+//
+bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash, int nHashType,
+                  CScript& scriptSigRet, txnouttype& whichTypeRet)
+{
+    scriptSigRet.clear();
+
+    vector<valtype> vSolutions;
+    if (!Solver(scriptPubKey, whichTypeRet, vSolutions))
+        return false;
+
+    CKeyID keyID;
+    switch (whichTypeRet)
+    {
+    case TX_NONSTANDARD:
+        return false;
+    case TX_PUBKEY:
+        keyID = CPubKey(vSolutions[0]).GetID();
+        return Sign1(keyID, keystore, hash, nHashType, scriptSigRet);
+    case TX_PUBKEYHASH:
+        keyID = CKeyID(uint160(vSolutions[0]));
+        if (!Sign1(keyID, keystore, hash, nHashType, scriptSigRet))
+            return false;
+        else
+        {
+            CPubKey vch;
+            keystore.GetPubKey(keyID, vch);
+            scriptSigRet << vch;
+        }
+        return true;
+    case TX_SCRIPTHASH:
+        return keystore.GetCScript(uint160(vSolutions[0]), scriptSigRet);
+
+    case TX_MULTISIG:
+        scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
+        return (SignN(vSolutions, keystore, hash, nHashType, scriptSigRet));
+    }
+    return false;
+}
+
+int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned char> >& vSolutions)
+{
+    switch (t)
+    {
+    case TX_NONSTANDARD:
+        return -1;
+    case TX_PUBKEY:
+        return 1;
+    case TX_PUBKEYHASH:
+        return 2;
+    case TX_MULTISIG:
+        if (vSolutions.size() < 1 || vSolutions[0].size() < 1)
+            return -1;
+        return vSolutions[0][0] + 1;
+    case TX_SCRIPTHASH:
+        return 1; // doesn't include args needed by the script
+    }
+    return -1;
+}
+
+bool IsStandard(const CScript& scriptPubKey)
+{
+    ve
