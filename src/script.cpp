@@ -1943,4 +1943,82 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     }
 
     /// ... and return its opcount:
-    CScript subscript(data.begi
+    CScript subscript(data.begin(), data.end());
+    return subscript.GetSigOpCount(true);
+}
+
+bool CScript::IsPayToScriptHash() const
+{
+    // Extra-fast test for pay-to-script-hash CScripts:
+    return (this->size() == 23 &&
+            this->at(0) == OP_HASH160 &&
+            this->at(1) == 0x14 &&
+            this->at(22) == OP_EQUAL);
+}
+
+bool CScript::HasCanonicalPushes() const
+{
+    const_iterator pc = begin();
+    while (pc < end())
+    {
+        opcodetype opcode;
+        std::vector<unsigned char> data;
+        if (!GetOp(pc, opcode, data))
+            return false;
+        if (opcode > OP_16)
+            continue;
+        if (opcode < OP_PUSHDATA1 && opcode > OP_0 && (data.size() == 1 && data[0] <= 16))
+            // Could have used an OP_n code, rather than a 1-byte push.
+            return false;
+        if (opcode == OP_PUSHDATA1 && data.size() < OP_PUSHDATA1)
+            // Could have used a normal n-byte push, rather than OP_PUSHDATA1.
+            return false;
+        if (opcode == OP_PUSHDATA2 && data.size() <= 0xFF)
+            // Could have used an OP_PUSHDATA1.
+            return false;
+        if (opcode == OP_PUSHDATA4 && data.size() <= 0xFFFF)
+            // Could have used an OP_PUSHDATA2.
+            return false;
+    }
+    return true;
+}
+
+class CScriptVisitor : public boost::static_visitor<bool>
+{
+private:
+    CScript *script;
+public:
+    CScriptVisitor(CScript *scriptin) { script = scriptin; }
+
+    bool operator()(const CNoDestination &dest) const {
+        script->clear();
+        return false;
+    }
+
+    bool operator()(const CKeyID &keyID) const {
+        script->clear();
+        *script << OP_DUP << OP_HASH160 << keyID << OP_EQUALVERIFY << OP_CHECKSIG;
+        return true;
+    }
+
+    bool operator()(const CScriptID &scriptID) const {
+        script->clear();
+        *script << OP_HASH160 << scriptID << OP_EQUAL;
+        return true;
+    }
+};
+
+void CScript::SetDestination(const CTxDestination& dest)
+{
+    boost::apply_visitor(CScriptVisitor(this), dest);
+}
+
+void CScript::SetMultisig(int nRequired, const std::vector<CKey>& keys)
+{
+    this->clear();
+
+    *this << EncodeOP_N(nRequired);
+    BOOST_FOREACH(const CKey& key, keys)
+        *this << key.GetPubKey();
+    *this << EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
+}
