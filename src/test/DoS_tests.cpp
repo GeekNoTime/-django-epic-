@@ -110,4 +110,91 @@ BOOST_AUTO_TEST_CASE(DoS_checknbits)
 
     // Make sure CheckNBits considers every combination of block-chain-lock-in-points
     // "sane":
-    BOOST_FOREACH(const Blo
+    BOOST_FOREACH(const BlockData::value_type& i, chainData)
+    {
+        BOOST_FOREACH(const BlockData::value_type& j, chainData)
+        {
+            BOOST_CHECK(CheckNBits(i.second, i.first, j.second, j.first));
+        }
+    }
+
+    // Test a couple of insane combinations:
+    BlockData::value_type firstcheck = *(chainData.begin());
+    BlockData::value_type lastcheck = *(chainData.rbegin());
+
+    // First checkpoint difficulty at or a while after the last checkpoint time should fail when
+    // compared to last checkpoint
+    BOOST_CHECK(!CheckNBits(firstcheck.second, lastcheck.first+60*10, lastcheck.second, lastcheck.first));
+    BOOST_CHECK(!CheckNBits(firstcheck.second, lastcheck.first+60*60*24*14, lastcheck.second, lastcheck.first));
+
+    // ... but OK if enough time passed for difficulty to adjust downward:
+    BOOST_CHECK(CheckNBits(firstcheck.second, lastcheck.first+60*60*24*365*4, lastcheck.second, lastcheck.first));
+    
+}
+
+CTransaction RandomOrphan()
+{
+    std::map<uint256, CDataStream*>::iterator it;
+    it = mapOrphanTransactions.lower_bound(GetRandHash());
+    if (it == mapOrphanTransactions.end())
+        it = mapOrphanTransactions.begin();
+    const CDataStream* pvMsg = it->second;
+    CTransaction tx;
+    CDataStream(*pvMsg) >> tx;
+    return tx;
+}
+
+BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
+{
+    CKey key;
+    key.MakeNewKey(true);
+    CBasicKeyStore keystore;
+    keystore.AddKey(key);
+
+    // 50 orphan transactions:
+    for (int i = 0; i < 50; i++)
+    {
+        CTransaction tx;
+        tx.vin.resize(1);
+        tx.vin[0].prevout.n = 0;
+        tx.vin[0].prevout.hash = GetRandHash();
+        tx.vin[0].scriptSig << OP_1;
+        tx.vout.resize(1);
+        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
+
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        ds << tx;
+        AddOrphanTx(ds);
+    }
+
+    // ... and 50 that depend on other orphans:
+    for (int i = 0; i < 50; i++)
+    {
+        CTransaction txPrev = RandomOrphan();
+
+        CTransaction tx;
+        tx.vin.resize(1);
+        tx.vin[0].prevout.n = 0;
+        tx.vin[0].prevout.hash = txPrev.GetHash();
+        tx.vout.resize(1);
+        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
+        SignSignature(keystore, txPrev, tx, 0);
+
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        ds << tx;
+        AddOrphanTx(ds);
+    }
+
+    // This really-big orphan should be ignored:
+    for (int i = 0; i < 10; i++)
+    {
+        CTransaction txPrev = RandomOrphan();
+
+        CTransaction tx;
+        tx.vout.resize(1);
+        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
+        tx.vin.resize(500);
+        f
