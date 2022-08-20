@@ -197,4 +197,83 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
         tx.vin.resize(500);
-        f
+        for (unsigned int j = 0; j < tx.vin.size(); j++)
+        {
+            tx.vin[j].prevout.n = j;
+            tx.vin[j].prevout.hash = txPrev.GetHash();
+        }
+        SignSignature(keystore, txPrev, tx, 0);
+        // Re-use same signature for other inputs
+        // (they don't have to be valid for this test)
+        for (unsigned int j = 1; j < tx.vin.size(); j++)
+            tx.vin[j].scriptSig = tx.vin[0].scriptSig;
+
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        ds << tx;
+        BOOST_CHECK(!AddOrphanTx(ds));
+    }
+
+    // Test LimitOrphanTxSize() function:
+    LimitOrphanTxSize(40);
+    BOOST_CHECK(mapOrphanTransactions.size() <= 40);
+    LimitOrphanTxSize(10);
+    BOOST_CHECK(mapOrphanTransactions.size() <= 10);
+    LimitOrphanTxSize(0);
+    BOOST_CHECK(mapOrphanTransactions.empty());
+    BOOST_CHECK(mapOrphanTransactionsByPrev.empty());
+}
+
+BOOST_AUTO_TEST_CASE(DoS_checkSig)
+{
+    // Test signature caching code (see key.cpp Verify() methods)
+
+    CKey key;
+    key.MakeNewKey(true);
+    CBasicKeyStore keystore;
+    keystore.AddKey(key);
+
+    // 100 orphan transactions:
+    static const int NPREV=100;
+    CTransaction orphans[NPREV];
+    for (int i = 0; i < NPREV; i++)
+    {
+        CTransaction& tx = orphans[i];
+        tx.vin.resize(1);
+        tx.vin[0].prevout.n = 0;
+        tx.vin[0].prevout.hash = GetRandHash();
+        tx.vin[0].scriptSig << OP_1;
+        tx.vout.resize(1);
+        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
+
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        ds << tx;
+        AddOrphanTx(ds);
+    }
+
+    // Create a transaction that depends on orphans:
+    CTransaction tx;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = 1*CENT;
+    tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
+    tx.vin.resize(NPREV);
+    for (unsigned int j = 0; j < tx.vin.size(); j++)
+    {
+        tx.vin[j].prevout.n = 0;
+        tx.vin[j].prevout.hash = orphans[j].GetHash();
+    }
+    // Creating signatures primes the cache:
+    boost::posix_time::ptime mst1 = boost::posix_time::microsec_clock::local_time();
+    for (unsigned int j = 0; j < tx.vin.size(); j++)
+        BOOST_CHECK(SignSignature(keystore, orphans[j], tx, j));
+    boost::posix_time::ptime mst2 = boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::time_duration msdiff = mst2 - mst1;
+    long nOneValidate = msdiff.total_milliseconds();
+    if (fDebug) printf("DoS_Checksig sign: %ld\n", nOneValidate);
+
+    // ... now validating repeatedly should be quick:
+    // 2.8GHz machine, -g build: Sign takes ~760ms,
+    // uncached Verify takes ~250ms, cached Verify takes ~50ms
+    // (for 100 single-signature inputs)
+    mst1 = boost::posix_time::microsec_clock::local_time();
+    for (unsigned int i = 0; i
