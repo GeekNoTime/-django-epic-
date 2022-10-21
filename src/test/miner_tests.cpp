@@ -40,4 +40,79 @@ struct {
     {1, 0x70de86a8}, {1, 0x74d64cd5}, {1, 0x49e738a1}, {2, 0x6910b602},
     {0, 0x643c565f}, {1, 0x54264b3f}, {2, 0x97ea6396}, {2, 0x55174459},
     {2, 0x03e8779a}, {1, 0x98f34d8f}, {1, 0xc07b2b07}, {1, 0xdfe29668},
-    {1, 0x3141c7c1}, {1, 0xb3b595f4}, {1,
+    {1, 0x3141c7c1}, {1, 0xb3b595f4}, {1, 0x735abf08}, {5, 0x623bfbce},
+    {2, 0xd351e722}, {1, 0xf4ca48c9}, {1, 0x5b19c670}, {1, 0xa164bf0e},
+    {2, 0xbbbeb305}, {2, 0xfe1c810a},
+};
+
+// NOTE: These tests rely on CreateNewBlock doing its own self-validation!
+BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
+{
+    CReserveKey reservekey(pwalletMain);
+    CBlock *pblock;
+    CTransaction tx;
+    CScript script;
+    uint256 hash;
+
+    // Simple block creation, nothing special yet:
+    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
+
+    // We can't make transactions until we have inputs
+    // Therefore, load 100 blocks :)
+    std::vector<CTransaction*>txFirst;
+    for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
+    {
+        pblock->nVersion = 1;
+        pblock->nTime = pindexBest->GetMedianTimePast()+1;
+        pblock->vtx[0].vin[0].scriptSig = CScript();
+        pblock->vtx[0].vin[0].scriptSig.push_back(blockinfo[i].extranonce);
+        pblock->vtx[0].vin[0].scriptSig.push_back(pindexBest->nHeight);
+        pblock->vtx[0].vout[0].scriptPubKey = CScript();
+        if (txFirst.size() < 2)
+            txFirst.push_back(new CTransaction(pblock->vtx[0]));
+        pblock->hashMerkleRoot = pblock->BuildMerkleTree();
+        pblock->nNonce = blockinfo[i].nonce;
+        assert(ProcessBlock(NULL, pblock));
+        pblock->hashPrevBlock = pblock->GetHash();
+    }
+    delete pblock;
+
+    // Just to make sure we can still make simple blocks
+    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
+
+    // block sigops > limit: 1000 CHECKMULTISIG + 1
+    tx.vin.resize(1);
+    // NOTE: OP_NOP is used to force 20 SigOps for the CHECKMULTISIG
+    tx.vin[0].scriptSig = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vin[0].prevout.n = 0;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = 5000000000LL;
+    for (unsigned int i = 0; i < 1001; ++i)
+    {
+        tx.vout[0].nValue -= 1000000;
+        hash = tx.GetHash();
+        mempool.addUnchecked(hash, tx);
+        tx.vin[0].prevout.hash = hash;
+    }
+    BOOST_CHECK(pblock = CreateNewBlock(reservekey));
+    delete pblock;
+    mempool.clear();
+
+    // block size > limit
+    tx.vin[0].scriptSig = CScript();
+    // 18 * (520char + DROP) + OP_1 = 9433 bytes
+    std::vector<unsigned char> vchData(520);
+    for (unsigned int i = 0; i < 18; ++i)
+        tx.vin[0].scriptSig << vchData << OP_DROP;
+    tx.vin[0].scriptSig << OP_1;
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vout[0].nValue = 5000000000LL;
+    for (unsigned int i = 0; i < 128; ++i)
+    {
+        tx.vout[0].nValue -= 10000000;
+        hash = tx.GetHash();
+        mempool.addUnchecked(hash, tx);
+        tx.vin[0].prevout.hash = hash;
+    }
+    BOOST_CHECK(pbl
