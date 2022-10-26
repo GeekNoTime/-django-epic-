@@ -156,4 +156,78 @@ BOOST_AUTO_TEST_CASE(script_invalid)
     {
         Array test = tv.get_array();
         string strTest = write_string(tv, false);
-        if (test.size() < 2) // Allow size > 2; extra stuff ignored (us
+        if (test.size() < 2) // Allow size > 2; extra stuff ignored (useful for comments)
+        {
+            BOOST_ERROR("Bad test: " << strTest);
+            continue;
+        }
+        string scriptSigString = test[0].get_str();
+        CScript scriptSig = ParseScript(scriptSigString);
+        string scriptPubKeyString = test[1].get_str();
+        CScript scriptPubKey = ParseScript(scriptPubKeyString);
+
+        CTransaction tx;
+        BOOST_CHECK_MESSAGE(!VerifyScript(scriptSig, scriptPubKey, tx, 0, true, SIGHASH_NONE), strTest);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(script_PushData)
+{
+    // Check that PUSHDATA1, PUSHDATA2, and PUSHDATA4 create the same value on
+    // the stack as the 1-75 opcodes do.
+    static const unsigned char direct[] = { 1, 0x5a };
+    static const unsigned char pushdata1[] = { OP_PUSHDATA1, 1, 0x5a };
+    static const unsigned char pushdata2[] = { OP_PUSHDATA2, 1, 0, 0x5a };
+    static const unsigned char pushdata4[] = { OP_PUSHDATA4, 1, 0, 0, 0, 0x5a };
+
+    vector<vector<unsigned char> > directStack;
+    BOOST_CHECK(EvalScript(directStack, CScript(&direct[0], &direct[sizeof(direct)]), CTransaction(), 0, 0));
+
+    vector<vector<unsigned char> > pushdata1Stack;
+    BOOST_CHECK(EvalScript(pushdata1Stack, CScript(&pushdata1[0], &pushdata1[sizeof(pushdata1)]), CTransaction(), 0, 0));
+    BOOST_CHECK(pushdata1Stack == directStack);
+
+    vector<vector<unsigned char> > pushdata2Stack;
+    BOOST_CHECK(EvalScript(pushdata2Stack, CScript(&pushdata2[0], &pushdata2[sizeof(pushdata2)]), CTransaction(), 0, 0));
+    BOOST_CHECK(pushdata2Stack == directStack);
+
+    vector<vector<unsigned char> > pushdata4Stack;
+    BOOST_CHECK(EvalScript(pushdata4Stack, CScript(&pushdata4[0], &pushdata4[sizeof(pushdata4)]), CTransaction(), 0, 0));
+    BOOST_CHECK(pushdata4Stack == directStack);
+}
+
+CScript
+sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transaction)
+{
+    uint256 hash = SignatureHash(scriptPubKey, transaction, 0, SIGHASH_ALL);
+
+    CScript result;
+    //
+    // NOTE: CHECKMULTISIG has an unfortunate bug; it requires
+    // one extra item on the stack, before the signatures.
+    // Putting OP_0 on the stack is the workaround;
+    // fixing the bug would mean splitting the blockchain (old
+    // clients would not accept new CHECKMULTISIG transactions,
+    // and vice-versa)
+    //
+    result << OP_0;
+    BOOST_FOREACH(CKey key, keys)
+    {
+        vector<unsigned char> vchSig;
+        BOOST_CHECK(key.Sign(hash, vchSig));
+        vchSig.push_back((unsigned char)SIGHASH_ALL);
+        result << vchSig;
+    }
+    return result;
+}
+CScript
+sign_multisig(CScript scriptPubKey, CKey key, CTransaction transaction)
+{
+    std::vector<CKey> keys;
+    keys.push_back(key);
+    return sign_multisig(scriptPubKey, keys, transaction);
+}
+
+BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
+{
+    CKey key
