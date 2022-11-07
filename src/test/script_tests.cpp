@@ -432,4 +432,14 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     BOOST_CHECK(combined == complete12);
     combined = CombineSignatures(scriptPubKey, txTo, 0, partial1b, partial2b);
     BOOST_CHECK(combined == complete12);
-    combined = CombineSignatu
+    combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial1b);
+    BOOST_CHECK(combined == complete13);
+    combined = CombineSignatures(scriptPubKey, txTo, 0, partial2a, partial3a);
+    BOOST_CHECK(combined == complete23);
+    combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial2b);
+    BOOST_CHECK(combined == complete23);
+    combined = CombineSignatures(scriptPubKey, txTo, 0, partial3b, partial3a);
+    BOOST_CHECK(combined == partial3c);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
