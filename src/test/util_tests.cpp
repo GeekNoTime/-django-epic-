@@ -72,4 +72,75 @@ BOOST_AUTO_TEST_CASE(util_ParseHex)
 
     // Spaces between bytes must be supported
     result = ParseHex("12 34 56 78");
-    BOOST_CHE
+    BOOST_CHECK(result.size() == 4 && result[0] == 0x12 && result[1] == 0x34 && result[2] == 0x56 && result[3] == 0x78);
+
+    // Stop parsing at invalid value
+    result = ParseHex("1234 invalid 1234");
+    BOOST_CHECK(result.size() == 2 && result[0] == 0x12 && result[1] == 0x34);
+}
+
+BOOST_AUTO_TEST_CASE(util_HexStr)
+{
+    BOOST_CHECK_EQUAL(
+        HexStr(ParseHex_expected, ParseHex_expected + sizeof(ParseHex_expected)),
+        "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f");
+
+    BOOST_CHECK_EQUAL(
+        HexStr(ParseHex_expected, ParseHex_expected + 5, true),
+        "04 67 8a fd b0");
+
+    BOOST_CHECK_EQUAL(
+        HexStr(ParseHex_expected, ParseHex_expected, true),
+        "");
+
+    std::vector<unsigned char> ParseHex_vec(ParseHex_expected, ParseHex_expected + 5);
+
+    BOOST_CHECK_EQUAL(
+        HexStr(ParseHex_vec, true),
+        "04 67 8a fd b0");
+}
+
+
+BOOST_AUTO_TEST_CASE(util_DateTimeStrFormat)
+{
+/*These are platform-dependant and thus removed to avoid useless test failures
+    BOOST_CHECK_EQUAL(DateTimeStrFormat("%x %H:%M:%S", 0), "01/01/70 00:00:00");
+    BOOST_CHECK_EQUAL(DateTimeStrFormat("%x %H:%M:%S", 0x7FFFFFFF), "01/19/38 03:14:07");
+    // Formats used within Bitcoin
+    BOOST_CHECK_EQUAL(DateTimeStrFormat("%x %H:%M:%S", 1317425777), "09/30/11 23:36:17");
+    BOOST_CHECK_EQUAL(DateTimeStrFormat("%x %H:%M", 1317425777), "09/30/11 23:36");
+*/
+}
+
+BOOST_AUTO_TEST_CASE(util_ParseParameters)
+{
+    const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
+
+    ParseParameters(0, (char**)argv_test);
+    BOOST_CHECK(mapArgs.empty() && mapMultiArgs.empty());
+
+    ParseParameters(1, (char**)argv_test);
+    BOOST_CHECK(mapArgs.empty() && mapMultiArgs.empty());
+
+    ParseParameters(5, (char**)argv_test);
+    // expectation: -ignored is ignored (program name argument), 
+    // -a, -b and -ccc end up in map, -d ignored because it is after
+    // a non-option argument (non-GNU option parsing)
+    BOOST_CHECK(mapArgs.size() == 3 && mapMultiArgs.size() == 3);
+    BOOST_CHECK(mapArgs.count("-a") && mapArgs.count("-b") && mapArgs.count("-ccc") 
+                && !mapArgs.count("f") && !mapArgs.count("-d"));
+    BOOST_CHECK(mapMultiArgs.count("-a") && mapMultiArgs.count("-b") && mapMultiArgs.count("-ccc") 
+                && !mapMultiArgs.count("f") && !mapMultiArgs.count("-d"));
+
+    BOOST_CHECK(mapArgs["-a"] == "" && mapArgs["-ccc"] == "multiple");
+    BOOST_CHECK(mapMultiArgs["-ccc"].size() == 2);
+}
+
+BOOST_AUTO_TEST_CASE(util_GetArg)
+{
+    mapArgs.clear();
+    mapArgs["strtest1"] = "string...";
+    // strtest2 undefined on purpose
+    mapArgs["inttest1"] = "12345";
+    mapArgs["inttest2"] = "81985529216486895";
+    // in
