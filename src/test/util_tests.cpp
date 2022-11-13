@@ -204,4 +204,61 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney)
     BOOST_CHECK(ParseMoney("0.0", ret));
     BOOST_CHECK_EQUAL(ret, 0);
 
-    BOOST_CHECK(ParseMoney("12345.678
+    BOOST_CHECK(ParseMoney("12345.6789", ret));
+    BOOST_CHECK_EQUAL(ret, (COIN/10000)*123456789);
+
+    BOOST_CHECK(ParseMoney("100000000.00", ret));
+    BOOST_CHECK_EQUAL(ret, COIN*100000000);
+    BOOST_CHECK(ParseMoney("10000000.00", ret));
+    BOOST_CHECK_EQUAL(ret, COIN*10000000);
+    BOOST_CHECK(ParseMoney("1000000.00", ret));
+    BOOST_CHECK_EQUAL(ret, COIN*1000000);
+    BOOST_CHECK(ParseMoney("100000.00", ret));
+    BOOST_CHECK_EQUAL(ret, COIN*100000);
+    BOOST_CHECK(ParseMoney("10000.00", ret));
+    BOOST_CHECK_EQUAL(ret, COIN*10000);
+    BOOST_CHECK(ParseMoney("1000.00", ret));
+    BOOST_CHECK_EQUAL(ret, COIN*1000);
+    BOOST_CHECK(ParseMoney("100.00", ret));
+    BOOST_CHECK_EQUAL(ret, COIN*100);
+    BOOST_CHECK(ParseMoney("10.00", ret));
+    BOOST_CHECK_EQUAL(ret, COIN*10);
+    BOOST_CHECK(ParseMoney("1.00", ret));
+    BOOST_CHECK_EQUAL(ret, COIN);
+    BOOST_CHECK(ParseMoney("0.1", ret));
+    BOOST_CHECK_EQUAL(ret, COIN/10);
+    BOOST_CHECK(ParseMoney("0.01", ret));
+    BOOST_CHECK_EQUAL(ret, COIN/100);
+    BOOST_CHECK(ParseMoney("0.001", ret));
+    BOOST_CHECK_EQUAL(ret, COIN/1000);
+    BOOST_CHECK(ParseMoney("0.0001", ret));
+    BOOST_CHECK_EQUAL(ret, COIN/10000);
+    BOOST_CHECK(ParseMoney("0.00001", ret));
+    BOOST_CHECK_EQUAL(ret, COIN/100000);
+    BOOST_CHECK(ParseMoney("0.000001", ret));
+    BOOST_CHECK_EQUAL(ret, COIN/1000000);
+    BOOST_CHECK(ParseMoney("0.0000001", ret));
+    BOOST_CHECK_EQUAL(ret, COIN/10000000);
+    BOOST_CHECK(ParseMoney("0.00000001", ret));
+    BOOST_CHECK_EQUAL(ret, COIN/100000000);
+
+    // Attempted 63 bit overflow should fail
+    BOOST_CHECK(!ParseMoney("92233720368.54775808", ret));
+}
+
+BOOST_AUTO_TEST_CASE(util_IsHex)
+{
+    BOOST_CHECK(IsHex("00"));
+    BOOST_CHECK(IsHex("00112233445566778899aabbccddeeffAABBCCDDEEFF"));
+    BOOST_CHECK(IsHex("ff"));
+    BOOST_CHECK(IsHex("FF"));
+
+    BOOST_CHECK(!IsHex(""));
+    BOOST_CHECK(!IsHex("0"));
+    BOOST_CHECK(!IsHex("a"));
+    BOOST_CHECK(!IsHex("eleven"));
+    BOOST_CHECK(!IsHex("00xx00"));
+    BOOST_CHECK(!IsHex("0x0000"));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
