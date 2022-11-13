@@ -143,4 +143,65 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     // strtest2 undefined on purpose
     mapArgs["inttest1"] = "12345";
     mapArgs["inttest2"] = "81985529216486895";
-    // in
+    // inttest3 undefined on purpose
+    mapArgs["booltest1"] = "";
+    // booltest2 undefined on purpose
+    mapArgs["booltest3"] = "0";
+    mapArgs["booltest4"] = "1";
+
+    BOOST_CHECK_EQUAL(GetArg("strtest1", "default"), "string...");
+    BOOST_CHECK_EQUAL(GetArg("strtest2", "default"), "default");
+    BOOST_CHECK_EQUAL(GetArg("inttest1", -1), 12345);
+    BOOST_CHECK_EQUAL(GetArg("inttest2", -1), 81985529216486895LL);
+    BOOST_CHECK_EQUAL(GetArg("inttest3", -1), -1);
+    BOOST_CHECK_EQUAL(GetBoolArg("booltest1"), true);
+    BOOST_CHECK_EQUAL(GetBoolArg("booltest2"), false);
+    BOOST_CHECK_EQUAL(GetBoolArg("booltest3"), false);
+    BOOST_CHECK_EQUAL(GetBoolArg("booltest4"), true);
+}
+
+BOOST_AUTO_TEST_CASE(util_WildcardMatch)
+{
+    BOOST_CHECK(WildcardMatch("127.0.0.1", "*"));
+    BOOST_CHECK(WildcardMatch("127.0.0.1", "127.*"));
+    BOOST_CHECK(WildcardMatch("abcdef", "a?cde?"));
+    BOOST_CHECK(!WildcardMatch("abcdef", "a?cde??"));
+    BOOST_CHECK(WildcardMatch("abcdef", "a*f"));
+    BOOST_CHECK(!WildcardMatch("abcdef", "a*x"));
+    BOOST_CHECK(WildcardMatch("", "*"));
+}
+
+BOOST_AUTO_TEST_CASE(util_FormatMoney)
+{
+    BOOST_CHECK_EQUAL(FormatMoney(0, false), "0.00");
+    BOOST_CHECK_EQUAL(FormatMoney((COIN/10000)*123456789, false), "12345.6789");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN, true), "+1.00");
+    BOOST_CHECK_EQUAL(FormatMoney(-COIN, false), "-1.00");
+    BOOST_CHECK_EQUAL(FormatMoney(-COIN, true), "-1.00");
+
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*100000000, false), "100000000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*10000000, false), "10000000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*1000000, false), "1000000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*100000, false), "100000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*10000, false), "10000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*1000, false), "1000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*100, false), "100.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*10, false), "10.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN, false), "1.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/10, false), "0.10");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/100, false), "0.01");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/1000, false), "0.001");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/10000, false), "0.0001");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/100000, false), "0.00001");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/1000000, false), "0.000001");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/10000000, false), "0.0000001");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/100000000, false), "0.00000001");
+}
+
+BOOST_AUTO_TEST_CASE(util_ParseMoney)
+{
+    int64 ret = 0;
+    BOOST_CHECK(ParseMoney("0.0", ret));
+    BOOST_CHECK_EQUAL(ret, 0);
+
+    BOOST_CHECK(ParseMoney("12345.678
