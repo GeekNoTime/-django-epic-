@@ -128,4 +128,95 @@ CWalletDB::ReorderTransactions(CWallet* pwallet)
         txByTime.insert(make_pair(wtx->nTimeReceived, TxPair(wtx, (CAccountingEntry*)0)));
     }
     list<CAccountingEntry> acentries;
-    ListAccoun
+    ListAccountCreditDebit("", acentries);
+    BOOST_FOREACH(CAccountingEntry& entry, acentries)
+    {
+        txByTime.insert(make_pair(entry.nTime, TxPair((CWalletTx*)0, &entry)));
+    }
+
+    int64_t& nOrderPosNext = pwallet->nOrderPosNext;
+    nOrderPosNext = 0;
+    std::vector<int64_t> nOrderPosOffsets;
+    for (TxItems::iterator it = txByTime.begin(); it != txByTime.end(); ++it)
+    {
+        CWalletTx *const pwtx = (*it).second.first;
+        CAccountingEntry *const pacentry = (*it).second.second;
+        int64_t& nOrderPos = (pwtx != 0) ? pwtx->nOrderPos : pacentry->nOrderPos;
+
+        if (nOrderPos == -1)
+        {
+            nOrderPos = nOrderPosNext++;
+            nOrderPosOffsets.push_back(nOrderPos);
+
+            if (pacentry)
+                // Have to write accounting regardless, since we don't keep it in memory
+                if (!WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
+                    return DB_LOAD_FAIL;
+        }
+        else
+        {
+            int64_t nOrderPosOff = 0;
+            BOOST_FOREACH(const int64_t& nOffsetStart, nOrderPosOffsets)
+            {
+                if (nOrderPos >= nOffsetStart)
+                    ++nOrderPosOff;
+            }
+            nOrderPos += nOrderPosOff;
+            nOrderPosNext = std::max(nOrderPosNext, nOrderPos + 1);
+
+            if (!nOrderPosOff)
+                continue;
+
+            // Since we're changing the order, write it back
+            if (pwtx)
+            {
+                if (!WriteTx(pwtx->GetHash(), *pwtx))
+                    return DB_LOAD_FAIL;
+            }
+            else
+                if (!WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
+                    return DB_LOAD_FAIL;
+        }
+    }
+
+    return DB_LOAD_OK;
+}
+
+class CWalletScanState {
+public:
+    unsigned int nKeys;
+    unsigned int nCKeys;
+    unsigned int nKeyMeta;
+    bool fIsEncrypted;
+    bool fAnyUnordered;
+    int nFileVersion;
+    vector<uint256> vWalletUpgrade;
+
+    CWalletScanState() {
+        nKeys = nCKeys = nKeyMeta = 0;
+        fIsEncrypted = false;
+        fAnyUnordered = false;
+        nFileVersion = 0;
+    }
+};
+
+bool
+ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
+             CWalletScanState &wss, string& strType, string& strErr)
+{
+    try {
+        // Unserialize
+        // Taking advantage of the fact that pair serialization
+        // is just the two items serialized one after the other
+        ssKey >> strType;
+        if (strType == "name")
+        {
+            string strAddress;
+            ssKey >> strAddress;
+            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()];
+        }
+        else if (strType == "tx")
+        {
+            uint256 hash;
+            ssKey >> hash;
+            CWalletTx& wtx = pwallet->mapWallet[h
