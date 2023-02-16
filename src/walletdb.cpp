@@ -624,4 +624,84 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
                 } catch(const filesystem::filesystem_error &e) {
                     printf("error copying wallet.dat to %s - %s\n", pathDest.string().c_str(), e.what());
                     return false;
-             
+                }
+            }
+        }
+        MilliSleep(100);
+    }
+    return false;
+}
+
+//
+// Try to (very carefully!) recover wallet.dat if there is a problem.
+//
+bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
+{
+    // Recovery procedure:
+    // move wallet.dat to wallet.timestamp.bak
+    // Call Salvage with fAggressive=true to
+    // get as much data as possible.
+    // Rewrite salvaged data to wallet.dat
+    // Set -rescan so any missing transactions will be
+    // found.
+    int64_t now = GetTime();
+    std::string newFilename = strprintf("wallet.%"PRId64".bak", now);
+
+    int result = dbenv.dbenv.dbrename(NULL, filename.c_str(), NULL,
+                                      newFilename.c_str(), DB_AUTO_COMMIT);
+    if (result == 0)
+        printf("Renamed %s to %s\n", filename.c_str(), newFilename.c_str());
+    else
+    {
+        printf("Failed to rename %s to %s\n", filename.c_str(), newFilename.c_str());
+        return false;
+    }
+
+    std::vector<CDBEnv::KeyValPair> salvagedData;
+    bool allOK = dbenv.Salvage(newFilename, true, salvagedData);
+    if (salvagedData.empty())
+    {
+        printf("Salvage(aggressive) found no records in %s.\n", newFilename.c_str());
+        return false;
+    }
+    printf("Salvage(aggressive) found %"PRIszu" records\n", salvagedData.size());
+
+    bool fSuccess = allOK;
+    Db* pdbCopy = new Db(&dbenv.dbenv, 0);
+    int ret = pdbCopy->open(NULL,                 // Txn pointer
+                            filename.c_str(),   // Filename
+                            "main",    // Logical db name
+                            DB_BTREE,  // Database type
+                            DB_CREATE,    // Flags
+                            0);
+    if (ret > 0)
+    {
+        printf("Cannot create database file %s\n", filename.c_str());
+        return false;
+    }
+    CWallet dummyWallet;
+    CWalletScanState wss;
+
+    DbTxn* ptxn = dbenv.TxnBegin();
+    BOOST_FOREACH(CDBEnv::KeyValPair& row, salvagedData)
+    {
+        if (fOnlyKeys)
+        {
+            CDataStream ssKey(row.first, SER_DISK, CLIENT_VERSION);
+            CDataStream ssValue(row.second, SER_DISK, CLIENT_VERSION);
+            string strType, strErr;
+            bool fReadOK = ReadKeyValue(&dummyWallet, ssKey, ssValue,
+                                        wss, strType, strErr);
+            if (!IsKeyType(strType))
+                continue;
+            if (!fReadOK)
+            {
+                printf("WARNING: CWalletDB::Recover skipping %s: %s\n", strType.c_str(), strErr.c_str());
+                continue;
+            }
+        }
+        Dbt datKey(&row.first[0], row.first.size());
+        Dbt datValue(&row.second[0], row.second.size());
+        int ret2 = pdbCopy->put(ptxn, &datKey, &datValue, DB_NOOVERWRITE);
+        if (ret2 > 0)
+         
