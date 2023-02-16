@@ -219,4 +219,80 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             uint256 hash;
             ssKey >> hash;
-            CWalletTx& wtx = pwallet->mapWallet[h
+            CWalletTx& wtx = pwallet->mapWallet[hash];
+            ssValue >> wtx;
+            if (wtx.CheckTransaction() && (wtx.GetHash() == hash))
+                wtx.BindWallet(pwallet);
+            else
+            {
+                pwallet->mapWallet.erase(hash);
+                return false;
+            }
+
+            // Undo serialize changes in 31600
+            if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
+            {
+                if (!ssValue.empty())
+                {
+                    char fTmp;
+                    char fUnused;
+                    ssValue >> fTmp >> fUnused >> wtx.strFromAccount;
+                    strErr = strprintf("LoadWallet() upgrading tx ver=%d %d '%s' %s",
+                                       wtx.fTimeReceivedIsTxTime, fTmp, wtx.strFromAccount.c_str(), hash.ToString().c_str());
+                    wtx.fTimeReceivedIsTxTime = fTmp;
+                }
+                else
+                {
+                    strErr = strprintf("LoadWallet() repairing tx ver=%d %s", wtx.fTimeReceivedIsTxTime, hash.ToString().c_str());
+                    wtx.fTimeReceivedIsTxTime = 0;
+                }
+                wss.vWalletUpgrade.push_back(hash);
+            }
+
+            if (wtx.nOrderPos == -1)
+                wss.fAnyUnordered = true;
+
+            //// debug print
+            //printf("LoadWallet  %s\n", wtx.GetHash().ToString().c_str());
+            //printf(" %12"PRId64"  %s  %s  %s\n",
+            //    wtx.vout[0].nValue,
+            //    DateTimeStrFormat("%x %H:%M:%S", wtx.GetBlockTime()).c_str(),
+            //    wtx.hashBlock.ToString().substr(0,20).c_str(),
+            //    wtx.mapValue["message"].c_str());
+        }
+        else if (strType == "acentry")
+        {
+            string strAccount;
+            ssKey >> strAccount;
+            uint64_t nNumber;
+            ssKey >> nNumber;
+            if (nNumber > nAccountingEntryNumber)
+                nAccountingEntryNumber = nNumber;
+
+            if (!wss.fAnyUnordered)
+            {
+                CAccountingEntry acentry;
+                ssValue >> acentry;
+                if (acentry.nOrderPos == -1)
+                    wss.fAnyUnordered = true;
+            }
+        }
+        else if (strType == "key" || strType == "wkey")
+        {
+            vector<unsigned char> vchPubKey;
+            ssKey >> vchPubKey;
+            CKey key;
+            if (strType == "key")
+            {
+                wss.nKeys++;
+                CPrivKey pkey;
+                ssValue >> pkey;
+                key.SetPubKey(vchPubKey);
+                if (!key.SetPrivKey(pkey))
+                {
+                    strErr = "Error reading wallet database: CPrivKey corrupt";
+                    return false;
+                }
+                if (key.GetPubKey() != vchPubKey)
+                {
+                    strErr = "Error r
