@@ -704,4 +704,16 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
         Dbt datValue(&row.second[0], row.second.size());
         int ret2 = pdbCopy->put(ptxn, &datKey, &datValue, DB_NOOVERWRITE);
         if (ret2 > 0)
-         
+            fSuccess = false;
+    }
+    ptxn->commit(0);
+    pdbCopy->close(0);
+    delete pdbCopy;
+
+    return fSuccess;
+}
+
+bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename)
+{
+    return CWalletDB::Recover(dbenv, filename, false);
+}
