@@ -467,4 +467,89 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
             {
                 printf("Error reading next record from wallet database\n");
                 return DB_CORRUPT;
-       
+            }
+
+            // Try to be tolerant of single corrupt records:
+            string strType, strErr;
+            if (!ReadKeyValue(pwallet, ssKey, ssValue, wss, strType, strErr))
+            {
+                // losing keys is considered a catastrophic error, anything else
+                // we assume the user can live with:
+                if (IsKeyType(strType))
+                    result = DB_CORRUPT;
+                else
+                {
+                    // Leave other errors alone, if we try to fix them we might make things worse.
+                    fNoncriticalErrors = true; // ... but do warn the user there is something wrong.
+                    if (strType == "tx")
+                        // Rescan if there is a bad transaction record:
+                        SoftSetBoolArg("-rescan", true);
+                }
+            }
+            if (!strErr.empty())
+                printf("%s\n", strErr.c_str());
+        }
+        pcursor->close();
+    }
+    catch (...)
+    {
+        result = DB_CORRUPT;
+    }
+
+    if (fNoncriticalErrors && result == DB_LOAD_OK)
+        result = DB_NONCRITICAL_ERROR;
+
+    // Any wallet corruption at all: skip any rewriting or
+    // upgrading, we don't want to make it worse.
+    if (result != DB_LOAD_OK)
+        return result;
+
+    printf("nFileVersion = %d\n", wss.nFileVersion);
+
+    printf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total\n",
+           wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys);
+
+    // nTimeFirstKey is only reliable if all keys have metadata
+    if ((wss.nKeys + wss.nCKeys) != wss.nKeyMeta)
+        pwallet->nTimeFirstKey = 1; // 0 would be considered 'no value'
+
+
+    BOOST_FOREACH(uint256 hash, wss.vWalletUpgrade)
+        WriteTx(hash, pwallet->mapWallet[hash]);
+
+    // Rewrite encrypted wallets of versions 0.4.0 and 0.5.0rc:
+    if (wss.fIsEncrypted && (wss.nFileVersion == 40000 || wss.nFileVersion == 50000))
+        return DB_NEED_REWRITE;
+
+    if (wss.nFileVersion < CLIENT_VERSION) // Update
+        WriteVersion(CLIENT_VERSION);
+
+    if (wss.fAnyUnordered)
+        result = ReorderTransactions(pwallet);
+
+    return result;
+}
+
+void ThreadFlushWalletDB(void* parg)
+{
+    // Make this thread recognisable as the wallet flushing thread
+    RenameThread("HongyunCoin2-wallet");
+
+    const string& strFile = ((const string*)parg)[0];
+    static bool fOneThread;
+    if (fOneThread)
+        return;
+    fOneThread = true;
+    if (!GetBoolArg("-flushwallet", true))
+        return;
+
+    unsigned int nLastSeen = nWalletDBUpdated;
+    unsigned int nLastFlushed = nWalletDBUpdated;
+    int64_t nLastWalletUpdate = GetTime();
+    while (!fShutdown)
+    {
+        MilliSleep(500);
+
+        if (nLastSeen != nWalletDBUpdated)
+        {
+            nLastSeen 
