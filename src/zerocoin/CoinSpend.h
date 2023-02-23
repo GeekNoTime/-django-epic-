@@ -83,4 +83,25 @@ public:
 	    READWRITE(denomination);
 	    READWRITE(accCommitmentToCoinValue);
 	    READWRITE(serialCommitmentToCoinValue);
-	    READWRITE(coi
+	    READWRITE(coinSerialNumber);
+	    READWRITE(accumulatorPoK);
+	    READWRITE(serialNumberSoK);
+	    READWRITE(commitmentPoK);
+	)
+
+private:
+	const Params *params;
+	const uint256 signatureHash(const SpendMetaData &m) const;
+	// Denomination is stored as an INT because storing
+	// and enum raises amigiuities in the serialize code //FIXME if possible
+	int denomination;
+	Bignum accCommitmentToCoinValue;
+	Bignum serialCommitmentToCoinValue;
+	Bignum coinSerialNumber;
+	AccumulatorProofOfKnowledge accumulatorPoK;
+	SerialNumberSignatureOfKnowledge serialNumberSoK;
+	CommitmentProofOfKnowledge commitmentPoK;
+};
+
+} /* namespace libzerocoin */
+#endif /* COINSPEND_H_ */
