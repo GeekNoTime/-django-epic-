@@ -117,4 +117,56 @@ bool CommitmentProofOfKnowledge::Verify(const Bignum& A, const Bignum& B) const
 	}
 
 	// Compute T1 = g1^S1 * h1^S2 * inverse(A^{challenge}) mod p1
-	Bignum T1 = A.pow_mod(this->challenge, ap->modulu
+	Bignum T1 = A.pow_mod(this->challenge, ap->modulus).inverse(ap->modulus).mul_mod(
+	                (ap->g.pow_mod(S1, ap->modulus).mul_mod(ap->h.pow_mod(S2, ap->modulus), ap->modulus)),
+	                ap->modulus);
+
+	// Compute T2 = g2^S1 * h2^S3 * inverse(B^{challenge}) mod p2
+	Bignum T2 = B.pow_mod(this->challenge, bp->modulus).inverse(bp->modulus).mul_mod(
+	                (bp->g.pow_mod(S1, bp->modulus).mul_mod(bp->h.pow_mod(S3, bp->modulus), bp->modulus)),
+	                bp->modulus);
+
+	// Hash T1 and T2 along with all of the public parameters
+	Bignum computedChallenge = calculateChallenge(A, B, T1, T2);
+
+	// Return success if the computed challenge matches the incoming challenge
+	if(computedChallenge == this->challenge) {
+		return true;
+	}
+
+	// Otherwise return failure
+	return false;
+}
+
+const Bignum CommitmentProofOfKnowledge::calculateChallenge(const Bignum& a, const Bignum& b, const Bignum &commitOne, const Bignum &commitTwo) const {
+	CHashWriter hasher(0,0);
+
+	// Hash together the following elements:
+	// * A string identifying the proof
+	// * Commitment A
+	// * Commitment B
+	// * Ephemeral commitment T1
+	// * Ephemeral commitment T2
+	// * A serialized instance of the commitment A parameters
+	// * A serialized instance of the commitment B parameters
+
+	hasher << std::string(ZEROCOIN_COMMITMENT_EQUALITY_PROOF);
+	hasher << commitOne;
+	hasher << std::string("||");
+	hasher << commitTwo;
+	hasher << std::string("||");
+	hasher << a;
+	hasher << std::string("||");
+	hasher << b;
+	hasher << std::string("||");
+	hasher << *(this->ap);
+	hasher << std::string("||");
+	hasher << *(this->bp);
+
+	// Convert the SHA256 result into a Bignum
+	// Note that if we ever change the size of the hash function we will have
+	// to update COMMITMENT_EQUALITY_CHALLENGE_SIZE appropriately!
+	return Bignum(hasher.GetHash());
+}
+
+} /* namespace libzerocoin */
