@@ -84,4 +84,80 @@ CalculateParams(Params &params, Bignum N, string aux, uint32_t securityLevel)
 	uint32_t resultCtr;
 	params.accumulatorParams.accumulatorQRNCommitmentGroup.g = generateIntegerFromSeed(NLen - 1,
 	        calculateSeed(N, aux, securityLevel, STRING_QRNCOMMIT_GROUPG),
-	        &resultCtr).pow_mod(Bignu
+	        &resultCtr).pow_mod(Bignum(2), N);
+	params.accumulatorParams.accumulatorQRNCommitmentGroup.h = generateIntegerFromSeed(NLen - 1,
+	        calculateSeed(N, aux, securityLevel, STRING_QRNCOMMIT_GROUPG),
+	        &resultCtr).pow_mod(Bignum(2), N);
+
+	// Calculate the accumulator base, which we calculate as "u = C**2 mod N"
+	// where C is an arbitrary value. In the unlikely case that "u = 1" we increment
+	// "C" and repeat.
+	Bignum constant(ACCUMULATOR_BASE_CONSTANT);
+	params.accumulatorParams.accumulatorBase = Bignum(1);
+	for (uint32_t count = 0; count < MAX_ACCUMGEN_ATTEMPTS && params.accumulatorParams.accumulatorBase.isOne(); count++) {
+		params.accumulatorParams.accumulatorBase = constant.pow_mod(Bignum(2), params.accumulatorParams.accumulatorModulus);
+	}
+
+	// Compute the accumulator range. The upper range is the largest possible coin commitment value.
+	// The lower range is sqrt(upper range) + 1. Since OpenSSL doesn't have
+	// a square root function we use a slightly higher approximation.
+	params.accumulatorParams.maxCoinValue = params.coinCommitmentGroup.modulus;
+	params.accumulatorParams.minCoinValue = Bignum(2).pow((params.coinCommitmentGroup.modulus.bitSize() / 2) + 3);
+
+	// If all went well, mark params as successfully initialized.
+	params.accumulatorParams.initialized = true;
+
+	// If all went well, mark params as successfully initialized.
+	params.initialized = true;
+}
+
+/// \brief Format a seed string by hashing several values.
+/// \param N                A Bignum
+/// \param aux              An auxiliary string
+/// \param securityLevel    The security level in bits
+/// \param groupName        A group description string
+/// \throws         ZerocoinException if the process fails
+///
+/// Returns the hash of the value.
+
+uint256
+calculateGeneratorSeed(uint256 seed, uint256 pSeed, uint256 qSeed, string label, uint32_t index, uint32_t count)
+{
+	CHashWriter hasher(0,0);
+	uint256     hash;
+
+	// Compute the hash of:
+	// <modulus>||<securitylevel>||<auxString>||groupName
+	hasher << seed;
+	hasher << string("||");
+	hasher << pSeed;
+	hasher << string("||");
+	hasher << qSeed;
+	hasher << string("||");
+	hasher << label;
+	hasher << string("||");
+	hasher << index;
+	hasher << string("||");
+	hasher << count;
+
+	return hasher.GetHash();
+}
+
+/// \brief Format a seed string by hashing several values.
+/// \param N                A Bignum
+/// \param aux              An auxiliary string
+/// \param securityLevel    The security level in bits
+/// \param groupName        A group description string
+/// \throws         ZerocoinException if the process fails
+///
+/// Returns the hash of the value.
+
+uint256
+calculateSeed(Bignum modulus, string auxString, uint32_t securityLevel, string groupName)
+{
+	CHashWriter hasher(0,0);
+	uint256     hash;
+
+	// Compute the hash of:
+	// <modulus>||<securitylevel>||<auxString>||groupName
+	
