@@ -75,4 +75,74 @@ public:
 	//  */
 	// void setValue(Bignum &b); // shouldn't this be a constructor?
 
-	/** Us
+	/** Used to accumulate a coin
+	 *
+	 * @param c the coin to accumulate
+	 * @return a refrence to the updated accumulator.
+	 */
+	Accumulator& operator +=(const PublicCoin& c);
+	bool operator==(const Accumulator rhs) const;
+
+	IMPLEMENT_SERIALIZE
+	(
+	    READWRITE(value);
+	    READWRITE(denomination);
+	)
+private:
+	const AccumulatorAndProofParams* params;
+	Bignum value;
+	// Denomination is stored as an INT because storing
+	// and enum raises amigiuities in the serialize code //FIXME if possible
+	int denomination;
+};
+
+/**A witness that a PublicCoin is in the accumulation of a set of coins
+ *
+ */
+class AccumulatorWitness {
+public:
+	template<typename Stream>
+	AccumulatorWitness(const Params* p, Stream& strm): params(p) {
+		strm >> *this;
+	}
+
+	/**  Construct's a witness.  You must add all elements after the witness
+	 * @param p pointer to params
+	 * @param checkpoint the last known accumulator value before the element was added
+	 * @param coin the coin we want a witness to
+	 */
+	AccumulatorWitness(const Params* p, const Accumulator& checkpoint, const PublicCoin coin);
+
+	/** Adds element to the set whose's accumulation we are proving coin is a member of
+	 *
+	 * @param c the coin to add
+	 */
+	void AddElement(const PublicCoin& c);
+
+	/**
+	 *
+	 * @return the value of the witness
+	 */
+	const Bignum& getValue() const;
+
+	/** Checks that this is a witness to the accumulation of coin
+	 * @param a             the accumulator we are checking against.
+	 * @param publicCoin    the coin we're providing a witness for
+	 * @return True if the witness computation validates
+	 */
+	bool VerifyWitness(const Accumulator& a, const PublicCoin &publicCoin) const;
+
+	/**
+	 * Adds rhs to the set whose's accumulation ware proving coin is a member of
+	 * @param rhs the PublicCoin to add
+	 * @return
+	 */
+	AccumulatorWitness& operator +=(const PublicCoin& rhs);
+private:
+	const Params* params;
+	Accumulator witness;
+	const PublicCoin element;
+};
+
+} /* namespace libzerocoin */
+#endif /* ACCUMULATOR_H_ */
