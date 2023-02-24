@@ -160,4 +160,91 @@ calculateSeed(Bignum modulus, string auxString, uint32_t securityLevel, string g
 
 	// Compute the hash of:
 	// <modulus>||<securitylevel>||<auxString>||groupName
-	
+	hasher << modulus;
+	hasher << string("||");
+	hasher << securityLevel;
+	hasher << string("||");
+	hasher << auxString;
+	hasher << string("||");
+	hasher << groupName;
+
+	return hasher.GetHash();
+}
+
+uint256
+calculateHash(uint256 input)
+{
+	CHashWriter hasher(0,0);
+
+	// Compute the hash of "input"
+	hasher << input;
+
+	return hasher.GetHash();
+}
+
+/// \brief Calculate field/group parameter sizes based on a security level.
+/// \param maxPLen          Maximum size of the field (modulus "p") in bits.
+/// \param securityLevel    Required security level in bits (at least 80)
+/// \param pLen             Result: length of "p" in bits
+/// \param qLen             Result: length of "q" in bits
+/// \throws                 ZerocoinException if the process fails
+///
+/// Calculates the appropriate sizes of "p" and "q" for a prime-order
+/// subgroup of order "q" embedded within a field "F_p". The sizes
+/// are based on a 'securityLevel' provided in symmetric-equivalent
+/// bits. Our choices slightly exceed the specs in FIPS 186-3:
+///
+/// securityLevel = 80:     pLen = 1024, qLen = 256
+/// securityLevel = 112:    pLen = 2048, qLen = 256
+/// securityLevel = 128:    qLen = 3072, qLen = 320
+///
+/// If the length of "p" exceeds the length provided in "maxPLen", or
+/// if "securityLevel < 80" this routine throws an exception.
+
+void
+calculateGroupParamLengths(uint32_t maxPLen, uint32_t securityLevel,
+                           uint32_t *pLen, uint32_t *qLen)
+{
+	*pLen = *qLen = 0;
+
+	if (securityLevel < 80) {
+		throw ZerocoinException("Security level must be at least 80 bits.");
+	} else if (securityLevel == 80) {
+		*qLen = 256;
+		*pLen = 1024;
+	} else if (securityLevel <= 112) {
+		*qLen = 256;
+		*pLen = 2048;
+	} else if (securityLevel <= 128) {
+		*qLen = 320;
+		*pLen = 3072;
+	} else {
+		throw ZerocoinException("Security level not supported.");
+	}
+
+	if (*pLen > maxPLen) {
+		throw ZerocoinException("Modulus size is too small for this security level.");
+	}
+}
+
+/// \brief Deterministically compute a set of group parameters using NIST procedures.
+/// \param seedStr  A byte string seeding the process.
+/// \param pLen     The desired length of the modulus "p" in bits
+/// \param qLen     The desired length of the order "q" in bits
+/// \return         An IntegerGroupParams object
+///
+/// Calculates the description of a group G of prime order "q" embedded within
+/// a field "F_p". The input to this routine is in arbitrary seed. It uses the
+/// algorithms described in FIPS 186-3 Appendix A.1.2 to calculate
+/// primes "p" and "q". It uses the procedure in Appendix A.2.3 to
+/// derive two generators "g", "h".
+
+IntegerGroupParams
+deriveIntegerGroupParams(uint256 seed, uint32_t pLen, uint32_t qLen)
+{
+	IntegerGroupParams result;
+	Bignum p;
+	Bignum q;
+	uint256 pSeed, qSeed;
+
+	// Calculate "p" and "q" and "domain_param
