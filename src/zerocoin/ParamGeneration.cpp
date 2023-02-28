@@ -304,4 +304,52 @@ deriveIntegerGroupFromOrder(Bignum &groupOrder)
 		if (result.modulus.isPrime(256)) {
 
 			// Success.
-	
+			//
+			// Calculate the generators "g", "h" using the process described in
+			// NIST FIPS 186-3, Appendix A.2.3. This algorithm takes ("p", "q",
+			// "domain_parameter_seed", "index"). We use "index" value 1
+			// to generate "g" and "index" value 2 to generate "h".
+			uint256 seed = calculateSeed(groupOrder, "", 128, "");
+			uint256 pSeed = calculateHash(seed);
+			uint256 qSeed = calculateHash(pSeed);
+			result.g = calculateGroupGenerator(seed, pSeed, qSeed, result.modulus, result.groupOrder, 1);
+			result.h = calculateGroupGenerator(seed, pSeed, qSeed, result.modulus, result.groupOrder, 2);
+
+			// Perform some basic tests to make sure we have good parameters
+			if (!(result.modulus.isPrime()) ||                          // modulus is prime
+			        !(result.groupOrder.isPrime()) ||                       // order is prime
+			        !((result.g.pow_mod(result.groupOrder, result.modulus)).isOne()) || // g^order mod modulus = 1
+			        !((result.h.pow_mod(result.groupOrder, result.modulus)).isOne()) || // h^order mod modulus = 1
+			        ((result.g.pow_mod(Bignum(100), result.modulus)).isOne()) ||        // g^100 mod modulus != 1
+			        ((result.h.pow_mod(Bignum(100), result.modulus)).isOne()) ||        // h^100 mod modulus != 1
+			        result.g == result.h ||                                 // g != h
+			        result.g.isOne()) {                                     // g != 1
+				// If any of the above tests fail, throw an exception
+				throw ZerocoinException("Group parameters are not valid");
+			}
+
+			return result;
+		}
+	}
+
+	// If we reached this point group generation has failed. Throw an exception.
+	throw ZerocoinException("Too many attempts to generate Schnorr group.");
+}
+
+/// \brief Deterministically compute a group description using NIST procedures.
+/// \param seed                         A byte string seeding the process.
+/// \param pLen                         The desired length of the modulus "p" in bits
+/// \param qLen                         The desired length of the order "q" in bits
+/// \param resultModulus                A value "p" describing a finite field "F_p"
+/// \param resultGroupOrder             A value "q" describing the order of a subgroup
+/// \param resultDomainParameterSeed    A resulting seed for use in later calculations.
+///
+/// Calculates the description of a group G of prime order "q" embedded within
+/// a field "F_p". The input to this routine is in arbitrary seed. It uses the
+/// algorithms described in FIPS 186-3 Appendix A.1.2 to calculate
+/// primes "p" and "q".
+
+void
+calculateGroupModulusAndOrder(uint256 seed, uint32_t pLen, uint32_t qLen,
+                              Bignum *resultModulus, Bignum *resultGroupOrder,
+                              uint256 *resultPseed, uint256 *resultQs
