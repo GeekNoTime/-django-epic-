@@ -352,4 +352,74 @@ deriveIntegerGroupFromOrder(Bignum &groupOrder)
 void
 calculateGroupModulusAndOrder(uint256 seed, uint32_t pLen, uint32_t qLen,
                               Bignum *resultModulus, Bignum *resultGroupOrder,
-                              uint256 *resultPseed, uint256 *resultQs
+                              uint256 *resultPseed, uint256 *resultQseed)
+{
+	// Verify that the seed length is >= qLen
+	if (qLen > (sizeof(seed)) * 8) {
+		// TODO: The use of 256-bit seeds limits us to 256-bit group orders. We should probably change this.
+		// throw ZerocoinException("Seed is too short to support the required security level.");
+	}
+
+#ifdef ZEROCOIN_DEBUG
+	cout << "calculateGroupModulusAndOrder: pLen = " << pLen << endl;
+#endif
+
+	// Generate a random prime for the group order.
+	// This may throw an exception, which we'll pass upwards.
+	// Result is the value "resultGroupOrder", "qseed" and "qgen_counter".
+	uint256     qseed;
+	uint32_t    qgen_counter;
+	*resultGroupOrder = generateRandomPrime(qLen, seed, &qseed, &qgen_counter);
+
+	// Using ⎡pLen / 2 + 1⎤ as the length and qseed as the input_seed, use the random prime
+	// routine to obtain p0 , pseed, and pgen_counter. We pass exceptions upward.
+	uint32_t    p0len = ceil((pLen / 2.0) + 1);
+	uint256     pseed;
+	uint32_t    pgen_counter;
+	Bignum p0 = generateRandomPrime(p0len, qseed, &pseed, &pgen_counter);
+
+	// Set x = 0, old_counter = pgen_counter
+	uint32_t    old_counter = pgen_counter;
+
+	// Generate a random integer "x" of pLen bits
+	uint32_t iterations;
+	Bignum x = generateIntegerFromSeed(pLen, pseed, &iterations);
+	pseed += (iterations + 1);
+
+	// Set x = 2^{pLen−1} + (x mod 2^{pLen–1}).
+	Bignum powerOfTwo = Bignum(2).pow(pLen-1);
+	x = powerOfTwo + (x % powerOfTwo);
+
+	// t = ⎡x / (2 * resultGroupOrder * p0)⎤.
+	// TODO: we don't have a ceiling function
+	Bignum t = x / (Bignum(2) * (*resultGroupOrder) * p0);
+
+	// Now loop until we find a valid prime "p" or we fail due to
+	// pgen_counter exceeding ((4*pLen) + old_counter).
+	for ( ; pgen_counter <= ((4*pLen) + old_counter) ; pgen_counter++) {
+		// If (2 * t * resultGroupOrder * p0 + 1) > 2^{pLen}, then
+		// t = ⎡2^{pLen−1} / (2 * resultGroupOrder * p0)⎤.
+		powerOfTwo = Bignum(2).pow(pLen);
+		Bignum prod = (Bignum(2) * t * (*resultGroupOrder) * p0) + Bignum(1);
+		if (prod > powerOfTwo) {
+			// TODO: implement a ceil function
+			t = Bignum(2).pow(pLen-1) / (Bignum(2) * (*resultGroupOrder) * p0);
+		}
+
+		// Compute a candidate prime resultModulus = 2tqp0 + 1.
+		*resultModulus = (Bignum(2) * t * (*resultGroupOrder) * p0) + Bignum(1);
+
+		// Verify that resultModulus is prime. First generate a pseudorandom integer "a".
+		Bignum a = generateIntegerFromSeed(pLen, pseed, &iterations);
+		pseed += iterations + 1;
+
+		// Set a = 2 + (a mod (resultModulus–3)).
+		a = Bignum(2) + (a % ((*resultModulus) - Bignum(3)));
+
+		// Set z = a^{2 * t * resultGroupOrder} mod resultModulus
+		Bignum z = a.pow_mod(Bignum(2) * t * (*resultGroupOrder), (*resultModulus));
+
+		// If GCD(z–1, resultModulus) == 1 AND (z^{p0} mod resultModulus == 1)
+		// then we have found our result. Return.
+		if ((resultModulus->gcd(z - Bignum(1))).isOne() &&
+		        (z
