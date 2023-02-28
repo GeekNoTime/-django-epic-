@@ -247,4 +247,61 @@ deriveIntegerGroupParams(uint256 seed, uint32_t pLen, uint32_t qLen)
 	Bignum q;
 	uint256 pSeed, qSeed;
 
-	// Calculate "p" and "q" and "domain_param
+	// Calculate "p" and "q" and "domain_parameter_seed" from the
+	// "seed" buffer above, using the procedure described in NIST
+	// FIPS 186-3, Appendix A.1.2.
+	calculateGroupModulusAndOrder(seed, pLen, qLen, &(result.modulus),
+	                              &(result.groupOrder), &pSeed, &qSeed);
+
+	// Calculate the generators "g", "h" using the process described in
+	// NIST FIPS 186-3, Appendix A.2.3. This algorithm takes ("p", "q",
+	// "domain_parameter_seed", "index"). We use "index" value 1
+	// to generate "g" and "index" value 2 to generate "h".
+	result.g = calculateGroupGenerator(seed, pSeed, qSeed, result.modulus, result.groupOrder, 1);
+	result.h = calculateGroupGenerator(seed, pSeed, qSeed, result.modulus, result.groupOrder, 2);
+
+	// Perform some basic tests to make sure we have good parameters
+	if ((uint32_t)(result.modulus.bitSize()) < pLen ||          // modulus is pLen bits long
+	        (uint32_t)(result.groupOrder.bitSize()) < qLen ||       // order is qLen bits long
+	        !(result.modulus.isPrime()) ||                          // modulus is prime
+	        !(result.groupOrder.isPrime()) ||                       // order is prime
+	        !((result.g.pow_mod(result.groupOrder, result.modulus)).isOne()) || // g^order mod modulus = 1
+	        !((result.h.pow_mod(result.groupOrder, result.modulus)).isOne()) || // h^order mod modulus = 1
+	        ((result.g.pow_mod(Bignum(100), result.modulus)).isOne()) ||        // g^100 mod modulus != 1
+	        ((result.h.pow_mod(Bignum(100), result.modulus)).isOne()) ||        // h^100 mod modulus != 1
+	        result.g == result.h ||                                 // g != h
+	        result.g.isOne()) {                                     // g != 1
+		// If any of the above tests fail, throw an exception
+		throw ZerocoinException("Group parameters are not valid");
+	}
+
+	return result;
+}
+
+/// \brief Deterministically compute a  set of group parameters with a specified order.
+/// \param groupOrder   The order of the group
+/// \return         An IntegerGroupParams object
+///
+/// Given "q" calculates the description of a group G of prime order "q" embedded within
+/// a field "F_p".
+
+IntegerGroupParams
+deriveIntegerGroupFromOrder(Bignum &groupOrder)
+{
+	IntegerGroupParams result;
+
+	// Set the order to "groupOrder"
+	result.groupOrder = groupOrder;
+
+	// Try possible values for "modulus" of the form "groupOrder * 2 * i" where
+	// "p" is prime and i is a counter starting at 1.
+	for (uint32_t i = 1; i < NUM_SCHNORRGEN_ATTEMPTS; i++) {
+		// Set modulus equal to "groupOrder * 2 * i"
+		result.modulus = (result.groupOrder * Bignum(i*2)) + Bignum(1);
+
+		// Test the result for primality
+		// TODO: This is a probabilistic routine and thus not the right choice
+		if (result.modulus.isPrime(256)) {
+
+			// Success.
+	
