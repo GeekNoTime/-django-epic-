@@ -422,4 +422,74 @@ calculateGroupModulusAndOrder(uint256 seed, uint32_t pLen, uint32_t qLen,
 		// If GCD(z–1, resultModulus) == 1 AND (z^{p0} mod resultModulus == 1)
 		// then we have found our result. Return.
 		if ((resultModulus->gcd(z - Bignum(1))).isOne() &&
-		        (z
+		        (z.pow_mod(p0, (*resultModulus))).isOne()) {
+			// Success! Return the seeds and primes.
+			*resultPseed = pseed;
+			*resultQseed = qseed;
+			return;
+		}
+
+		// This prime did not work out. Increment "t" and try again.
+		t = t + Bignum(1);
+	} // loop continues until pgen_counter exceeds a limit
+
+	// We reach this point only if we exceeded our maximum iteration count.
+	// Throw an exception.
+	throw ZerocoinException("Unable to generate a prime modulus for the group");
+}
+
+/// \brief Deterministically compute a generator for a given group.
+/// \param seed                         A first seed for the process.
+/// \param pSeed                        A second seed for the process.
+/// \param qSeed                        A third seed for the process.
+/// \param modulus                      Proposed prime modulus for the field.
+/// \param groupOrder                   Proposed order of the group.
+/// \param index                        Index value, selects which generator you're building.
+/// \return                             The resulting generator.
+/// \throws                             A ZerocoinException if error.
+///
+/// Generates a random group generator deterministically as a function of (seed,pSeed,qSeed)
+/// Uses the algorithm described in FIPS 186-3 Appendix A.2.3.
+
+Bignum
+calculateGroupGenerator(uint256 seed, uint256 pSeed, uint256 qSeed, Bignum modulus, Bignum groupOrder, uint32_t index)
+{
+	Bignum result;
+
+	// Verify that 0 <= index < 256
+	if (index > 255) {
+		throw ZerocoinException("Invalid index for group generation");
+	}
+
+	// Compute e = (modulus - 1) / groupOrder
+	Bignum e = (modulus - Bignum(1)) / groupOrder;
+
+	// Loop until we find a generator
+	for (uint32_t count = 1; count < MAX_GENERATOR_ATTEMPTS; count++) {
+		// hash = Hash(seed || pSeed || qSeed || “ggen” || index || count
+		uint256 hash = calculateGeneratorSeed(seed, pSeed, qSeed, "ggen", index, count);
+		Bignum W(hash);
+
+		// Compute result = W^e mod p
+		result = W.pow_mod(e, modulus);
+
+		// If result > 1, we have a generator
+		if (result > 1) {
+			return result;
+		}
+	}
+
+	// We only get here if we failed to find a generator
+	throw ZerocoinException("Unable to find a generator, too many attempts");
+}
+
+/// \brief Deterministically compute a random prime number.
+/// \param primeBitLen                  Desired bit length of the prime.
+/// \param in_seed                      Input seed for the process.
+/// \param out_seed                     Result: output seed from the process.
+/// \param prime_gen_counter            Result: number of iterations required.
+/// \return                             The resulting prime number.
+/// \throws                             A ZerocoinException if error.
+///
+/// Generates a random prime number of primeBitLen bits from a given input
+/// seed. Uses the Shawe-Tayl
