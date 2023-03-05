@@ -492,4 +492,85 @@ calculateGroupGenerator(uint256 seed, uint256 pSeed, uint256 qSeed, Bignum modul
 /// \throws                             A ZerocoinException if error.
 ///
 /// Generates a random prime number of primeBitLen bits from a given input
-/// seed. Uses the Shawe-Tayl
+/// seed. Uses the Shawe-Taylor algorithm as described in FIPS 186-3
+/// Appendix C.6. This is a recursive function.
+
+Bignum
+generateRandomPrime(uint32_t primeBitLen, uint256 in_seed, uint256 *out_seed,
+                    uint32_t *prime_gen_counter)
+{
+	// Verify that primeBitLen is not too small
+	if (primeBitLen < 2) {
+		throw ZerocoinException("Prime length is too short");
+	}
+
+	// If primeBitLen < 33 bits, perform the base case.
+	if (primeBitLen < 33) {
+		Bignum result(0);
+
+		// Set prime_seed = in_seed, prime_gen_counter = 0.
+		uint256     prime_seed = in_seed;
+		(*prime_gen_counter) = 0;
+
+		// Loop up to "4 * primeBitLen" iterations.
+		while ((*prime_gen_counter) < (4 * primeBitLen)) {
+
+			// Generate a pseudorandom integer "c" of length primeBitLength bits
+			uint32_t iteration_count;
+			Bignum c = generateIntegerFromSeed(primeBitLen, prime_seed, &iteration_count);
+#ifdef ZEROCOIN_DEBUG
+			cout << "generateRandomPrime: primeBitLen = " << primeBitLen << endl;
+			cout << "Generated c = " << c << endl;
+#endif
+
+			prime_seed += (iteration_count + 1);
+			(*prime_gen_counter)++;
+
+			// Set "intc" to be the least odd integer >= "c" we just generated
+			uint32_t intc = c.getulong();
+			intc = (2 * floor(intc / 2.0)) + 1;
+#ifdef ZEROCOIN_DEBUG
+			cout << "Should be odd. c = " << intc << endl;
+			cout << "The big num is: c = " << c << endl;
+#endif
+
+			// Perform trial division on this (relatively small) integer to determine if "intc"
+			// is prime. If so, return success.
+			if (primalityTestByTrialDivision(intc)) {
+				// Return "intc" converted back into a Bignum and "prime_seed". We also updated
+				// the variable "prime_gen_counter" in previous statements.
+				result = intc;
+				*out_seed = prime_seed;
+
+				// Success
+				return result;
+			}
+		} // while()
+
+		// If we reached this point there was an error finding a candidate prime
+		// so throw an exception.
+		throw ZerocoinException("Unable to find prime in Shawe-Taylor algorithm");
+
+		// END OF BASE CASE
+	}
+	// If primeBitLen >= 33 bits, perform the recursive case.
+	else {
+		// Recurse to find a new random prime of roughly half the size
+		uint32_t newLength = ceil((double)primeBitLen / 2.0) + 1;
+		Bignum c0 = generateRandomPrime(newLength, in_seed, out_seed, prime_gen_counter);
+
+		// Generate a random integer "x" of primeBitLen bits using the output
+		// of the previous call.
+		uint32_t numIterations;
+		Bignum x = generateIntegerFromSeed(primeBitLen, *out_seed, &numIterations);
+		(*out_seed) += numIterations + 1;
+
+		// Compute "t" = ⎡x / (2 * c0⎤
+		// TODO no Ceiling call
+		Bignum t = x / (Bignum(2) * c0);
+
+		// Repeat the following procedure until we find a prime (or time out)
+		for (uint32_t testNum = 0; testNum < MAX_PRIMEGEN_ATTEMPTS; testNum++) {
+
+			// If ((2 * t * c0) + 1 > 2^{primeBitLen}),
+			// then t = ⎡2^{primeBitLen} – 1 / (2 *
