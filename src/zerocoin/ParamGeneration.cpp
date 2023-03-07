@@ -573,4 +573,82 @@ generateRandomPrime(uint32_t primeBitLen, uint256 in_seed, uint256 *out_seed,
 		for (uint32_t testNum = 0; testNum < MAX_PRIMEGEN_ATTEMPTS; testNum++) {
 
 			// If ((2 * t * c0) + 1 > 2^{primeBitLen}),
-			// then t = ⎡2^{primeBitLen} – 1 / (2 *
+			// then t = ⎡2^{primeBitLen} – 1 / (2 * c0)⎤.
+			if ((Bignum(2) * t * c0) > (Bignum(2).pow(Bignum(primeBitLen)))) {
+				t = ((Bignum(2).pow(Bignum(primeBitLen))) - Bignum(1)) / (Bignum(2) * c0);
+			}
+
+			// Set c = (2 * t * c0) + 1
+			Bignum c = (Bignum(2) * t * c0) + Bignum(1);
+
+			// Increment prime_gen_counter
+			(*prime_gen_counter)++;
+
+			// Test "c" for primality as follows:
+			// 1. First pick an integer "a" in between 2 and (c - 2)
+			Bignum a = generateIntegerFromSeed(c.bitSize(), (*out_seed), &numIterations);
+			a = Bignum(2) + (a % (c - Bignum(3)));
+			(*out_seed) += (numIterations + 1);
+
+			// 2. Compute "z" = a^{2*t} mod c
+			Bignum z = a.pow_mod(Bignum(2) * t, c);
+
+			// 3. Check if "c" is prime.
+			//    Specifically, verify that gcd((z-1), c) == 1 AND (z^c0 mod c) == 1
+			// If so we return "c" as our result.
+			if (c.gcd(z - Bignum(1)).isOne() && z.pow_mod(c0, c).isOne()) {
+				// Return "c", out_seed and prime_gen_counter
+				// (the latter two of which were already updated)
+				return c;
+			}
+
+			// 4. If the test did not succeed, increment "t" and loop
+			t = t + Bignum(1);
+		} // end of test loop
+	}
+
+	// We only reach this point if the test loop has iterated MAX_PRIMEGEN_ATTEMPTS
+	// and failed to identify a valid prime. Throw an exception.
+	throw ZerocoinException("Unable to generate random prime (too many tests)");
+}
+
+Bignum
+generateIntegerFromSeed(uint32_t numBits, uint256 seed, uint32_t *numIterations)
+{
+	Bignum      result(0);
+	uint32_t    iterations = ceil((double)numBits / (double)HASH_OUTPUT_BITS);
+
+#ifdef ZEROCOIN_DEBUG
+	cout << "numBits = " << numBits << endl;
+	cout << "iterations = " << iterations << endl;
+#endif
+
+	// Loop "iterations" times filling up the value "result" with random bits
+	for (uint32_t count = 0; count < iterations; count++) {
+		// result += ( H(pseed + count) * 2^{count * p0len} )
+		result += Bignum(calculateHash(seed + count)) * Bignum(2).pow(count * HASH_OUTPUT_BITS);
+	}
+
+	result = Bignum(2).pow(numBits - 1) + (result % (Bignum(2).pow(numBits - 1)));
+
+	// Return the number of iterations and the result
+	*numIterations = iterations;
+	return result;
+}
+
+/// \brief Determines whether a uint32_t is a prime through trial division.
+/// \param candidate       Candidate to test.
+/// \return                true if the value is prime, false otherwise
+///
+/// Performs trial division to determine whether a uint32_t is prime.
+
+bool
+primalityTestByTrialDivision(uint32_t candidate)
+{
+	// TODO: HACK HACK WRONG WRONG
+	Bignum canBignum(candidate);
+
+	return canBignum.isPrime();
+}
+
+} // namespace libzerocoin
