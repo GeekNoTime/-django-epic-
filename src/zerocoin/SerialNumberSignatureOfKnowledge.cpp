@@ -83,4 +83,57 @@ SerialNumberSignatureOfKnowledge::SerialNumberSignatureOfKnowledge(const
 			sprime[i]           = v[i];
 		} else {
 			s_notprime[i]       = r[i] - coin.getRandomness();
-			sprime[i]           = v[i] - (comm
+			sprime[i]           = v[i] - (commitmentToCoin.getRandomness() *
+			                              b.pow_mod(r[i] - coin.getRandomness(), params->serialNumberSoKCommitmentGroup.groupOrder));
+		}
+	}
+}
+
+inline Bignum SerialNumberSignatureOfKnowledge::challengeCalculation(const Bignum& a_exp,const Bignum& b_exp,
+        const Bignum& h_exp) const {
+
+	Bignum a = params->coinCommitmentGroup.g;
+	Bignum b = params->coinCommitmentGroup.h;
+	Bignum g = params->serialNumberSoKCommitmentGroup.g;
+	Bignum h = params->serialNumberSoKCommitmentGroup.h;
+
+	Bignum exponent = (a.pow_mod(a_exp, params->serialNumberSoKCommitmentGroup.groupOrder)
+	                   * b.pow_mod(b_exp, params->serialNumberSoKCommitmentGroup.groupOrder)) % params->serialNumberSoKCommitmentGroup.groupOrder;
+
+	return (g.pow_mod(exponent, params->serialNumberSoKCommitmentGroup.modulus) * h.pow_mod(h_exp, params->serialNumberSoKCommitmentGroup.modulus)) % params->serialNumberSoKCommitmentGroup.modulus;
+}
+
+bool SerialNumberSignatureOfKnowledge::Verify(const Bignum& coinSerialNumber, const Bignum& valueOfCommitmentToCoin,
+        const uint256 msghash) const {
+	Bignum a = params->coinCommitmentGroup.g;
+	Bignum b = params->coinCommitmentGroup.h;
+	Bignum g = params->serialNumberSoKCommitmentGroup.g;
+	Bignum h = params->serialNumberSoKCommitmentGroup.h;
+	CHashWriter hasher(0,0);
+	hasher << *params << valueOfCommitmentToCoin <<coinSerialNumber;
+
+	vector<CBigNum> tprime(params->zkp_iterations);
+	unsigned char *hashbytes = (unsigned char*) &this->hash;
+#ifdef ZEROCOIN_THREADING
+	#pragma omp parallel for
+#endif
+	for(uint32_t i = 0; i < params->zkp_iterations; i++) {
+		int bit = i % 8;
+		int byte = i / 8;
+		bool challenge_bit = ((hashbytes[byte] >> bit) & 0x01);
+		if(challenge_bit) {
+			tprime[i] = challengeCalculation(coinSerialNumber, s_notprime[i], sprime[i]);
+		} else {
+			Bignum exp = b.pow_mod(s_notprime[i], params->serialNumberSoKCommitmentGroup.groupOrder);
+			tprime[i] = ((valueOfCommitmentToCoin.pow_mod(exp, params->serialNumberSoKCommitmentGroup.modulus) % params->serialNumberSoKCommitmentGroup.modulus) *
+			             (h.pow_mod(sprime[i], params->serialNumberSoKCommitmentGroup.modulus) % params->serialNumberSoKCommitmentGroup.modulus)) %
+			            params->serialNumberSoKCommitmentGroup.modulus;
+		}
+	}
+	for(uint32_t i = 0; i < params->zkp_iterations; i++) {
+		hasher << tprime[i];
+	}
+	return hasher.GetHash() == hash;
+}
+
+} /* namespace libzerocoin */
